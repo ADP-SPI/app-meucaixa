@@ -78,9 +78,9 @@ export default function Login() {
         .select()
         .single();
 
-      if (erroConta || !conta) {
+if (erroConta || !conta) {
         console.error('Erro Supabase:', erroConta);
-        setErro(`Erro: ${erroConta.message}`);
+        setErro(`Erro: ${erroConta?.message || 'Email já cadastrado'}`);
         setCarregando(false);
         return;
       }
