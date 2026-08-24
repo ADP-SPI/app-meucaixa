@@ -96,7 +96,7 @@ export default function Planos() {
 
       // 3. Criar assinatura
       const dataVencimento = tipoAssinatura === 'teste' 
-        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // +7 dias
+        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         : null;
 
       const { error: erroAssinatura } = await supabase
@@ -120,9 +120,8 @@ export default function Planos() {
       localStorage.setItem('conta_id', conta.id.toString());
       localStorage.setItem('usuario_nome', usuario.nome);
 
-      // Mostrar mensagem de sucesso
       if (tipoAssinatura === 'teste') {
-        alert(`✅ Teste de 7 dias ativado!\n\nVocê receberá um email de confirmação.\nAcesso liberado para: ${dataVencimento?.toLocaleDateString('pt-BR')}`);
+        alert(`✅ Teste de 7 dias ativado!\n\nAcesso liberado para: ${dataVencimento?.toLocaleDateString('pt-BR')}`);
       } else {
         alert(`✅ Assinatura criada!\n\nAguarde o email com instruções de pagamento.\nPlano: ${planoSelecionado.nome}\nValor: R$ ${planoSelecionado.preco_mensal.toFixed(2)}/mês`);
       }
@@ -145,12 +144,29 @@ export default function Planos() {
       <div className="w-full max-w-6xl">
         {!planoSelecionado ? (
           <>
-            <div className="text-center py-8 mb-8">
+            {/* HEADER */}
+            <div className="text-center py-8 mb-6">
               <h1 className="text-3xl font-bold text-gray-900">Meu Caixa</h1>
-              <p className="text-gray-600 mt-2">Escolha seu plano e comece agora</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* BOTÃO LOGIN */}
+            <div className="text-center mb-8">
+              <p className="text-gray-600 mb-3">Já tem uma conta?</p>
+              <a 
+                href="/login" 
+                className="inline-block border-2 border-black bg-white text-black px-6 py-3 rounded font-bold hover:bg-gray-50 transition"
+              >
+                Faça login aqui
+              </a>
+            </div>
+
+            {/* SUBTÍTULO */}
+            <div className="text-center mb-8">
+              <p className="text-gray-600 text-lg">Escolha seu plano e comece agora</p>
+            </div>
+
+            {/* PLANOS */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               {planos.map((plano) => (
                 <div key={plano.id} className="bg-white p-6 rounded-lg shadow-md border-2 border-gray-200 hover:border-green-600 transition">
                   <h2 className="text-2xl font-bold mb-2">{plano.nome}</h2>
@@ -192,13 +208,6 @@ export default function Planos() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            <div className="mt-8 text-center">
-              <p className="text-gray-600 mb-4">Já tem uma conta?</p>
-              <a href="/login" className="text-blue-600 hover:underline font-bold">
-                Faça login aqui
-              </a>
             </div>
           </>
         ) : (
