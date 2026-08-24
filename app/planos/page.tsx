@@ -96,8 +96,9 @@ export default function Planos() {
 
       // 3. Criar assinatura
       const dataVencimento = tipoAssinatura === 'teste' 
-        ? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-        : null;
+          ? new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
 
       const { error: erroAssinatura } = await supabase
         .from('assinaturas')
@@ -121,7 +122,7 @@ export default function Planos() {
       localStorage.setItem('usuario_nome', usuario.nome);
 
       if (tipoAssinatura === 'teste') {
-        alert(`✅ Teste de 7 dias ativado!\n\nAcesso liberado para: ${dataVencimento?.toLocaleDateString('pt-BR')}`);
+        alert(`✅ Teste de 15 dias ativado!\n\nAcesso liberado para: ${dataVencimento?.toLocaleDateString('pt-BR')}`);
       } else {
         alert(`✅ Assinatura criada!\n\nAguarde o email com instruções de pagamento.\nPlano: ${planoSelecionado.nome}\nValor: R$ ${planoSelecionado.preco_mensal.toFixed(2)}/mês`);
       }
@@ -197,7 +198,7 @@ export default function Planos() {
                       onClick={() => selecionarPlano(plano, 'teste')}
                       className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
                     >
-                      Teste 7 dias grátis
+                      Teste 15 dias grátis
                     </button>
                     <button
                       onClick={() => selecionarPlano(plano, 'pago')}
@@ -221,7 +222,7 @@ export default function Planos() {
                 <p className="text-sm text-gray-600">Plano selecionado:</p>
                 <p className="text-2xl font-bold text-blue-600">{planoSelecionado.nome}</p>
                 {tipoAssinatura === 'teste' ? (
-                  <p className="text-sm text-green-600 mt-2">✓ 7 dias de teste gratuito</p>
+                  <p className="text-sm text-green-600 mt-2">✓157 dias de teste gratuito</p>
                 ) : (
                   <p className="text-sm text-gray-600 mt-2">R$ {planoSelecionado.preco_mensal.toFixed(2)}/mês</p>
                 )}
