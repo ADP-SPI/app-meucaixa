@@ -2,60 +2,165 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
+  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
+);
 
 export default function Caixa() {
   const [transacoes, setTransacoes] = useState<any[]>([]);
+  const [tipoOperacao, setTipoOperacao] = useState('receita');
   const [nomeCliente, setNomeCliente] = useState('');
   const [valor, setValor] = useState('');
-  const [tipo, setTipo] = useState('PIX');
+  const [formapagamento, setformapagamento] = useState('PIX');
+  const [excluindoId, setExcluindoId] = useState<number | null>(null);
+  const [carregando, setCarregando] = useState(true);
+  const [contaId, setContaId] = useState<number | null>(null);
 
   useEffect(() => {
-    carregarTransacoes();
+    const conta = localStorage.getItem('conta_id');
+    if (conta) {
+      setContaId(parseInt(conta));
+      carregarTransacoes(parseInt(conta));
+    }
   }, []);
 
-  const carregarTransacoes = () => {
+  const carregarTransacoes = async (cId: number) => {
     try {
-      const data = JSON.parse(localStorage.getItem('transacoes') || '[]');
-      if (Array.isArray(data)) {
-        setTransacoes(data.filter(t => t && t.valor !== undefined));
-      }
-    } catch (e) {
-      setTransacoes([]);
+      const { data, error } = await supabase
+        .from('transacoes')
+        .select('*')
+        .eq('conta_id', cId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setTransacoes(data || []);
+    } catch (err) {
+      console.error('Erro ao carregar transações:', err);
     }
+    setCarregando(false);
   };
 
-  const adicionarTransacao = () => {
+  const adicionarTransacao = async () => {
     if (!nomeCliente.trim() || !valor || isNaN(parseFloat(valor))) {
-      alert('Preencha nome e valor corretamente');
+      alert('Preencha descrição e valor corretamente');
       return;
     }
 
-    const novaTransacao = {
-      id: Date.now(),
-      nome_cliente: nomeCliente,
-      valor: parseFloat(valor),
-      tipo: tipo,
-      hora: new Date().toLocaleTimeString('pt-BR'),
-      data: new Date().toISOString().split('T')[0],
-      created_at: new Date().toISOString()
-    };
+    if (!contaId) {
+      alert('Erro: conta não identificada');
+      return;
+    }
 
-    const existing = JSON.parse(localStorage.getItem('transacoes') || '[]');
-    existing.push(novaTransacao);
-    localStorage.setItem('transacoes', JSON.stringify(existing));
+    try {
+      const { error } = await supabase
+        .from('transacoes')
+        .insert([
+          {
+            conta_id: contaId,
+            descricao: nomeCliente,
+            valor: parseFloat(valor),
+            tipo: tipoOperacao,
+            formapagamento: formapagamento,
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            data: new Date().toISOString().split('T')[0],
+            created_at: new Date().toISOString()
+          }
+        ]);
 
-    setNomeCliente('');
-    setValor('');
-    setTipo('PIX');
-    carregarTransacoes();
+      if (error) throw error;
+
+      setNomeCliente('');
+      setValor('');
+      setformapagamento('PIX');
+      setTipoOperacao('receita');
+      
+      carregarTransacoes(contaId);
+    } catch (err) {
+      console.error('Erro ao adicionar transação:', err);
+      alert('Erro ao registrar transação');
+    }
   };
 
-  const calcularTotal = (tipo_filtro?: string) => {
-    const total = transacoes
-      .filter(t => t && (!tipo_filtro || t.tipo === tipo_filtro))
-      .reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
-    return total.toFixed(2);
+
+const confirmarExclusao = async (id: number) => {
+    if (!contaId) return;
+
+    try {
+      const transacao = transacoes.find(t => t.id === id);
+      if (!transacao) return;
+
+      // Se era Fiado pago, retorna como FIADO
+      if (transacao.origin === 'fiado_pago') {
+        // Inserir novamente como FIADO (sem origem, pra aparecer como fiado original)
+        await supabase
+          .from('transacoes')
+          .insert([{
+            conta_id: contaId,
+            descricao: transacao.descricao.replace(' (recebido)', ''),
+            valor: transacao.valor,
+            tipo: 'receita',
+            formapagamento: 'FIADO',
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            data: new Date().toISOString().split('T')[0],
+            created_at: new Date().toISOString()
+          }]);
+      }
+
+      // Se era Comanda, retorna com itens
+      if (transacao.origin === 'comanda') {
+        await supabase
+          .from('comandas')
+          .insert([{
+            conta_id: contaId,
+            nome: transacao.descricao.replace('Comanda: ', ''),
+            itens: transacao.itens || [],
+            data: new Date().toISOString().split('T')[0],
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            created_at: new Date().toISOString()
+          }]);
+      }
+
+      // Deletar do caixa
+      await supabase
+        .from('transacoes')
+        .delete()
+        .eq('id', id)
+        .eq('conta_id', contaId);
+
+      carregarTransacoes(contaId);
+      setExcluindoId(null);
+    } catch (err) {
+      console.error('Erro ao excluir:', err);
+      alert('Erro ao excluir transação');
+    }
   };
+
+
+  const hoje = new Date().toISOString().split('T')[0];
+  const transacoesHoje = transacoes.filter(t => t && t.data === hoje);
+
+  const receitas = transacoesHoje.filter(t => t.tipo === 'receita' && t.formapagamento !== 'FIADO');
+  const despesas = transacoesHoje.filter(t => t.tipo === 'despesa');
+  const fiados = transacoesHoje.filter(t => t.tipo === 'receita' && t.formapagamento === 'FIADO');
+
+  const totalReceitas = receitas.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+  const totalDespesas = despesas.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+  const totalFiados = fiados.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+  const saldo = totalReceitas - totalDespesas;
+
+  const receitasPorForma = (forma: string) => {
+    return receitas
+      .filter(t => t.formapagamento === forma)
+      .reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0)
+      .toFixed(2);
+  };
+
+  if (carregando) {
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Carregando...</p></div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
@@ -66,38 +171,64 @@ export default function Caixa() {
 
         <h1 className="text-2xl font-bold mb-6">Caixa</h1>
 
-        <div className="grid grid-cols-2 gap-4 mb-6">
+        {/* RESUMO DO DIA */}
+        <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-blue-600 text-white p-4 rounded-lg text-center">
+            <p className="text-sm">RECEITAS</p>
+            <p className="text-2xl font-bold">R$ {totalReceitas.toFixed(2)}</p>
+          </div>
+          <div className="bg-red-600 text-white p-4 rounded-lg text-center">
+            <p className="text-sm">DESPESAS</p>
+            <p className="text-2xl font-bold">R$ {totalDespesas.toFixed(2)}</p>
+          </div>
+          <div className={`${saldo >= 0 ? 'bg-blue-600' : 'bg-red-600'} text-white p-4 rounded-lg text-center`}>
+            <p className="text-sm">SALDO</p>
+            <p className="text-2xl font-bold">R$ {saldo.toFixed(2)}</p>
+          </div>
+        </div>
+
+        {/* DETALHES DE RECEITAS */}
+        <div className="grid grid-cols-4 gap-4 mb-6">
+          <div className="bg-white text-black p-4 rounded-lg text-center border border-gray-200">
             <p className="text-sm">PIX</p>
-            <p className="text-2xl font-bold">R$ {calcularTotal('PIX')}</p>
+            <p className="text-xl font-bold">R$ {receitasPorForma('PIX')}</p>
           </div>
-          <div className="bg-green-600 text-white p-4 rounded-lg text-center">
+          <div className="bg-white text-black p-4 rounded-lg text-center border border-gray-200">
             <p className="text-sm">DINHEIRO</p>
-            <p className="text-2xl font-bold">R$ {calcularTotal('DINHEIRO')}</p>
+            <p className="text-xl font-bold">R$ {receitasPorForma('DINHEIRO')}</p>
           </div>
-          <div className="bg-purple-600 text-white p-4 rounded-lg text-center">
+          <div className="bg-white text-black p-4 rounded-lg text-center border border-gray-200">
             <p className="text-sm">CARTÃO</p>
-            <p className="text-2xl font-bold">R$ {calcularTotal('CARTÃO')}</p>
+            <p className="text-xl font-bold">R$ {receitasPorForma('CARTÃO')}</p>
           </div>
-          <div className="bg-orange-600 text-white p-4 rounded-lg text-center">
+          <div className="bg-white text-black p-4 rounded-lg text-center border border-gray-200">
             <p className="text-sm">FIADO</p>
-            <p className="text-2xl font-bold">R$ {calcularTotal('FIADO')}</p>
+            <p className="text-xl font-bold">R$ {totalFiados.toFixed(2)}</p>
+            <p className="text-xs mt-2">(não entra na receita)</p>
           </div>
         </div>
 
-        <div className="bg-red-700 text-white p-4 rounded-lg text-center mb-6">
-          <p className="text-sm">TOTAL DO DIA</p>
-          <p className="text-3xl font-bold">R$ {calcularTotal()}</p>
-        </div>
-
+        {/* FORMULÁRIO */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
           <div className="mb-4">
-            <label className="block text-sm font-bold mb-2">Nome do Cliente</label>
+            <label className="block text-sm font-bold mb-2">Tipo de Operação</label>
+            <select
+              value={tipoOperacao}
+              onChange={(e) => setTipoOperacao(e.target.value)}
+              className="w-full border border-gray-300 p-2 rounded"
+            >
+              <option value="receita">Receita (Ganho)</option>
+              <option value="despesa">Despesa (Gasto)</option>
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-bold mb-2">Descrição</label>
             <input
               type="text"
               value={nomeCliente}
               onChange={(e) => setNomeCliente(e.target.value)}
-              placeholder="Digite o nome"
+              placeholder="Ex: Cliente João, Reposição, Aluguel..."
               className="w-full border border-gray-300 p-2 rounded"
             />
           </div>
@@ -117,14 +248,14 @@ export default function Caixa() {
           <div className="mb-4">
             <label className="block text-sm font-bold mb-2">Forma de Pagamento</label>
             <select
-              value={tipo}
-              onChange={(e) => setTipo(e.target.value)}
+              value={formapagamento}
+              onChange={(e) => setformapagamento(e.target.value)}
               className="w-full border border-gray-300 p-2 rounded"
             >
               <option>PIX</option>
               <option>DINHEIRO</option>
               <option>CARTÃO</option>
-              <option>FIADO</option>
+              {tipoOperacao === 'receita' && <option>FIADO</option>}
             </select>
           </div>
 
@@ -136,19 +267,65 @@ export default function Caixa() {
           </button>
         </div>
 
+        {/* MOVIMENTAÇÕES DO DIA */}
         <div>
-          <h2 className="text-lg font-bold mb-4">Transações de Hoje</h2>
-          {transacoes && transacoes.length === 0 ? (
-            <p className="text-gray-500">Nenhuma transação</p>
+          <h2 className="text-lg font-bold mb-4">Movimentações de Hoje</h2>
+          {transacoesHoje && transacoesHoje.length === 0 ? (
+            <p className="text-gray-500">Nenhuma movimentação</p>
           ) : (
             <div className="space-y-2">
-              {transacoes && transacoes.map((t) => (
+              {transacoesHoje && transacoesHoje.map((t) => (
                 t ? (
-                  <div key={t.id} className="bg-white p-3 rounded border border-gray-200">
-                    <p className="font-bold">{t.nome_cliente || 'Sem nome'}</p>
-                    <p className="text-sm text-gray-600">
-                      R$ {parseFloat(t.valor || 0).toFixed(2)} - {t.tipo || 'PIX'} - {t.hora || '--:--'}
-                    </p>
+                  <div
+                    key={t.id}
+                    className={`p-3 rounded border-l-4 ${
+                      t.tipo === 'receita'
+                        ? t.formapagamento === 'FIADO'
+                          ? 'bg-orange-50 border-orange-600'
+                          : 'bg-green-50 border-green-600'
+                        : 'bg-red-50 border-red-600'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="font-bold">{t.descricao || 'Sem descrição'}</p>
+                        <p className="text-sm text-gray-600">
+                          {t.formapagamento} - {t.hora}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`font-bold text-lg ${
+                          t.tipo === 'receita' ? 'text-green-600' : 'text-red-600'
+                        }`}>
+                          {t.tipo === 'receita' ? '+' : '-'} R$ {parseFloat(t.valor || 0).toFixed(2)}
+                        </p>
+                      </div>
+                      <div className="ml-3">
+                        {excluindoId === t.id ? (
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => confirmarExclusao(t.id)}
+                              className="bg-red-600 text-white px-2 py-1 rounded text-xs hover:bg-red-700"
+                            >
+                              Sim
+                            </button>
+                            <button
+                              onClick={() => setExcluindoId(null)}
+                              className="bg-gray-400 text-white px-2 py-1 rounded text-xs hover:bg-gray-500"
+                            >
+                              Não
+                            </button>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={() => setExcluindoId(t.id)}
+                            className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                          >
+                            🗑️ Excluir
+                          </button>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ) : null
               ))}

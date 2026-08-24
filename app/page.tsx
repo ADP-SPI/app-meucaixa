@@ -1,27 +1,53 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+
 export default function Home() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    document.cookie = 'conta_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    document.cookie = 'usuario_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    localStorage.clear();
+    router.push('/login');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-md mx-auto">
-        {/* Header */}
-        <div className="text-center py-8">
-          <h1 className="text-3xl font-bold text-gray-900">App Barbearia</h1>
-          <p className="text-gray-600 mt-2">Controle sua barbearia</p>
+    <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
+      <div className="w-full max-w-6xl">
+        <div className="mb-6 text-right">
+          <button
+            onClick={handleLogout}
+            className="text-blue-600 hover:underline font-bold cursor-pointer"
+          >
+            Sair / Trocar Usuário
+          </button>
         </div>
 
-        {/* Menu Principal */}
+        <div className="text-center py-8">
+          <h1 className="text-3xl font-bold text-gray-900">Meu Caixa</h1>
+          <p className="text-gray-600 mt-2">Gestão simples do seu negócio</p>
+        </div>
+
         <div className="space-y-3">
-          <a href="/agenda" className="block bg-blue-600 text-white p-4 rounded-lg text-center font-bold">
+          <a href="/agenda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
             📅 AGENDA
           </a>
-          <a href="/caixa" className="block bg-green-600 text-white p-4 rounded-lg text-center font-bold">
+          <a href="/caixa" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
             💰 CAIXA
           </a>
-          <a href="/fiados" className="block bg-orange-600 text-white p-4 rounded-lg text-center font-bold">
-            📋 FIADOS
+          <a href="/fiados" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+            📝 FIADOS
           </a>
-          <a href="/relatorios" className="block bg-purple-600 text-white p-4 rounded-lg text-center font-bold">
+          <a href="/comanda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+            🍽️ COMANDA
+          </a>
+          <a href="/cardapio" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+            📋 CARDÁPIO
+          </a>
+          <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
             📊 RELATÓRIOS
           </a>
         </div>
