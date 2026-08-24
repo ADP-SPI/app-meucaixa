@@ -222,7 +222,7 @@ export default function Planos() {
                 <p className="text-sm text-gray-600">Plano selecionado:</p>
                 <p className="text-2xl font-bold text-blue-600">{planoSelecionado.nome}</p>
                 {tipoAssinatura === 'teste' ? (
-                  <p className="text-sm text-green-600 mt-2">✓157 dias de teste gratuito</p>
+                  <p className="text-sm text-green-600 mt-2">✓17 dias de teste gratuito</p>
                 ) : (
                   <p className="text-sm text-gray-600 mt-2">R$ {planoSelecionado.preco_mensal.toFixed(2)}/mês</p>
                 )}
