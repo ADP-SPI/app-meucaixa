@@ -42,12 +42,6 @@ export default function Login() {
         return;
       }
 
-// Salvar em cookie (mais seguro)
-      document.cookie = `usuario_id=${usuarios.id}; path=/`;
-      document.cookie = `conta_id=${usuarios.conta_id}; path=/`;
-      document.cookie = `usuario_nome=${usuarios.nome}; path=/`;
-
-      // Também salvar em localStorage (pra compatibilidade)
       localStorage.setItem('usuario_id', usuarios.id.toString());
       localStorage.setItem('conta_id', usuarios.conta_id.toString());
       localStorage.setItem('usuario_nome', usuarios.nome);
@@ -78,9 +72,14 @@ export default function Login() {
         .select()
         .single();
 
-if (erroConta || !conta) {
-        console.error('Erro Supabase:', erroConta);
-        setErro(`Erro: ${erroConta?.message || 'Email já cadastrado'}`);
+      if (erroConta) {
+        setErro('Email de empresa já cadastrado');
+        setCarregando(false);
+        return;
+      }
+
+      if (!conta) {
+        setErro('Erro ao criar conta');
         setCarregando(false);
         return;
       }
