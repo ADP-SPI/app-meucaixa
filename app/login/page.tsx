@@ -72,7 +72,7 @@ export default function Login() {
         .select()
         .single();
 
-      if (erroConta) {
+      if (erroConta?.message) {
         setErro('Email de empresa já cadastrado');
         setCarregando(false);
         return;
