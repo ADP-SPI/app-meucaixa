@@ -1,3 +1,11 @@
+// Cache busting - força reload se não logado
+if (typeof window !== 'undefined') {
+  const usuarioId = localStorage.getItem('usuario_id');
+  if (!usuarioId && window.location.pathname === '/') {
+    window.location.replace('/login');
+  }
+}
+
 'use client';
 
 import Link from 'next/link';
