@@ -55,19 +55,31 @@ export default function Login() {
         setCarregando(false);
         return;
       }
-
       localStorage.setItem('usuario_id', usuarios.id.toString());
       localStorage.setItem('conta_id', usuarios.conta_id.toString());
       localStorage.setItem('usuario_nome', usuarios.nome);
       localStorage.setItem('tipo_usuario', usuarios.tipo);
+      
+      // Buscar nome da empresa
+      const { data: contaData } = await supabase
+        .from('contas')
+        .select('nome')
+        .eq('id', usuarios.conta_id)
+        .single();
 
+      if (contaData?.nome) {
+        localStorage.setItem('empresa_nome', contaData.nome);
+        document.cookie = `empresa_nome=${contaData.nome}; path=/`;
+      }
+      
       document.cookie = `usuario_id=${usuarios.id}; path=/`;
       document.cookie = `conta_id=${usuarios.conta_id}; path=/`;
       document.cookie = `usuario_nome=${usuarios.nome}; path=/`;
       document.cookie = `tipo_usuario=${usuarios.tipo}; path=/`;
-
+      
       router.push('/dashboard');
     } catch (err) {
+     
       setErro('Erro ao conectar. Tente novamente.');
       console.error(err);
     }

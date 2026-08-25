@@ -25,12 +25,12 @@ export default function Usuarios() {
   const [sucesso, setSucesso] = useState('');
   const [excluindo, setExcluindo] = useState<number | null>(null);
 
-  useEffect(() => {
+useEffect(() => {
     const tipoUsuario = localStorage.getItem('tipo_usuario');
     
     if (tipoUsuario !== 'proprietario') {
       alert('❌ Apenas o proprietário pode gerenciar usuários');
-      window.location.href = '/';
+      router.push('/dashboard');
       return;
     }
   }, []);
@@ -181,9 +181,9 @@ export default function Usuarios() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-2xl">
-        <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
-          ← Voltar
-        </Link>
+          <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
+       ← Voltar
+      </Link>
 
         <h1 className="text-2xl font-bold mb-6">👥 Gerenciar Usuários</h1>
 
