@@ -126,8 +126,10 @@ export default function Planos() {
       } else {
         alert(`✅ Assinatura criada!\n\nAguarde o email com instruções de pagamento.\nPlano: ${planoSelecionado.nome}\nValor: R$ ${planoSelecionado.preco_mensal.toFixed(2)}/mês`);
       }
+       localStorage.setItem('tipo_usuario', 'proprietario');
+       localStorage.setItem('empresa_nome', nomeEmpresa);
 
-      router.push('/');
+    router.push('/login');
     } catch (err) {
       setErro('Erro ao processar assinatura');
       console.error(err);
