@@ -6,6 +6,8 @@ import { useState } from 'react';
 export default function LandingPage() {
   const [email, setEmail] = useState('');
 
+  console.log('Landing Page carregado');
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* HEADER */}
