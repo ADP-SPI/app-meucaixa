@@ -1,15 +1,6 @@
 const CACHE_NAME = 'meucaixa-v1';
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll([
-        '/',
-        '/favicon.ico',
-        '/manifest.json',
-      ]).catch(() => {})
-    })
-  );
   self.skipWaiting();
 });
 
@@ -17,9 +8,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
-        cacheNames
-          .filter((cacheName) => cacheName !== CACHE_NAME)
-          .map((cacheName) => caches.delete(cacheName))
+        cacheNames.map((cacheName) => caches.delete(cacheName))
       );
     })
   );
@@ -27,8 +16,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET') return;
+  // Nunca cachear a home
+  if (event.request.url.endsWith('/') || event.request.url.includes('appmeucaixa.com.br/')) {
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        return new Response('Offline');
+      })
+    );
+    return;
+  }
 
+  // Para outros recursos, usar cache
   event.respondWith(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.match(event.request).then((response) => {
