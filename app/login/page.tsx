@@ -66,7 +66,7 @@ export default function Login() {
       document.cookie = `usuario_nome=${usuarios.nome}; path=/`;
       document.cookie = `tipo_usuario=${usuarios.tipo}; path=/`;
 
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       setErro('Erro ao conectar. Tente novamente.');
       console.error(err);
@@ -134,7 +134,7 @@ export default function Login() {
       document.cookie = `usuario_nome=${usuario.nome}; path=/`;
       document.cookie = `tipo_usuario=proprietario; path=/`;
 
-      router.push('/');
+      router.push('/dashboard');
     } catch (err) {
       setErro('Erro ao cadastrar. Tente novamente.');
       console.error(err);
