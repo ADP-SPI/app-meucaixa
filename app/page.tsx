@@ -2,14 +2,18 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
   const [nomeUsuario, setNomeUsuario] = useState('');
+  const [tipoUsuario, setTipoUsuario] = useState('');
 
- useEffect(() => {
+  useEffect(() => {
     const nome = localStorage.getItem('usuario_nome');
+    const tipo = localStorage.getItem('tipo_usuario');
     setNomeUsuario(nome || 'Usuário');
+    setTipoUsuario(tipo || '');
   }, []);
 
   const handleLogout = () => {
@@ -23,18 +27,30 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
-      <div className="mb-6 flex justify-between items-center">
-          <p className="text-sm text-gray-600">
-            Logado como: <span className="font-bold text-gray-900">{nomeUsuario}</span>
-          </p>
+        <div className="mb-6 flex justify-between items-center">
+          <div>
+            <p className="text-sm text-gray-600">Logado como:</p>
+            <p className="text-lg font-bold text-gray-900">{nomeUsuario}</p>
+            {tipoUsuario === 'proprietario' && (
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">
+                👤 Proprietário
+              </span>
+            )}
+            {tipoUsuario === 'funcionario' && (
+              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mt-1 inline-block">
+                👨‍💼 Funcionário
+              </span>
+            )}
+          </div>
           <button
-            onClick={() => {        
-
+            onClick={handleLogout}
+            className="text-blue-600 hover:underline font-bold"
+          >
             Sair / Trocar Usuário
           </button>
         </div>
 
-        <div className="text-center py-8">
+        <div className="text-center py-8 mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Meu Caixa</h1>
           <p className="text-gray-600 mt-2">Gestão simples do seu negócio</p>
         </div>
@@ -58,9 +74,11 @@ export default function Home() {
           <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
             📊 RELATÓRIOS
           </a>
-          <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-            👥 GERENCIAR USUÁRIOS
-          </a>
+          {tipoUsuario === 'proprietario' && (
+            <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+              👥 GERENCIAR USUÁRIOS
+            </a>
+          )}
         </div>
       </div>
     </div>
