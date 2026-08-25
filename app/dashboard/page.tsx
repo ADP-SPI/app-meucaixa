@@ -1,25 +1,30 @@
 'use client';
 
-import { useEffect } from 'react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
+  const [nomeUsuario, setNomeUsuario] = useState('');
+  const [tipoUsuario, setTipoUsuario] = useState('');
 
   useEffect(() => {
     // Validar sessão IMEDIATAMENTE
     const usuarioId = localStorage.getItem('usuario_id');
     const contaId = localStorage.getItem('conta_id');
-    const nomeUsuario = localStorage.getItem('usuario_nome');
+    const nome = localStorage.getItem('usuario_nome');
+    const tipo = localStorage.getItem('tipo_usuario');
 
-    if (!usuarioId || !contaId || !nomeUsuario) {
+    if (!usuarioId || !contaId || !nome) {
       localStorage.clear();
       sessionStorage.clear();
       router.push('/login');
       return;
     }
 
-    // Renderizar a página
+    setNomeUsuario(nome);
+    setTipoUsuario(tipo || '');
   }, [router]);
 
   return (
@@ -28,7 +33,7 @@ export default function Home() {
         <div className="mb-6 flex justify-between items-center">
           <div>
             <p className="text-sm text-gray-600">Logado como:</p>
-            <p className="text-lg font-bold text-gray-900">{localStorage.getItem('usuario_nome')}</p>
+            <p className="text-lg font-bold text-gray-900">{nomeUsuario}</p>
           </div>
           <button
             onClick={() => {
@@ -66,7 +71,7 @@ export default function Home() {
           <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
             📊 RELATÓRIOS
           </a>
-          {localStorage.getItem('tipo_usuario') === 'proprietario' && (
+          {tipoUsuario === 'proprietario' && (
             <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
               👥 GERENCIAR USUÁRIOS
             </a>
