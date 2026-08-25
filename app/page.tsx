@@ -9,9 +9,27 @@ export default function Home() {
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState('');
 
-  useEffect(() => {
+// Forçar logout se não houver usuario_id válido
+useEffect(() => {
+    const usuarioId = localStorage.getItem('usuario_id');
+    const contaId = localStorage.getItem('conta_id');
+    
+    if (!usuarioId || !contaId) {
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+  }, []);
+
+useEffect(() => {
     const nome = localStorage.getItem('usuario_nome');
     const tipo = localStorage.getItem('tipo_usuario');
+    const usuarioId = localStorage.getItem('usuario_id');
+    
+    if (!usuarioId) {
+      window.location.href = '/login';
+      return;
+    }
+    
     setNomeUsuario(nome || 'Usuário');
     setTipoUsuario(tipo || '');
   }, []);
