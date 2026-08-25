@@ -1,59 +1,26 @@
 'use client';
 
-import Link from 'next/link';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
 
 export default function Home() {
   const router = useRouter();
-  const [nomeUsuario, setNomeUsuario] = useState('');
-  const [tipoUsuario, setTipoUsuario] = useState('');
-  const [validando, setValidando] = useState(true);
 
   useEffect(() => {
-    validarSessao();
-  }, []);
-
-  const validarSessao = () => {
+    // Validar sessão IMEDIATAMENTE
     const usuarioId = localStorage.getItem('usuario_id');
     const contaId = localStorage.getItem('conta_id');
     const nomeUsuario = localStorage.getItem('usuario_nome');
-    const tipoUsuario = localStorage.getItem('tipo_usuario');
 
-    // Se falta algum dado, limpa tudo e vai pro login
     if (!usuarioId || !contaId || !nomeUsuario) {
       localStorage.clear();
       sessionStorage.clear();
-      window.location.replace('/login');
+      router.push('/login');
       return;
     }
 
-    setNomeUsuario(nomeUsuario);
-    setTipoUsuario(tipoUsuario || '');
-    setValidando(false);
-  };
-
-  const handleLogout = () => {
-    // Limpar tudo
-    localStorage.removeItem('usuario_id');
-    localStorage.removeItem('conta_id');
-    localStorage.removeItem('usuario_nome');
-    localStorage.removeItem('tipo_usuario');
-    sessionStorage.clear();
-
-    // Limpar cookies
-    document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    document.cookie = 'conta_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    document.cookie = 'usuario_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    document.cookie = 'tipo_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-
-    // Redirecionar com reload forçado
-     window.location.href = '/login?logout=true';
-  };
-
-  if (validando) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessão...</p></div>;
-  }
+    // Renderizar a página
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
@@ -61,15 +28,14 @@ export default function Home() {
         <div className="mb-6 flex justify-between items-center">
           <div>
             <p className="text-sm text-gray-600">Logado como:</p>
-            <p className="text-lg font-bold text-gray-900">{nomeUsuario}</p>
-            {tipoUsuario === 'proprietario' && (
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">
-                👤 Proprietário
-              </span>
-            )}
+            <p className="text-lg font-bold text-gray-900">{localStorage.getItem('usuario_nome')}</p>
           </div>
           <button
-            onClick={handleLogout}
+            onClick={() => {
+              localStorage.clear();
+              sessionStorage.clear();
+              router.push('/login');
+            }}
             className="text-blue-600 hover:underline font-bold"
           >
             Sair / Trocar Usuário
@@ -100,7 +66,7 @@ export default function Home() {
           <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
             📊 RELATÓRIOS
           </a>
-          {tipoUsuario === 'proprietario' && (
+          {localStorage.getItem('tipo_usuario') === 'proprietario' && (
             <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
               👥 GERENCIAR USUÁRIOS
             </a>
