@@ -46,12 +46,6 @@ export default function RootLayout({
         <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
         <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
         <script dangerouslySetInnerHTML={{__html: `
-          if (typeof window !== 'undefined') {
-            const usuarioId = localStorage.getItem('usuario_id');
-            if (!usuarioId && window.location.pathname === '/') {
-              window.location.replace('/login');
-            }
-          }
         `}} />
       </head>
       <body
