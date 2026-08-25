@@ -45,6 +45,7 @@ export default function Login() {
       localStorage.setItem('usuario_id', usuarios.id.toString());
       localStorage.setItem('conta_id', usuarios.conta_id.toString());
       localStorage.setItem('usuario_nome', usuarios.nome);
+      localStorage.setItem('tipo_usuario', usuarios.tipo);
 
       router.push('/');
     } catch (err) {
@@ -107,6 +108,7 @@ export default function Login() {
       localStorage.setItem('usuario_id', usuario.id.toString());
       localStorage.setItem('conta_id', usuario.conta_id.toString());
       localStorage.setItem('usuario_nome', usuario.nome);
+      localStorage.setItem('tipo_usuario', usuarios.tipo);
 
       router.push('/');
     } catch (err) {

@@ -5,6 +5,12 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
+  const [nomeUsuario, setNomeUsuario] = useState('');
+
+ useEffect(() => {
+    const nome = localStorage.getItem('usuario_nome');
+    setNomeUsuario(nome || 'Usuário');
+  }, []);
 
   const handleLogout = () => {
     document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
@@ -17,11 +23,13 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
-        <div className="mb-6 text-right">
+      <div className="mb-6 flex justify-between items-center">
+          <p className="text-sm text-gray-600">
+            Logado como: <span className="font-bold text-gray-900">{nomeUsuario}</span>
+          </p>
           <button
-            onClick={handleLogout}
-            className="text-blue-600 hover:underline font-bold cursor-pointer"
-          >
+            onClick={() => {        
+
             Sair / Trocar Usuário
           </button>
         </div>

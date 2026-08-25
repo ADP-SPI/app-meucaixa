@@ -22,6 +22,24 @@ export default function Usuarios() {
   const [sucesso, setSucesso] = useState('');
   const [excluindo, setExcluindo] = useState<number | null>(null);
 
+useEffect(() => {
+    const tipoUsuario = localStorage.getItem('tipo_usuario');
+    
+    if (tipoUsuario !== 'proprietario') {
+      alert('❌ Apenas o proprietário pode gerenciar usuários');
+      window.location.href = '/';
+      return;
+    }
+  }, []);
+
+useEffect(() => {
+    const conta = localStorage.getItem('conta_id');
+    if (conta) {
+      setContaId(parseInt(conta));
+      carregarDados(parseInt(conta));
+    }
+  }, []);
+
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
     if (conta) {
