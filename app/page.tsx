@@ -16,12 +16,13 @@ export default function Home() {
     setTipoUsuario(tipo || '');
   }, []);
 
-  const handleLogout = () => {
+const handleLogout = () => {
     document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'conta_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'usuario_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    document.cookie = 'tipo_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     localStorage.clear();
-    router.push('/login');
+    window.location.href = '/login';
   };
 
   return (
