@@ -60,18 +60,22 @@ export default function Login() {
       localStorage.setItem('usuario_nome', usuarios.nome);
       localStorage.setItem('tipo_usuario', usuarios.tipo);
       
-      // Buscar nome da empresa
-      const { data: contaData } = await supabase
+     
+     // Buscar nome da empresa
+      const { data: contaData, error: erroContaData } = await supabase
         .from('contas')
         .select('nome')
         .eq('id', usuarios.conta_id)
         .single();
 
+      console.log('contaData:', contaData);
+      console.log('erroContaData:', erroContaData);
+
       if (contaData?.nome) {
         localStorage.setItem('empresa_nome', contaData.nome);
         document.cookie = `empresa_nome=${contaData.nome}; path=/`;
-      }
-      
+      }    
+  
       document.cookie = `usuario_id=${usuarios.id}; path=/`;
       document.cookie = `conta_id=${usuarios.conta_id}; path=/`;
       document.cookie = `usuario_nome=${usuarios.nome}; path=/`;
