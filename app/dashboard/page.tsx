@@ -8,13 +8,15 @@ export default function Home() {
   const router = useRouter();
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState('');
+  const [nomeEmpresa, setNomeEmpresa] = useState('');
 
-  useEffect(() => {
+useEffect(() => {
     // Validar sessão IMEDIATAMENTE
     const usuarioId = localStorage.getItem('usuario_id');
     const contaId = localStorage.getItem('conta_id');
     const nome = localStorage.getItem('usuario_nome');
     const tipo = localStorage.getItem('tipo_usuario');
+    const empresa = localStorage.getItem('empresa_nome');
 
     if (!usuarioId || !contaId || !nome) {
       localStorage.clear();
@@ -25,16 +27,19 @@ export default function Home() {
 
     setNomeUsuario(nome);
     setTipoUsuario(tipo || '');
+    setNomeEmpresa(empresa || '');
   }, [router]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
-        <div className="mb-6 flex justify-between items-center">
+    <div className="mb-6 flex justify-between items-center">
           <div>
-            <p className="text-sm text-gray-600">Logado como:</p>
-            <p className="text-lg font-bold text-gray-900">{nomeUsuario}</p>
-          </div>
+            <p className="text-sm text-gray-600">Empresa:</p>
+            <p className="text-lg font-bold text-gray-900">{nomeEmpresa}</p>
+            <p className="text-sm text-gray-600 mt-2">Logado como:</p>
+            <p className="text-sm font-bold text-gray-900">{nomeUsuario}</p>        
+        </div>
           <button
             onClick={() => {
               localStorage.clear();
