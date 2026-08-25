@@ -87,8 +87,9 @@ export default function Usuarios() {
     if (!contaId || !plano) return;
 
     // Verificar se atingiu o limite
-    if (usuarios.length >= plano.max_usuarios) {
-      setErro(`Você atingiu o limite de ${plano.max_usuarios} acessos para seu plano`);
+     if (usuarios.length >= plano.max_usuarios) {
+      alert(`Limite atingido! Seu plano permite apenas ${plano.max_usuarios} acesso(s).\n\nFaça upgrade para adicionar mais usuários.`);
+      router.push('/planos');
       return;
     }
 
