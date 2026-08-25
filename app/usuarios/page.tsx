@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -10,11 +11,13 @@ const supabase = createClient(
 );
 
 export default function Usuarios() {
+  const router = useRouter();
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [plano, setPlano] = useState<any>(null);
   const [contaId, setContaId] = useState<number | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
+  const [novoNome, setNovoNome] = useState('');
   const [novoEmail, setNovoEmail] = useState('');
   const [novaSenha, setNovaSenha] = useState('');
   const [processando, setProcessando] = useState(false);
@@ -22,21 +25,13 @@ export default function Usuarios() {
   const [sucesso, setSucesso] = useState('');
   const [excluindo, setExcluindo] = useState<number | null>(null);
 
-useEffect(() => {
+  useEffect(() => {
     const tipoUsuario = localStorage.getItem('tipo_usuario');
     
     if (tipoUsuario !== 'proprietario') {
       alert('❌ Apenas o proprietário pode gerenciar usuários');
       window.location.href = '/';
       return;
-    }
-  }, []);
-
-useEffect(() => {
-    const conta = localStorage.getItem('conta_id');
-    if (conta) {
-      setContaId(parseInt(conta));
-      carregarDados(parseInt(conta));
     }
   }, []);
 
@@ -84,8 +79,8 @@ useEffect(() => {
   };
 
   const adicionarUsuario = async () => {
-    if (!novoEmail.trim() || !novaSenha.trim()) {
-      setErro('Preencha email e senha');
+    if (!novoNome.trim() || !novoEmail.trim() || !novaSenha.trim()) {
+      setErro('Preencha nome, email e senha');
       return;
     }
 
@@ -122,7 +117,7 @@ useEffect(() => {
           conta_id: contaId,
           email: novoEmail,
           senha_hash: novaSenha,
-          nome: novoEmail.split('@')[0],
+          nome: novoNome,
           tipo: 'funcionario',
           ativo: true
         }]);
@@ -133,7 +128,8 @@ useEffect(() => {
         return;
       }
 
-      setSucesso(`✅ Usuário ${novoEmail} criado com sucesso!`);
+      setSucesso(`✅ Usuário ${novoNome} criado com sucesso!`);
+      setNovoNome('');
       setNovoEmail('');
       setNovaSenha('');
       setModalAberto(false);
@@ -225,10 +221,11 @@ useEffect(() => {
               {usuarios.map((user) => (
                 <div key={user.id} className="flex justify-between items-center bg-gray-50 p-4 rounded border border-gray-200">
                   <div className="flex-1">
-                    <p className="font-bold">{user.email}</p>
-                    <p className="text-sm text-gray-600">
-                      {user.tipo === 'proprietario' ? '👤 Proprietário (você)' : '👨‍💼 Funcionário'}
-                    </p>
+                    <p className="font-bold">{user.nome}</p>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                    {user.tipo === 'proprietario' && (
+                      <p className="text-xs text-blue-600 mt-1">👤 Proprietário</p>
+                    )}
                   </div>
 
                   {user.tipo !== 'proprietario' && (
@@ -236,7 +233,7 @@ useEffect(() => {
                       {excluindo === user.id ? (
                         <div className="flex gap-2">
                           <button
-                            onClick={() => removerUsuario(user.id, user.email)}
+                            onClick={() => removerUsuario(user.id, user.nome)}
                             className="bg-red-600 text-white px-3 py-2 rounded text-sm hover:bg-red-700"
                           >
                             Confirmar
@@ -288,7 +285,18 @@ useEffect(() => {
 
               <div className="space-y-4 mb-6">
                 <div>
-                  <label className="block text-sm font-bold mb-2">Email do Funcionário</label>
+                  <label className="block text-sm font-bold mb-2">Nome</label>
+                  <input
+                    type="text"
+                    value={novoNome}
+                    onChange={(e) => setNovoNome(e.target.value)}
+                    placeholder="Ex: Carlos"
+                    className="w-full border border-gray-300 p-2 rounded"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold mb-2">Email</label>
                   <input
                     type="email"
                     value={novoEmail}
@@ -322,6 +330,7 @@ useEffect(() => {
                 <button
                   onClick={() => {
                     setModalAberto(false);
+                    setNovoNome('');
                     setNovoEmail('');
                     setNovaSenha('');
                   }}
