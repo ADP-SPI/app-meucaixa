@@ -10,28 +10,30 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%2316a34a' width='192' height='192'/><text x='50%' y='50%' font-size='80' fill='white' text-anchor='middle' dy='.3em' font-weight='bold'>MC</text></svg>",
       "sizes": "192x192",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icon-512.png",
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%2316a34a' width='512' height='512'/><text x='50%' y='50%' font-size='250' fill='white' text-anchor='middle' dy='.3em' font-weight='bold'>MC</text></svg>",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/svg+xml",
       "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23f3f4f6' width='540' height='720'/><rect fill='%2316a34a' width='540' height='100'/><text x='270' y='60' font-size='40' fill='white' text-anchor='middle' dy='.3em' font-weight='bold'>Meu Caixa</text><text x='270' y='400' font-size='30' fill='%23374151' text-anchor='middle'>Gestão simples</text><text x='270' y='450' font-size='30' fill='%23374151' text-anchor='middle'>do seu negócio</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
     },
     {
-      "src": "/icon-maskable-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'><rect fill='%23f3f4f6' width='1280' height='720'/><rect fill='%2316a34a' width='1280' height='100'/><text x='640' y='60' font-size='50' fill='white' text-anchor='middle' dy='.3em' font-weight='bold'>Meu Caixa</text><text x='640' y='400' font-size='40' fill='%23374151' text-anchor='middle'>Gestão simples do seu negócio</text></svg>",
+      "sizes": "1280x720",
+      "type": "image/svg+xml",
+      "form_factor": "wide"
     }
   ]
 }
