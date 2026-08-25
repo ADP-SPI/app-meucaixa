@@ -1,11 +1,3 @@
-// Cache busting - força reload se não logado
-if (typeof window !== 'undefined') {
-  const usuarioId = localStorage.getItem('usuario_id');
-  if (!usuarioId && window.location.pathname === '/') {
-    window.location.replace('/login');
-  }
-}
-
 'use client';
 
 import Link from 'next/link';
@@ -16,40 +8,52 @@ export default function Home() {
   const router = useRouter();
   const [nomeUsuario, setNomeUsuario] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState('');
+  const [validando, setValidando] = useState(true);
 
-// Forçar logout se não houver usuario_id válido
-useEffect(() => {
+  useEffect(() => {
+    validarSessao();
+  }, []);
+
+  const validarSessao = () => {
     const usuarioId = localStorage.getItem('usuario_id');
     const contaId = localStorage.getItem('conta_id');
-    
-    if (!usuarioId || !contaId) {
-      localStorage.clear();
-      window.location.href = '/login';
-    }
-  }, []);
+    const nomeUsuario = localStorage.getItem('usuario_nome');
+    const tipoUsuario = localStorage.getItem('tipo_usuario');
 
-useEffect(() => {
-    const nome = localStorage.getItem('usuario_nome');
-    const tipo = localStorage.getItem('tipo_usuario');
-    const usuarioId = localStorage.getItem('usuario_id');
-    
-    if (!usuarioId) {
-      window.location.href = '/login';
+    // Se falta algum dado, limpa tudo e vai pro login
+    if (!usuarioId || !contaId || !nomeUsuario) {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.replace('/login');
       return;
     }
-    
-    setNomeUsuario(nome || 'Usuário');
-    setTipoUsuario(tipo || '');
-  }, []);
 
-const handleLogout = () => {
+    setNomeUsuario(nomeUsuario);
+    setTipoUsuario(tipoUsuario || '');
+    setValidando(false);
+  };
+
+  const handleLogout = () => {
+    // Limpar tudo
+    localStorage.removeItem('usuario_id');
+    localStorage.removeItem('conta_id');
+    localStorage.removeItem('usuario_nome');
+    localStorage.removeItem('tipo_usuario');
+    sessionStorage.clear();
+
+    // Limpar cookies
     document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'conta_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'usuario_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'tipo_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    localStorage.clear();
-    window.location.href = '/login';
+
+    // Redirecionar com reload forçado
+    window.location.replace('/login?logout=true');
   };
+
+  if (validando) {
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessão...</p></div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
@@ -61,11 +65,6 @@ const handleLogout = () => {
             {tipoUsuario === 'proprietario' && (
               <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">
                 👤 Proprietário
-              </span>
-            )}
-            {tipoUsuario === 'funcionario' && (
-              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded mt-1 inline-block">
-                👨‍💼 Funcionário
               </span>
             )}
           </div>
