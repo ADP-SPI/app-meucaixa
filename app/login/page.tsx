@@ -55,11 +55,15 @@ export default function Login() {
         setCarregando(false);
         return;
       }
+   console.log('Login bem-sucedido, usuario_id:', usuarios.id);
+      console.log('conta_id:', usuarios.conta_id);
+   
       localStorage.setItem('usuario_id', usuarios.id.toString());
       localStorage.setItem('conta_id', usuarios.conta_id.toString());
       localStorage.setItem('usuario_nome', usuarios.nome);
       localStorage.setItem('tipo_usuario', usuarios.tipo);
-      
+      console.log('Antes de buscar empresa_nome');      
+
      
      // Buscar nome da empresa
       const { data: contaData, error: erroContaData } = await supabase
