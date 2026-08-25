@@ -48,7 +48,7 @@ export default function Home() {
     document.cookie = 'tipo_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
 
     // Redirecionar com reload forçado
-    window.location.replace('/login?logout=true');
+     window.location.href = '/login?logout=true';
   };
 
   if (validando) {
