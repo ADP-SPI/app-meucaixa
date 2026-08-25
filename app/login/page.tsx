@@ -26,7 +26,7 @@ export default function Login() {
     try {
       const { data: usuarios, error: erroUsuario } = await supabase
         .from('usuarios')
-        .select('id, conta_id, senha_hash, nome')
+        .select('id, conta_id, senha_hash, nome, tipo')
         .eq('email', email)
         .single();
 
@@ -46,6 +46,11 @@ export default function Login() {
       localStorage.setItem('conta_id', usuarios.conta_id.toString());
       localStorage.setItem('usuario_nome', usuarios.nome);
       localStorage.setItem('tipo_usuario', usuarios.tipo);
+
+      document.cookie = `usuario_id=${usuarios.id}; path=/`;
+      document.cookie = `conta_id=${usuarios.conta_id}; path=/`;
+      document.cookie = `usuario_nome=${usuarios.nome}; path=/`;
+      document.cookie = `tipo_usuario=${usuarios.tipo}; path=/`;
 
       router.push('/');
     } catch (err) {
@@ -73,7 +78,7 @@ export default function Login() {
         .select()
         .single();
 
-      if (erroConta?.message) {
+      if (erroConta) {
         setErro('Email de empresa já cadastrado');
         setCarregando(false);
         return;
@@ -108,7 +113,12 @@ export default function Login() {
       localStorage.setItem('usuario_id', usuario.id.toString());
       localStorage.setItem('conta_id', usuario.conta_id.toString());
       localStorage.setItem('usuario_nome', usuario.nome);
-      localStorage.setItem('tipo_usuario', usuarios.tipo);
+      localStorage.setItem('tipo_usuario', 'proprietario');
+
+      document.cookie = `usuario_id=${usuario.id}; path=/`;
+      document.cookie = `conta_id=${usuario.conta_id}; path=/`;
+      document.cookie = `usuario_nome=${usuario.nome}; path=/`;
+      document.cookie = `tipo_usuario=proprietario; path=/`;
 
       router.push('/');
     } catch (err) {
