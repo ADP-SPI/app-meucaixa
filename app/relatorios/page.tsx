@@ -88,7 +88,10 @@ useEffect(() => {
             <label className="block text-sm font-bold mb-2">Tipo de Operação</label>
             <select
               value={filtroOperacao}
-              onChange={(e) => setFiltroOperacao(e.target.value)}
+           onChange={(e) => {
+             setFiltroOperacao(e.target.value);
+             setFiltroAplicado(false);
+             }}              
               className="w-full border border-gray-300 p-2 rounded"
             >
               <option value="ambos">Receitas e Despesas</option>
@@ -101,8 +104,11 @@ useEffect(() => {
             <label className="block text-sm font-bold mb-2">Forma de Pagamento</label>
             <select
               value={filtroTipo}
-              onChange={(e) => setFiltroTipo(e.target.value)}
-              className="w-full border border-gray-300 p-2 rounded"
+              onChange={(e) => {
+                   setFiltroTipo(e.target.value);
+                   setFiltroAplicado(false);
+                 }}
+  className="w-full border border-gray-300 p-2 rounded"
             >
               <option value="">Todas</option>
               <option value="PIX">PIX</option>
@@ -117,8 +123,12 @@ useEffect(() => {
             <input
               type="date"
               value={dataInicio}
-              onChange={(e) => setDataInicio(e.target.value)}
-              className="w-full border border-gray-300 p-2 rounded"
+               onChange={(e) => {
+                setDataInicio(e.target.value);
+                setFiltroAplicado(false);
+               }}
+              
+className="w-full border border-gray-300 p-2 rounded"
             />
           </div>
 
@@ -127,7 +137,10 @@ useEffect(() => {
             <input
               type="date"
               value={dataFim}
-              onChange={(e) => setDataFim(e.target.value)}
+              onChange={(e) => {
+                 setFiltroOperacao(e.target.value);
+                 setFiltroAplicado(false);
+                }}
               className="w-full border border-gray-300 p-2 rounded"
             />
           </div>
