@@ -90,17 +90,27 @@ export default function Caixa() {
   };
 
 
-const confirmarExclusao = async (id: number) => {
-    if (!contaId) return;
-
+  const confirmarExclusao = async (id: number) => {
+    if (!contaId) {
+      console.log('Erro: contaId não está definido');
+      return;
+    }
+    
     try {
+      console.log('Iniciando exclusão de ID:', id);
+      
       const transacao = transacoes.find(t => t.id === id);
-      if (!transacao) return;
-
+      if (!transacao) {
+        console.log('Transação não encontrada');
+        return;
+      }
+      
+      console.log('Transação encontrada:', transacao);
+      
       // Se era Fiado pago, retorna como FIADO
       if (transacao.origin === 'fiado_pago') {
-        // Inserir novamente como FIADO (sem origem, pra aparecer como fiado original)
-        await supabase
+        console.log('Restaurando fiado...');
+        const { error: erroFiado } = await supabase
           .from('transacoes')
           .insert([{
             conta_id: contaId,
@@ -112,11 +122,13 @@ const confirmarExclusao = async (id: number) => {
             data: new Date().toISOString().split('T')[0],
             created_at: new Date().toISOString()
           }]);
+        if (erroFiado) console.error('Erro ao restaurar fiado:', erroFiado);
       }
-
+      
       // Se era Comanda, retorna com itens
       if (transacao.origin === 'comanda') {
-        await supabase
+        console.log('Restaurando comanda...');
+        const { error: erroComanda } = await supabase
           .from('comandas')
           .insert([{
             conta_id: contaId,
@@ -126,19 +138,27 @@ const confirmarExclusao = async (id: number) => {
             hora: new Date().toLocaleTimeString('pt-BR'),
             created_at: new Date().toISOString()
           }]);
+        if (erroComanda) console.error('Erro ao restaurar comanda:', erroComanda);
       }
-
+      
       // Deletar do caixa
-      await supabase
+      console.log('Deletando do caixa...');
+      const { error: erroDelete } = await supabase
         .from('transacoes')
         .delete()
         .eq('id', id)
         .eq('conta_id', contaId);
-
-      carregarTransacoes(contaId);
+      
+      if (erroDelete) {
+        console.error('Erro ao deletar:', erroDelete);
+        throw erroDelete;
+      }
+      
+      console.log('Exclusão bem-sucedida!');
       setExcluindoId(null);
+      carregarTransacoes(contaId);
     } catch (err) {
-      console.error('Erro ao excluir:', err);
+      console.error('Erro completo:', err);
       alert('Erro ao excluir transação');
     }
   };
