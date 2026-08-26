@@ -72,13 +72,18 @@ export default function Caixa() {
 
       if (error) throw error;
 
-      setNomeCliente('');
+     setNomeCliente('');
       setValor('');
       setformapagamento('PIX');
       setTipoOperacao('receita');
       
-      carregarTransacoes(contaId);
-    } catch (err) {
+      // Recarrega as transações imediatamente
+      setTimeout(() => {
+        if (contaId) {
+          carregarTransacoes(contaId);
+        }
+      }, 500);   
+ } catch (err) {
       console.error('Erro ao adicionar transação:', err);
       alert('Erro ao registrar transação');
     }
