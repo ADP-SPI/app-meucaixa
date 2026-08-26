@@ -71,13 +71,14 @@ export default function PlanosPage() {
         }])
         .select()
         .single();
-
+ 
       if (erroConta || !conta) {
-        setErro('Email ou empresa já cadastrada');
+        console.log('Erro ao criar conta:', erroConta);
+        setErro(erroConta?.message || 'Email ou empresa já cadastrada');
         setCarregando(false);
         return;
       }
-
+     
       // 2. Criar usuário
       const { data: usuario, error: erroUsuario } = await supabase
         .from('usuarios')
@@ -163,7 +164,7 @@ export default function PlanosPage() {
               <div className="text-3xl font-bold text-green-600 mb-6">
                 R$ {plano.preco.toFixed(2)}<span className="text-sm">/mês</span>
               </div>
-              <ul className="space-y-2 text-gray-700 mb-6">
+            <ul className="space-y-2 text-gray-700 mb-6">
                 <li>✓ {plano.usuarios} acesso{plano.usuarios > 1 ? 's' : ''}</li>
                 <li>✓ {plano.itens} itens cardápio</li>
                 <li>✓ {plano.mesas} mesas/comandas</li>
@@ -206,11 +207,18 @@ export default function PlanosPage() {
                 </div>
               )}
 
-              <p className="text-gray-600 mb-4">{plano.descricao}</p>
-              <ul className="space-y-2 text-gray-700 mb-6">
-                <li>✓ {plano.usuarios} acesso{plano.usuarios > 1 ? 's' : ''}</li>
-                <li>✓ Caixa + Relatórios</li>
-              </ul>
+              {plano.tipo === 'pessoal' ? (
+                <p className="text-gray-600 mb-6">{plano.descricao}</p>
+              ) : (
+                <>
+                  <p className="text-gray-600 mb-4">{plano.descricao}</p>
+                  <ul className="space-y-2 text-gray-700 mb-6">
+                    <li>✓ {plano.usuarios} acesso{plano.usuarios > 1 ? 's' : ''}</li>
+                    <li>✓ {plano.itens} itens cardápio</li>
+                    <li>✓ {plano.mesas} mesas/comandas</li>
+                  </ul>
+                </>
+              )}
               <button
                 onClick={() => handleSelecionarPlano(plano)}
                 className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700"
