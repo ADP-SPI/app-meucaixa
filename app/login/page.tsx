@@ -244,21 +244,14 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 mb-3">
-              {modo === 'login' ? 'Não tem conta?' : 'Já tem conta?'}
-            </p>
-            <button
-              onClick={() => {
-                setModo(modo === 'login' ? 'cadastro' : 'login');
-                setErro('');
-              }}
-              className="text-blue-600 hover:underline font-bold"
-            >
-              {modo === 'login' ? 'CADASTRAR' : 'ENTRAR'}
-            </button>
-          </div>
-        </div>
+          
+	</form>
+
+          <p className="text-center text-xs text-gray-600 mt-4">
+            Não tem conta? <Link href="/planos" className="text-blue-600 hover:underline">Contrate um plano aqui</Link>
+          </p>
+        </div>       
+       </div>
       </div>
     </div>
   );
