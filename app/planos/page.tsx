@@ -71,7 +71,9 @@ export default function PlanosPage() {
         }])
         .select()
         .single();
- 
+      console.log('Response:', { data: conta, error: erroConta }); 
+
+
       if (erroConta || !conta) {
         console.log('Erro ao criar conta:', erroConta);
         setErro(erroConta?.message || 'Email ou empresa já cadastrada');
