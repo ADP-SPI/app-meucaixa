@@ -138,15 +138,16 @@ export default function PlanosPage() {
           ← Voltar
         </Link>
 
-        <div className="text-center mb-12">
+         <div className="text-center mb-12">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Escolha o Plano Ideal</h1>
           <p className="text-gray-600">15 dias de teste grátis. Sem cartão de crédito.</p>
         </div>
 
-        {/* PLANOS EMPRESARIAIS */}
+        {/* TÍTULO PLANOS EMPRESARIAIS */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">PLANOS EMPRESARIAIS</h2>
+       
+      {/* PLANOS EMPRESARIAIS */}
         <div className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">PLANOS EMPRESARIAIS</h2>
-          
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             {planos.filter(p => p.tipo === 'empresa').map((plano) => (
               <div
@@ -179,17 +180,19 @@ export default function PlanosPage() {
           </div>
         </div>
 
-        {/* DIVISÓRIA */}
+             {/* DIVISÓRIA */}
         <div className="flex items-center gap-4 my-12">
           <div className="flex-1 h-px bg-gray-300"></div>
-          <span className="text-gray-600 font-semibold">PLANOS PARA USO PESSOAL</span>
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
+        {/* TÍTULO PLANOS PESSOAIS */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">PLANOS PARA USO PESSOAL</h2>
+
         {/* PLANOS PESSOAIS */}
         <div className="mb-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            {planos.filter(p => p.tipo === 'pessoal').map((plano) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 max-w-2xl mx-auto">              
+              {planos.filter(p => p.tipo === 'pessoal').map((plano) => (
               <div
                 key={plano.id}
                 onClick={() => setPlanoSelecionado(plano)}
