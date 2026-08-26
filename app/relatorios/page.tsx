@@ -16,6 +16,7 @@ export default function Relatorios() {
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [contaId, setContaId] = useState<number | null>(null);
+  const [filtroAplicado, setFiltroAplicado] = useState(false);
 
 useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -24,11 +25,6 @@ useEffect(() => {
     }
   }, []);
 
-  useEffect(() => {
-    if (contaId) {
-      carregarTransacoes();
-    }
-  }, [contaId]);
 
    const carregarTransacoes = async () => {
     if (!contaId) return;
@@ -49,14 +45,14 @@ useEffect(() => {
     }
   }; 
 
-  const transacoesFiltradas = transacoes.filter((t) => {
+   const transacoesFiltradas = filtroAplicado ? transacoes.filter((t) => {
     if (filtroTipo && t.formaPagamento !== filtroTipo) return false;
     if (dataInicio && t.data < dataInicio) return false;
     if (dataFim && t.data > dataFim) return false;
     if (filtroOperacao === 'receita' && t.tipo !== 'receita') return false;
     if (filtroOperacao === 'despesa' && t.tipo !== 'despesa') return false;
     return true;
-  });
+  }) : [];  
 
   const calcularTotal = () => {
     return transacoesFiltradas.reduce((sum, t) => sum + (t.tipo === 'despesa' ? -(parseFloat(t.valor) || 0) : (parseFloat(t.valor) || 0)), 0).toFixed(2);
@@ -129,11 +125,14 @@ useEffect(() => {
           </div>
 
           <button
-            onClick={carregarTransacoes}
+            onClick={() => {
+              carregarTransacoes();
+              setFiltroAplicado(true);
+            }}
             className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700"
           >
             FILTRAR
-          </button>
+          </button>       
         </div>
 
         {/* TOTAL FILTRADO */}
