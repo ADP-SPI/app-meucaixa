@@ -6,9 +6,11 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const router = useRouter();
-  const [nomeUsuario, setNomeUsuario] = useState('');
+  
+const [nomeUsuario, setNomeUsuario] = useState('');
   const [tipoUsuario, setTipoUsuario] = useState('');
   const [nomeEmpresa, setNomeEmpresa] = useState('');
+  const [contaId, setContaId] = useState('');
 
 useEffect(() => {
     // Validar sessão IMEDIATAMENTE
@@ -28,7 +30,9 @@ useEffect(() => {
     setNomeUsuario(nome);
     setTipoUsuario(tipo || '');
     setNomeEmpresa(empresa || '');
-  }, [router]);
+    const cId = localStorage.getItem('conta_id');
+    setContaId(cId || '');
+ }, [router]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
