@@ -75,8 +75,13 @@ useEffect(() => {
           </a>
           <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
             📊 RELATÓRIOS
-          </a>
-          {tipoUsuario === 'proprietario' && (
+          </a>   
+             {contaId === '4' && (
+            <a href="/admin" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+              🔧 ADMIN
+            </a>
+          )}
+               {tipoUsuario === 'proprietario' && (
             <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
               👥 GERENCIAR USUÁRIOS
             </a>
