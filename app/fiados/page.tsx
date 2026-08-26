@@ -80,7 +80,7 @@ export default function Fiados() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
-        <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
+        <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
           ← Voltar
         </Link>
 
