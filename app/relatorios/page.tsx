@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(
+  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
+  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
+);
 
 export default function Relatorios() {
   const [transacoes, setTransacoes] = useState<any[]>([]);
@@ -9,21 +15,39 @@ export default function Relatorios() {
   const [filtroOperacao, setFiltroOperacao] = useState('ambos');
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
+  const [contaId, setContaId] = useState<number | null>(null);
 
-  useEffect(() => {
-    carregarTransacoes();
+useEffect(() => {
+    const conta = localStorage.getItem('conta_id');
+    if (conta) {
+      setContaId(parseInt(conta));
+    }
   }, []);
 
-  const carregarTransacoes = () => {
+  useEffect(() => {
+    if (contaId) {
+      carregarTransacoes();
+    }
+  }, [contaId]);
+
+   const carregarTransacoes = async () => {
+    if (!contaId) return;
+    
     try {
-      const data = JSON.parse(localStorage.getItem('transacoes') || '[]');
-      if (Array.isArray(data)) {
-        setTransacoes(data.filter(t => t && t.valor !== undefined).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-      }
-    } catch (e) {
+      const { data, error } = await supabase
+        .from('transacoes')
+        .select('*')
+        .eq('conta_id', contaId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      
+      setTransacoes(data || []);
+    } catch (err) {
+      console.error('Erro ao carregar transações:', err);
       setTransacoes([]);
     }
-  };
+  }; 
 
   const transacoesFiltradas = transacoes.filter((t) => {
     if (filtroTipo && t.formaPagamento !== filtroTipo) return false;
