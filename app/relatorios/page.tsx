@@ -45,14 +45,22 @@ useEffect(() => {
     }
   }; 
 
-   const transacoesFiltradas = filtroAplicado ? transacoes.filter((t) => {
-    if (filtroTipo && t.formaPagamento !== filtroTipo) return false;
-    if (dataInicio && t.data < dataInicio) return false;
-    if (dataFim && t.data > dataFim) return false;
+    const transacoesFiltradas = filtroAplicado ? transacoes.filter((t) => {
+    // Filtro de Tipo de Operação
     if (filtroOperacao === 'receita' && t.tipo !== 'receita') return false;
     if (filtroOperacao === 'despesa' && t.tipo !== 'despesa') return false;
+    
+    // Filtro de Forma de Pagamento
+    if (filtroTipo && filtroTipo !== '' && t.formapagamento !== filtroTipo) return false;
+    
+    // Filtro de Data Início
+    if (dataInicio && t.data < dataInicio) return false;
+    
+    // Filtro de Data Fim
+    if (dataFim && t.data > dataFim) return false;
+    
     return true;
-  }) : [];  
+  }) : [];    
 
   const calcularTotal = () => {
     return transacoesFiltradas.reduce((sum, t) => sum + (t.tipo === 'despesa' ? -(parseFloat(t.valor) || 0) : (parseFloat(t.valor) || 0)), 0).toFixed(2);
