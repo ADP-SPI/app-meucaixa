@@ -97,7 +97,7 @@ const params = new URLSearchParams(window.location.search);
       console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
       
       // Atualiza device_id no Supabase
-      const { error: erroDevice } = await getsupabase
+      const { error: erroDevice } = await getSupabase()
         .from('usuarios')
         .update({ device_id: deviceId })
         .eq('id', usuarios.id);
