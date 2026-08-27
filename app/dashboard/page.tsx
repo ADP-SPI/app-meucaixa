@@ -14,14 +14,18 @@ export default function Dashboard() {
   const [validando, setValidando] = useState(true);
 
   useEffect(() => {
+    const usuarioId = localStorage.getItem('usuario_id');
+    
     validarSessao();
     
-    // Verifica a cada 5 segundos se device_id mudou
-    const interval = setInterval(() => {
-      verificarDeviceChange();
-    }, 5000);
-    
-    return () => clearInterval(interval);
+    // Só verifica device se estiver logado
+    if (usuarioId) {
+      const interval = setInterval(() => {
+        verificarDeviceChange();
+      }, 5000);
+      
+      return () => clearInterval(interval);
+    }
   }, []);
 
   const verificarDeviceChange = async () => {
