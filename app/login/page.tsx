@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
 // Gera device_id único pra cada dispositivo
-const gerarDeviceId = () => {
+  const gerarDeviceId = () => {
+  if (typeof window === 'undefined') return 'server_' + Date.now();
+  
   let deviceId = localStorage.getItem('device_id');
   if (!deviceId) {
     deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();

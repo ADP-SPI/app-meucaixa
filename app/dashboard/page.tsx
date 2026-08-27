@@ -34,7 +34,7 @@ export default function Dashboard() {
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('device_id')
-        .eq('id', usuarioId)
+        .eq('id', parseInt(usuarioId))        
         .single();
       
       // Se device_id mudou no banco, desconecta
