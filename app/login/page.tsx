@@ -84,15 +84,18 @@ const params = new URLSearchParams(window.location.search);
       localStorage.setItem('empresa_nome', conta?.nome || '');
 
       // Gera device_id
-      const deviceId = gerarDeviceId();
+      const deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+      localStorage.setItem('device_id', deviceId);
+      
+      console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
       
       // Atualiza device_id no Supabase
-      await supabase
+      const { error: erroDevice } = await supabase
         .from('usuarios')
         .update({ device_id: deviceId })
         .eq('id', usuarios.id);
-
-      localStorage.setItem('device_id', deviceId);
+      
+      console.log('Erro ao salvar device_id:', erroDevice);  
 
       router.push('/dashboard');
     } catch (err) {
