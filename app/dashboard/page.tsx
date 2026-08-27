@@ -15,7 +15,37 @@ export default function Dashboard() {
 
   useEffect(() => {
     validarSessao();
+    
+    // Verifica a cada 5 segundos se device_id mudou
+    const interval = setInterval(() => {
+      verificarDeviceChange();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
+
+  const verificarDeviceChange = async () => {
+    const usuarioId = localStorage.getItem('usuario_id');
+    const deviceIdLocal = localStorage.getItem('device_id');
+    
+    if (!usuarioId) return;
+    
+    try {
+      const { data: usuario } = await supabase
+        .from('usuarios')
+        .select('device_id')
+        .eq('id', usuarioId)
+        .single();
+      
+      // Se device_id mudou no banco, desconecta
+      if (usuario?.device_id && usuario.device_id !== deviceIdLocal) {
+        localStorage.clear();
+        router.push('/login?logado_outro_dispositivo=true');
+      }
+    } catch (err) {
+      console.error('Erro ao verificar device:', err);
+    }
+  };
 
   const validarSessao = () => {
     const usuarioId = localStorage.getItem('usuario_id');

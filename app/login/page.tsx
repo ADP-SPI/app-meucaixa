@@ -5,6 +5,16 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
+// Gera device_id único pra cada dispositivo
+const gerarDeviceId = () => {
+  let deviceId = localStorage.getItem('device_id');
+  if (!deviceId) {
+    deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    localStorage.setItem('device_id', deviceId);
+  }
+  return deviceId;
+};
+
 const supabase = createClient(
   'https://rbocrgnmsadkbfoqbzpe.supabase.co',
   'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
@@ -16,6 +26,28 @@ export default function LoginPage() {
   const [senha, setSenha] = useState('');
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
+
+const params = new URLSearchParams(window.location.search);
+  const logadoOutro = params.get('logado_outro_dispositivo');
+
+  if (logadoOutro) {
+    return (
+      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-md text-center">
+          <h1 className="text-2xl font-bold text-blue-600 mb-4">⚠️ Nova Sessão Iniciada</h1>
+          <p className="text-gray-700 mb-6">
+            Você foi desconectado porque fez login em outro dispositivo.
+          </p>
+          <Link
+            href="/login"
+            className="inline-block bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
+          >
+            ✓ Fazer Login Novamente
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +80,17 @@ export default function LoginPage() {
       localStorage.setItem('usuario_nome', usuarios.nome);
       localStorage.setItem('tipo_usuario', usuarios.tipo);
       localStorage.setItem('empresa_nome', conta?.nome || '');
+
+      // Gera device_id
+      const deviceId = gerarDeviceId();
+      
+      // Atualiza device_id no Supabase
+      await supabase
+        .from('usuarios')
+        .update({ device_id: deviceId })
+        .eq('id', usuarios.id);
+
+      localStorage.setItem('device_id', deviceId);
 
       router.push('/dashboard');
     } catch (err) {
