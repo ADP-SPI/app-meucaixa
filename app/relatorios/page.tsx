@@ -137,13 +137,13 @@ className="w-full border border-gray-300 p-2 rounded"
             <input
               type="date"
               value={dataFim}
-              onChange={(e) => {
-                 setFiltroOperacao(e.target.value);
-                 setFiltroAplicado(false);
-                }}
-              className="w-full border border-gray-300 p-2 rounded"
-            />
-          </div>
+      	       onChange={(e) => {
+                setDataFim(e.target.value);
+                setFiltroAplicado(false);
+               }}
+  className="w-full border border-gray-300 p-2 rounded"
+/>          
+</div>
 
           <button
             onClick={() => {
