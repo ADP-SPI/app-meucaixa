@@ -163,9 +163,20 @@ export default function Caixa() {
     }
   };
 
+    const [transacoesHoje, setTransacoesHoje] = useState<any[]>([]);
 
-  const hoje = new Date().toISOString().split('T')[0];
-  const transacoesHoje = transacoes.filter(t => t && t.data === hoje);
+useEffect(() => {
+  if (transacoes.length > 0) {
+    const agora = new Date();
+    const dataHojeSP = new Date(agora.getTime() - (3 * 60 * 60 * 1000));
+    const hoje = dataHojeSP.toISOString().split('T')[0];
+    
+    const filtradas = transacoes.filter(t => t && t.data === hoje);
+    setTransacoesHoje(filtradas);
+  } else {
+    setTransacoesHoje([]);
+  }
+}, [transacoes]);
 
   const receitas = transacoesHoje.filter(t => t.tipo === 'receita' && t.formapagamento !== 'FIADO');
   const despesas = transacoesHoje.filter(t => t.tipo === 'despesa');
