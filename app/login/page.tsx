@@ -5,8 +5,14 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
+// ✅ UMA ÚNICA instância global do Supabase
+const supabase = createClient(
+  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
+  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
+);
+
 // Gera device_id único pra cada dispositivo
-  const gerarDeviceId = () => {
+const gerarDeviceId = () => {
   if (typeof window === 'undefined') return 'server_' + Date.now();
   
   let deviceId = localStorage.getItem('device_id');
@@ -17,18 +23,6 @@ import { createClient } from '@supabase/supabase-js';
   return deviceId;
 };
 
-let supabase: any = null;
-
-const getSupabase = () => {
-  if (!supabase) {
-    supabase = createClient(
-      'https://rbocrgnmsadkbfoqbzpe.supabase.co',
-      'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
-    );
-  }
-  return supabase;
-};
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -36,7 +30,8 @@ export default function LoginPage() {
   const [carregando, setCarregando] = useState(false);
   const [erro, setErro] = useState('');
 
-const params = new URLSearchParams(window.location.search);
+  // Detecta se foi desconectado por novo login
+  const params = new URLSearchParams(window.location.search);
   const logadoOutro = params.get('logado_outro_dispositivo');
 
   if (logadoOutro) {
@@ -64,7 +59,7 @@ const params = new URLSearchParams(window.location.search);
     setErro('');
 
     try {
-      const { data: usuarios, error: erroLogin } = await getsupabase
+      const { data: usuarios, error: erroLogin } = await supabase
         .from('usuarios')
         .select('id, conta_id, email, nome, tipo')
         .eq('email', email)
@@ -78,12 +73,13 @@ const params = new URLSearchParams(window.location.search);
       }
 
       // Buscar nome da empresa
-      const { data: conta } = await getsupabase
+      const { data: conta } = await supabase
         .from('contas')
         .select('nome, whatsapp')
         .eq('id', usuarios.conta_id)
         .single();
 
+      // Salvar dados básicos
       localStorage.setItem('usuario_id', usuarios.id.toString());
       localStorage.setItem('conta_id', usuarios.conta_id.toString());
       localStorage.setItem('usuario_nome', usuarios.nome);
@@ -93,16 +89,16 @@ const params = new URLSearchParams(window.location.search);
       // Gera device_id
       const deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
       localStorage.setItem('device_id', deviceId);
-      
+
       console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
-      
+
       // Atualiza device_id no Supabase
-      const { error: erroDevice } = await getSupabase()
+      const { error: erroDevice } = await supabase
         .from('usuarios')
         .update({ device_id: deviceId })
         .eq('id', usuarios.id);
-      
-      console.log('Erro ao salvar device_id:', erroDevice);  
+
+      console.log('Erro ao salvar device_id:', erroDevice);
 
       router.push('/dashboard');
     } catch (err) {
