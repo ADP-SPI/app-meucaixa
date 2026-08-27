@@ -17,10 +17,17 @@ import { createClient } from '@supabase/supabase-js';
   return deviceId;
 };
 
-const supabase = createClient(
-  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
-  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
-);
+let supabase: any = null;
+
+const getSupabase = () => {
+  if (!supabase) {
+    supabase = createClient(
+      'https://rbocrgnmsadkbfoqbzpe.supabase.co',
+      'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
+    );
+  }
+  return supabase;
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -57,7 +64,7 @@ const params = new URLSearchParams(window.location.search);
     setErro('');
 
     try {
-      const { data: usuarios, error: erroLogin } = await supabase
+      const { data: usuarios, error: erroLogin } = await getsupabase
         .from('usuarios')
         .select('id, conta_id, email, nome, tipo')
         .eq('email', email)
@@ -71,7 +78,7 @@ const params = new URLSearchParams(window.location.search);
       }
 
       // Buscar nome da empresa
-      const { data: conta } = await supabase
+      const { data: conta } = await getsupabase
         .from('contas')
         .select('nome, whatsapp')
         .eq('id', usuarios.conta_id)
@@ -90,7 +97,7 @@ const params = new URLSearchParams(window.location.search);
       console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
       
       // Atualiza device_id no Supabase
-      const { error: erroDevice } = await supabase
+      const { error: erroDevice } = await getsupabase
         .from('usuarios')
         .update({ device_id: deviceId })
         .eq('id', usuarios.id);
