@@ -17,7 +17,7 @@ const gerarDeviceId = () => {
   
   let deviceId = localStorage.getItem('device_id');
   if (!deviceId) {
-    deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    deviceId = 'device_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
     localStorage.setItem('device_id', deviceId);
   }
   return deviceId;
