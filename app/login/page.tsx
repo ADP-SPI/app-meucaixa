@@ -87,7 +87,7 @@ export default function LoginPage() {
       localStorage.setItem('empresa_nome', conta?.nome || '');
 
       // Gera device_id
-      const deviceId = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+      const deviceId = 'device_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();      
       localStorage.setItem('device_id', deviceId);
 
       console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
