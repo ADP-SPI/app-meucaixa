@@ -184,25 +184,13 @@ className="w-full border border-gray-300 p-2 rounded"
           </div>
         )}
 
-        {/* DETALHES POR FORMA DE PAGAMENTO */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white text-black p-4 rounded text-center border border-gray-200">
-            <p className="text-xs">PIX</p>
-            <p className="text-xl font-bold">R$ {calcularPorTipo('PIX')}</p>
+           {/* SALDO TOTAL */}
+        {mostrarTotaisIndividuais && (
+          <div className={`${calcularTotal() >= 0 ? 'bg-blue-600' : 'bg-red-600'} text-white p-6 rounded-lg shadow-md text-center mb-6 w-full`}>
+            <p className="text-sm">SALDO</p>
+            <p className="text-2xl font-bold">R$ {calcularTotal()}</p>
           </div>
-          <div className="bg-white text-black p-4 rounded text-center border border-gray-200">
-            <p className="text-xs">DINHEIRO</p>
-            <p className="text-xl font-bold">R$ {calcularPorTipo('DINHEIRO')}</p>
-          </div>
-          <div className="bg-white text-black p-4 rounded text-center border border-gray-200">
-            <p className="text-xs">CARTÃO</p>
-            <p className="text-xl font-bold">R$ {calcularPorTipo('CARTÃO')}</p>
-          </div>
-          <div className="bg-white text-black p-4 rounded text-center border border-gray-200">
-            <p className="text-xs">FIADO</p>
-            <p className="text-xl font-bold">R$ {calcularPorTipo('FIADO')}</p>
-          </div>
-        </div>
+        )}
 
         {/* DETALHES DAS TRANSAÇÕES */}
         <div>
