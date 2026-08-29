@@ -255,7 +255,8 @@ useEffect(() => {
             >
               <option value="receita">Receita (Ganho)</option>
               <option value="despesa">Despesa (Gasto)</option>
-            </select>
+              <option value="retirada_pessoal">Retirada Pessoal</option>
+             </select>
           </div>
 
           <div className="mb-4">
