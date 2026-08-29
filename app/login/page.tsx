@@ -93,10 +93,10 @@ export default function LoginPage() {
       console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
 
       // Atualiza device_id no Supabase
-      const { error: erroDevice } = await supabase
+         const { error: erroDevice } = await supabase
         .from('usuarios')
         .update({ device_id: deviceId })
-        .eq('id', usuarios.id);
+        .eq('id', parseInt(usuarios.id));         
 
       console.log('Erro ao salvar device_id:', erroDevice);
 
