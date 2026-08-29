@@ -93,11 +93,16 @@ export default function LoginPage() {
       console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
 
       // Atualiza device_id no Supabase
-         const { error: erroDevice } = await supabase
+        console.log('Antes de update - usuarios.id:', usuarios.id, 'tipo:', typeof usuarios.id);
+      console.log('Device ID a salvar:', deviceId);
+      
+      const { data: updateData, error: erroDevice } = await supabase
         .from('usuarios')
         .update({ device_id: deviceId })
-        .eq('id', parseInt(usuarios.id));         
-
+        .eq('id', parseInt(usuarios.id))
+        .select();
+      
+      console.log('Update retornou:', updateData);
       console.log('Erro ao salvar device_id:', erroDevice);
 
       router.push('/dashboard');
