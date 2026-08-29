@@ -85,11 +85,14 @@ export default function LoginPage() {
       localStorage.setItem('usuario_nome', usuarios.nome);
       localStorage.setItem('tipo_usuario', usuarios.tipo);
       localStorage.setItem('empresa_nome', conta?.nome || '');
+      console.log('✅ Empresa salva, agora vou gerar device_id...');
 
       // Gera device_id
-      const deviceId = 'device_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();      
+      console.log('⏳ Gerando device_id...');
+      const deviceId = 'device_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+      console.log('✅ Device_id gerado:', deviceId);      
       localStorage.setItem('device_id', deviceId);
-
+      console.log('✅ Device_id salvo no localStorage');
       console.log('Salvando device_id:', deviceId, 'Usuario:', usuarios.id);
 
       // Atualiza device_id no Supabase
