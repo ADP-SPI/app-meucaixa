@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
@@ -31,8 +31,12 @@ export default function LoginPage() {
   const [erro, setErro] = useState('');
 
   // Detecta se foi desconectado por novo login
-  const params = new URLSearchParams(window.location.search);
-  const logadoOutro = params.get('logado_outro_dispositivo');
+  const [logadoOutro, setLogadoOutro] = useState(false);
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setLogadoOutro(params.get('logado_outro_dispositivo') === 'true');
+  }, []); 
 
   if (logadoOutro) {
     return (
