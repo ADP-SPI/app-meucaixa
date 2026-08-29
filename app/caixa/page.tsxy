@@ -224,7 +224,6 @@ useEffect(() => {
             <p className="text-sm">SALDO</p>
             <p className="text-2xl font-bold">R$ {saldo.toFixed(2)}</p>
           </div>
-        </div>
 
 	   {/* RETIRADAS PESSOAIS */}
         {totalRetiradas > 0 && (
@@ -234,6 +233,8 @@ useEffect(() => {
             </p>
           </div>
         )} 
+
+        </div>
 
         {/* DETALHES DE RECEITAS */}
         <div className="grid grid-cols-4 gap-4 mb-6">
