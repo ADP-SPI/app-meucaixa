@@ -1,17 +1,6 @@
-// Mock para funcionar sem Supabase
-export const supabase = {
-  from: (table: string) => ({
-    insert: async (data: any) => {
-      const existing = JSON.parse(localStorage.getItem(table) || '[]');
-      existing.push({ ...data, id: Date.now(), created_at: new Date() });
-      localStorage.setItem(table, JSON.stringify(existing));
-      return { data: [data], error: null };
-    },
-    select: async (cols: string) => ({
-      order: (field: string, options: any) => ({
-        data: JSON.parse(localStorage.getItem(table) || '[]'),
-        error: null
-      })
-    })
-  })
-};
+import { createClient } from '@supabase/supabase-js';
+
+export const supabase = createClient(
+  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
+  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
+);

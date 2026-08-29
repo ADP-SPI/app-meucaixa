@@ -1,35 +1,9 @@
 const CACHE_NAME = 'meucaixa-v1';
-const STATIC_ASSETS = [
-  '/',
-  '/login',
-  '/planos',
-  '/offline.html'
-];
 
-const DYNAMIC_ROUTES = [
-  '/dashboard',
-  '/caixa',
-  '/comanda',
-  '/fiados',
-  '/relatorios',
-  '/agenda',
-  '/cardapio',
-  '/usuarios',
-  '/admin',
-  '/plano-expirado'
-];
-
-// Install event
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
   self.skipWaiting();
 });
 
-// Activate event
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -45,29 +19,23 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event
 self.addEventListener('fetch', (event) => {
-  const { pathname } = new URL(event.request.url);
-
-  // NUNCA cachear rotas dinâmicas
-  if (DYNAMIC_ROUTES.some(route => pathname.startsWith(route))) {
-    event.respondWith(
-      fetch(event.request)
-        .then(response => response)
-        .catch(() => caches.match('/offline.html'))
-    );
+  // Nunca cacheia API calls
+  if (event.request.url.includes('/rest/v1/')) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
-  // CACHEAR tudo mais (estático)
+  // Nunca cacheia a home
+  if (new URL(event.request.url).pathname === '/') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Para tudo mais: tenta network, se falhar usa cache
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((fetchResponse) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
-        });
-      });
-    })
+    fetch(event.request)
+      .then(response => response)
+      .catch(() => caches.match(event.request))
   );
 });
