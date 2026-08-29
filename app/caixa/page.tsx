@@ -226,21 +226,15 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* FIADOS E RETIRADAS */}
-        <div className="space-y-3 mb-6">
-          {totalFiados > 0 && (
-            <div className="text-center border-t border-gray-300 pt-3">
-              <p className="text-sm text-gray-600">Pendente em Fiados:</p>
-              <p className="text-lg font-bold text-orange-600">R$ {totalFiados.toFixed(2)}</p>
-            </div>
-          )}
-          
-          {totalRetiradas > 0 && (
-            <div className="text-center border-t border-gray-300 pt-3">
-              <p className="text-sm text-gray-600">Total das Retiradas Pessoais:</p>
-              <p className="text-lg font-bold text-blue-600">R$ {totalRetiradas.toFixed(2)}</p>
-            </div>
-          )}
+	   {/* RETIRADAS PESSOAIS */}
+        {totalRetiradas > 0 && (
+          <div className="text-center border-t border-gray-300 pt-3 mb-6">
+            <p className="text-sm text-gray-700">
+              Total das Retiradas Pessoais: <span className="font-bold">R$ {totalRetiradas.toFixed(2)}</span>
+            </p>
+          </div>
+        )} 
+
         </div>
 
         {/* DETALHES DE RECEITAS */}
