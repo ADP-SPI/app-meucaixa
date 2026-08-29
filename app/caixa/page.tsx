@@ -210,7 +210,7 @@ const saldo = totalReceitas - totalDespesas - totalRetiradas;
 
         <h1 className="text-2xl font-bold mb-6">Caixa</h1>
 
- 	{/* RESUMO DO DIA */}
+           {/* RESUMO DO DIA */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-blue-600 text-white p-4 rounded-lg text-center">
             <p className="text-sm">RECEITAS</p>
@@ -220,20 +220,17 @@ const saldo = totalReceitas - totalDespesas - totalRetiradas;
             <p className="text-sm">DESPESAS</p>
             <p className="text-2xl font-bold">R$ {totalDespesas.toFixed(2)}</p>
           </div>
-          <div className={`${saldo >= 0 ? 'bg-blue-600' : 'bg-red-600'} text-white p-4 rounded-lg text-center`}>
-            <p className="text-sm">SALDO</p>
-            <p className="text-2xl font-bold">R$ {saldo.toFixed(2)}</p>
+          <div className="bg-purple-600 text-white p-4 rounded-lg text-center">
+            <p className="text-sm">RETIRADAS PESSOAIS</p>
+            <p className="text-2xl font-bold">R$ {totalRetiradas.toFixed(2)}</p>
           </div>
         </div>
 
-	   {/* RETIRADAS PESSOAIS */}
-        {totalRetiradas > 0 && (
-          <div className="text-center border-t border-gray-300 pt-3 mb-6">
-            <p className="text-sm text-gray-700">
-              Total das Retiradas Pessoais: <span className="font-bold text-lg">R$ {totalRetiradas.toFixed(2)}</span>
-            </p>
-          </div>
-        )} 
+        {/* SALDO FULL WIDTH */}
+        <div className={`${saldo >= 0 ? 'bg-blue-600' : 'bg-red-600'} text-white p-4 rounded-lg text-center mb-6 w-full`}>
+          <p className="text-sm">SALDO</p>
+          <p className="text-2xl font-bold">R$ {saldo.toFixed(2)}</p>
+        </div> 	
 
         {/* DETALHES DE RECEITAS */}
         <div className="grid grid-cols-4 gap-4 mb-6">
