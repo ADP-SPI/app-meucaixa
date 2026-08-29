@@ -71,14 +71,23 @@ export default function LoginPage() {
         setCarregando(false);
         return;
       }
-
+      
       // Buscar nome da empresa
-      const { data: conta } = await supabase
+      console.log('🔍 Buscando conta com ID:', usuarios.conta_id);
+      const { data: conta, error: eroConta } = await supabase
         .from('contas')
         .select('nome, whatsapp')
         .eq('id', usuarios.conta_id)
         .single();
-
+      
+      console.log('Conta encontrada:', conta);
+      console.log('Erro ao buscar conta:', eroConta);
+      
+      if (eroConta) {
+        console.error('❌ Erro ao buscar conta:', eroConta);
+        throw new Error('Erro ao buscar dados da empresa');
+      }
+      
       // Salvar dados básicos
       localStorage.setItem('usuario_id', usuarios.id.toString());
       localStorage.setItem('conta_id', usuarios.conta_id.toString());
