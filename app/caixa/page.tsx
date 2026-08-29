@@ -230,7 +230,7 @@ useEffect(() => {
         {totalRetiradas > 0 && (
           <div className="text-center border-t border-gray-300 pt-3 mb-6">
             <p className="text-sm text-gray-700">
-              Total das Retiradas Pessoais: <span className="font-bold">R$ {totalRetiradas.toFixed(2)}</span>
+              Total das Retiradas Pessoais: <span className="font-bold text-lg">R$ {totalRetiradas.toFixed(2)}</span>
             </p>
           </div>
         )} 
