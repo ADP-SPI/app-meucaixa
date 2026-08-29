@@ -58,9 +58,15 @@ useEffect(() => {
   }) : [];
 
     const calcularTotal = () => {
-    return transacoesFiltradas.reduce((sum, t) => sum + (t.tipo === 'despesa' ? -(parseFloat(t.valor) || 0) : (parseFloat(t.valor) || 0)), 0).toFixed(2);
+    return transacoesFiltradas.reduce((sum, t) => {
+      const valor = parseFloat(t.valor) || 0;
+      if (t.tipo === 'receita') return sum + valor;
+      if (t.tipo === 'despesa') return sum - valor;
+      if (t.tipo === 'retirada_pessoal') return sum - valor;
+      return sum;
+    }, 0).toFixed(2);
   };
-
+     
   const calcularPorTipo = (tipo: string) => {
     return transacoesFiltradas
       .filter(t => t.formapagamento === tipo)
