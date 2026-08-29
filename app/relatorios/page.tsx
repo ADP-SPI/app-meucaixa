@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
-  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
-);
+import { supabase } from '@/lib/supabase';
 
 export default function Relatorios() {
   const [transacoes, setTransacoes] = useState<any[]>([]);
@@ -45,22 +40,22 @@ useEffect(() => {
     }
   }; 
 
-    const transacoesFiltradas = filtroAplicado ? transacoes.filter((t) => {
+   const transacoesFiltradas = filtroAplicado ? transacoes.filter((t) => {
     // Filtro de Tipo de Operação
     if (filtroOperacao === 'receita' && t.tipo !== 'receita') return false;
     if (filtroOperacao === 'despesa' && t.tipo !== 'despesa') return false;
+    if (filtroOperacao === 'retirada_pessoal' && t.tipo !== 'retirada_pessoal') return false;
     
     // Filtro de Forma de Pagamento
     if (filtroTipo && filtroTipo !== '' && t.formapagamento !== filtroTipo) return false;
-    
+     
     // Filtro de Data Início
     if (dataInicio && t.data < dataInicio) return false;
-    
     // Filtro de Data Fim
     if (dataFim && t.data > dataFim) return false;
     
     return true;
-  }) : [];    
+  }) : [];
 
   const calcularTotal = () => {
     return transacoesFiltradas.reduce((sum, t) => sum + (t.tipo === 'despesa' ? -(parseFloat(t.valor) || 0) : (parseFloat(t.valor) || 0)), 0).toFixed(2);
@@ -97,6 +92,7 @@ useEffect(() => {
               <option value="ambos">Receitas e Despesas</option>
               <option value="receita">Apenas Receitas</option>
               <option value="despesa">Apenas Despesas</option>
+              <option value="retirada_pessoal">Apenas Retiradas Pessoais</option>
             </select>
           </div>
 
