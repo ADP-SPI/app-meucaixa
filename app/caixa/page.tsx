@@ -188,7 +188,7 @@ useEffect(() => {
   const totalFiados = fiados.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
   const totalRetiradas = retiradas.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
   
-  const saldo = totalReceitas - totalDespesas;   
+const saldo = totalReceitas - totalDespesas - totalRetiradas;
 
   const receitasPorForma = (forma: string) => {
     return receitas
