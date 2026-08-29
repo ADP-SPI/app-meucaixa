@@ -72,6 +72,9 @@ export default function LoginPage() {
         return;
       }
       
+      console.log('✅ Usuário autenticado:', usuarios);
+      console.log('🔍 Agora vou buscar a conta...');
+      
       // Buscar nome da empresa
       console.log('🔍 Buscando conta com ID:', usuarios.conta_id);
       const { data: conta, error: eroConta } = await supabase
