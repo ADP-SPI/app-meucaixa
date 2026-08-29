@@ -181,11 +181,14 @@ useEffect(() => {
   const receitas = transacoesHoje.filter(t => t.tipo === 'receita' && t.formapagamento !== 'FIADO');
   const despesas = transacoesHoje.filter(t => t.tipo === 'despesa');
   const fiados = transacoesHoje.filter(t => t.tipo === 'receita' && t.formapagamento === 'FIADO');
-
+  const retiradas = transacoesHoje.filter(t => t.tipo === 'retirada_pessoal');
+  
   const totalReceitas = receitas.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
   const totalDespesas = despesas.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
   const totalFiados = fiados.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
-  const saldo = totalReceitas - totalDespesas;
+  const totalRetiradas = retiradas.reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0);
+  
+  const saldo = totalReceitas - totalDespesas;   
 
   const receitasPorForma = (forma: string) => {
     return receitas
@@ -207,7 +210,7 @@ useEffect(() => {
 
         <h1 className="text-2xl font-bold mb-6">Caixa</h1>
 
-        {/* RESUMO DO DIA */}
+ 	{/* RESUMO DO DIA */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-blue-600 text-white p-4 rounded-lg text-center">
             <p className="text-sm">RECEITAS</p>
@@ -221,6 +224,23 @@ useEffect(() => {
             <p className="text-sm">SALDO</p>
             <p className="text-2xl font-bold">R$ {saldo.toFixed(2)}</p>
           </div>
+        </div>
+
+        {/* FIADOS E RETIRADAS */}
+        <div className="space-y-3 mb-6">
+          {totalFiados > 0 && (
+            <div className="text-center border-t border-gray-300 pt-3">
+              <p className="text-sm text-gray-600">Pendente em Fiados:</p>
+              <p className="text-lg font-bold text-orange-600">R$ {totalFiados.toFixed(2)}</p>
+            </div>
+          )}
+          
+          {totalRetiradas > 0 && (
+            <div className="text-center border-t border-gray-300 pt-3">
+              <p className="text-sm text-gray-600">Total das Retiradas Pessoais:</p>
+              <p className="text-lg font-bold text-blue-600">R$ {totalRetiradas.toFixed(2)}</p>
+            </div>
+          )}
         </div>
 
         {/* DETALHES DE RECEITAS */}
@@ -316,13 +336,17 @@ useEffect(() => {
                   <div
                     key={t.id}
                     className={`p-3 rounded border-l-4 ${
+                    
                       t.tipo === 'receita'
                         ? t.formapagamento === 'FIADO'
                           ? 'bg-orange-50 border-orange-600'
                           : 'bg-green-50 border-green-600'
+                        : t.tipo === 'retirada_pessoal'
+                        ? 'bg-blue-50 border-blue-600'
                         : 'bg-red-50 border-red-600'
                     }`}
                   >
+
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <p className="font-bold">{t.descricao || 'Sem descrição'}</p>
@@ -331,10 +355,11 @@ useEffect(() => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`font-bold text-lg ${
-                          t.tipo === 'receita' ? 'text-green-600' : 'text-red-600'
+                       
+			<p className={`font-bold text-lg ${
+                          t.tipo === 'receita' ? 'text-green-600' : t.tipo === 'retirada_pessoal' ? 'text-blue-600' : 'text-red-600'
                         }`}>
-                          {t.tipo === 'receita' ? '+' : '-'} R$ {parseFloat(t.valor || 0).toFixed(2)}
+                          {t.tipo === 'receita' ? '+' : t.tipo === 'retirada_pessoal' ? '-' : '-'} R$ {parseFloat(t.valor || 0).toFixed(2)}
                         </p>
                       </div>
                       <div className="ml-3">
