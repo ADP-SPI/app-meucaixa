@@ -57,16 +57,25 @@ useEffect(() => {
     return true;
   }) : [];
 
-  const calcularTotal = () => {
+    const calcularTotal = () => {
     return transacoesFiltradas.reduce((sum, t) => sum + (t.tipo === 'despesa' ? -(parseFloat(t.valor) || 0) : (parseFloat(t.valor) || 0)), 0).toFixed(2);
   };
 
   const calcularPorTipo = (tipo: string) => {
     return transacoesFiltradas
-      .filter(t => t.formaPagamento === tipo)
+      .filter(t => t.formapagamento === tipo)
       .reduce((sum, t) => sum + (t.tipo === 'despesa' ? -(parseFloat(t.valor) || 0) : (parseFloat(t.valor) || 0)), 0)
       .toFixed(2);
   };
+
+  const calcularPorTipoOperacao = (tipo: string) => {
+    return transacoesFiltradas
+      .filter(t => t.tipo === tipo)
+      .reduce((sum, t) => sum + (parseFloat(t.valor) || 0), 0)
+      .toFixed(2);
+  };
+
+  const mostrarTotaisIndividuais = filtroOperacao === 'ambos';
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
@@ -89,7 +98,7 @@ useEffect(() => {
              }}              
               className="w-full border border-gray-300 p-2 rounded"
             >
-              <option value="ambos">Receitas e Despesas</option>
+              <option value="ambos">Todas as Movimentações</option>
               <option value="receita">Apenas Receitas</option>
               <option value="despesa">Apenas Despesas</option>
               <option value="retirada_pessoal">Apenas Retiradas Pessoais</option>
@@ -152,11 +161,28 @@ className="w-full border border-gray-300 p-2 rounded"
           </button>       
         </div>
 
-        {/* TOTAL FILTRADO */}
-        <div className="bg-green-600 text-white p-6 rounded-lg shadow-md text-center mb-6">
-          <p className="text-sm">TOTAL</p>
-          <p className="text-4xl font-bold">R$ {calcularTotal()}</p>
-        </div>
+        {/* TOTAIS */}
+        {!mostrarTotaisIndividuais ? (
+          <div className="bg-green-600 text-white p-6 rounded-lg shadow-md text-center mb-6">
+            <p className="text-sm">TOTAL</p>
+            <p className="text-4xl font-bold">R$ {calcularTotal()}</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-blue-600 text-white p-6 rounded-lg shadow-md text-center">
+              <p className="text-sm">TOTAL RECEITAS</p>
+              <p className="text-2xl font-bold">R$ {calcularPorTipoOperacao('receita')}</p>
+            </div>
+            <div className="bg-red-600 text-white p-6 rounded-lg shadow-md text-center">
+              <p className="text-sm">TOTAL DESPESAS</p>
+              <p className="text-2xl font-bold">R$ {calcularPorTipoOperacao('despesa')}</p>
+            </div>
+            <div className="bg-purple-600 text-white p-6 rounded-lg shadow-md text-center">
+              <p className="text-sm">TOTAL RETIRADAS</p>
+              <p className="text-2xl font-bold">R$ {calcularPorTipoOperacao('retirada_pessoal')}</p>
+            </div>
+          </div>
+        )}
 
         {/* DETALHES POR FORMA DE PAGAMENTO */}
         <div className="grid grid-cols-4 gap-4 mb-6">
