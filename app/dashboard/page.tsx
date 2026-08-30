@@ -75,6 +75,7 @@ export default function Dashboard() {
     setValidando(false);
   };
 
+  
   const handleLogout = () => {
     localStorage.removeItem('usuario_id');
     localStorage.removeItem('conta_id');
@@ -82,10 +83,12 @@ export default function Dashboard() {
     localStorage.removeItem('tipo_usuario');
     localStorage.removeItem('empresa_nome');
     localStorage.removeItem('tipo_plano');
+    localStorage.removeItem('device_id');
     sessionStorage.clear();
-
+  
     document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'conta_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    router.push('/login');
     document.cookie = 'usuario_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'tipo_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'empresa_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
