@@ -1,4 +1,16 @@
 const CACHE_NAME = 'meucaixa-v1';
+let currentVersion = null;
+
+// Busca versão do servidor
+async function getServerVersion() {
+  try {
+    const response = await fetch('/api/version');
+    const data = await response.json();
+    return data.version;
+  } catch {
+    return null;
+  }
+}
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -57,3 +69,20 @@ self.addEventListener('fetch', (event) => {
     })
   );
 });
+
+// Verifica nova versão a cada 30 segundos
+setInterval(async () => {
+  const serverVersion = await getServerVersion();
+  if (currentVersion && serverVersion && currentVersion !== serverVersion) {
+    // Nova versão disponível - avisa aos clientes
+    self.clients.matchAll().then((clients) => {
+      clients.forEach((client) => {
+        client.postMessage({
+          type: 'NEW_VERSION_AVAILABLE',
+          version: serverVersion
+        });
+      });
+    });
+  }
+  currentVersion = serverVersion;
+}, 30000);

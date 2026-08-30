@@ -1,3 +1,4 @@
+import UpdateNotification from './components/UpdateNotification';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -48,9 +49,11 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{__html: `
         `}} />
       </head>
-      <body
+     
+        <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <UpdateNotification />
         {children}
         <script>
           {`
