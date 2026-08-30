@@ -50,9 +50,15 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Nunca cacheia a home
-  if (url.pathname === '/') {
-    event.respondWith(fetch(event.request));
+    // Nunca cacheia a home (sempre fetch fresh)
+  if (url.pathname === '/' || url.pathname === '') {
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        return response;
+      }).catch(() => {
+        return new Response('Offline', { status: 503 });
+      })
+    );
     return;
   }
   
