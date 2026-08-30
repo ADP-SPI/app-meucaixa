@@ -20,22 +20,40 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Nunca cacheia requisições autenticadas
+  if (event.request.headers.get('authorization') || 
+      url.pathname.includes('/login') ||
+      url.pathname.includes('/dashboard') ||
+      url.pathname.includes('/caixa') ||
+      url.pathname.includes('/relatorios')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
   // Nunca cacheia API calls
-  if (event.request.url.includes('/rest/v1/')) {
+  if (url.pathname.includes('/rest/v1/')) {
     event.respondWith(fetch(event.request));
     return;
   }
-
+  
   // Nunca cacheia a home
-  if (new URL(event.request.url).pathname === '/') {
+  if (url.pathname === '/') {
     event.respondWith(fetch(event.request));
     return;
   }
-
-  // Para tudo mais: tenta network, se falhar usa cache
+  
+  // Para arquivos estáticos: cache-first
   event.respondWith(
-    fetch(event.request)
-      .then(response => response)
-      .catch(() => caches.match(event.request))
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request).then((response) => {
+        if (response.status === 200) {
+          const cache = caches.open(CACHE_NAME);
+          cache.then((c) => c.put(event.request, response.clone()));
+        }
+        return response;
+      });
+    })
   );
 });
