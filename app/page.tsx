@@ -1,15 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function LandingPage() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    const usuarioId = localStorage.getItem('usuario_id');
+    if (usuarioId) {
+      router.push('/dashboard');
+    }
+  }, [router]);
 
   console.log('Landing Page carregado');
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+
       {/* HEADER */}
       <header className="border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
