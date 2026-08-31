@@ -14,7 +14,32 @@ export default function Dashboard() {
   const [tipoPlano, setTipoPlano] = useState('');
   const [validando, setValidando] = useState(true);
 
+  // Pull-to-refresh
   useEffect(() => {
+    let pullStartY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      pullStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0].clientY;
+      if (currentY - pullStartY > 100 && window.scrollY === 0) {
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener('touchstart', handleTouchStart, false);
+    window.addEventListener('touchmove', handleTouchMove, false);
+
+    return () => {
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
+  useEffect(() => {
+
     const usuarioId = localStorage.getItem('usuario_id');
     
     validarSessao();
