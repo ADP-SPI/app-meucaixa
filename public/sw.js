@@ -1,16 +1,4 @@
 const CACHE_NAME = 'meucaixa-v1';
-let currentVersion = null;
-
-// Busca versão do servidor
-async function getServerVersion() {
-  try {
-    const response = await fetch('/api/version');
-    const data = await response.json();
-    return data.version;
-  } catch {
-    return null;
-  }
-}
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -50,45 +38,30 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-    // Nunca cacheia a home (sempre fetch fresh)
+  // Nunca cacheia a home (sempre fetch fresh)
   if (url.pathname === '/' || url.pathname === '') {
-    event.respondWith(
-      fetch(event.request).then((response) => {
-        return response;
-      }).catch(() => {
-        return new Response('Offline', { status: 503 });
-      })
-    );
+    event.respondWith(fetch(event.request));
     return;
   }
   
   // Para arquivos estáticos: cache-first
   event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request).then((response) => {
-        if (response.status === 200) {
-          const cache = caches.open(CACHE_NAME);
-          cache.then((c) => c.put(event.request, response.clone()));
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      
+      return fetch(event.request).then((response) => {
+        if (response.status === 200 && response.type === 'basic') {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
         }
         return response;
       });
+    }).catch(() => {
+      return new Response('Offline', { status: 503 });
     })
   );
 });
-
-// Verifica nova versão a cada 30 segundos
-setInterval(async () => {
-  const serverVersion = await getServerVersion();
-  if (currentVersion && serverVersion && currentVersion !== serverVersion) {
-    // Nova versão disponível - avisa aos clientes
-    self.clients.matchAll().then((clients) => {
-      clients.forEach((client) => {
-        client.postMessage({
-          type: 'NEW_VERSION_AVAILABLE',
-          version: serverVersion
-        });
-      });
-    });
-  }
-  currentVersion = serverVersion;
-}, 30000);
