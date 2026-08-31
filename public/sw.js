@@ -1,16 +1,18 @@
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => client.navigate(client.url));
+  });
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(cacheNames.map((c) => caches.delete(c)));
-    })
+    caches.keys().then((names) => Promise.all(names.map((name) => caches.delete(name))))
   );
-  self.clients.claim();
 });
 
 self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request));
+  event.respondWith(fetch(event.request).catch(() => {
+    return new Response('offline', { status: 503 });
+  }));
 });
