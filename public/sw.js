@@ -57,9 +57,10 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseClone);
           });
+          return response;
         }
         return response;
-      });
+      });  
     }).catch(() => {
       return new Response('Offline', { status: 503 });
     })
