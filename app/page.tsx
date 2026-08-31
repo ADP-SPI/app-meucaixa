@@ -8,12 +8,12 @@ export default function LandingPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
 
-  useEffect(() => {
+    useEffect(() => {
     const usuarioId = localStorage.getItem('usuario_id');
     if (usuarioId) {
-      router.push('/dashboard');
+      window.location.href = '/dashboard';
     }
-  }, [router]);
+  }, []);
 
   console.log('Landing Page carregado');
 
