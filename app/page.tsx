@@ -1,7 +1,5 @@
 'use client';
 
-export const revalidate = 0;
-
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -18,6 +16,7 @@ export default function LandingPage() {
   }, [router]);
 
   console.log('Landing Page carregado');
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
