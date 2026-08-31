@@ -1,6 +1,6 @@
-export const revalidate = 0;
-
 'use client';
+
+export const revalidate = 0;
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
