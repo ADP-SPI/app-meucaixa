@@ -38,7 +38,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   
-  // Nunca cacheia a home (sempre fetch fresh)
+  // Nunca cacheia a home
   if (url.pathname === '/' || url.pathname === '') {
     event.respondWith(fetch(event.request));
     return;
@@ -47,22 +47,15 @@ self.addEventListener('fetch', (event) => {
   // Para arquivos estáticos: cache-first
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      return fetch(event.request).then((response) => {
-        if (response.status === 200 && response.type === 'basic') {
-          const responseClone = response.clone();
+      return cachedResponse || fetch(event.request).then((response) => {
+        if (response.ok) {
+          const responseToCache = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
+            cache.put(event.request, responseToCache);
           });
-          return response;
         }
         return response;
-      });  
-    }).catch(() => {
-      return new Response('Offline', { status: 503 });
+      });
     })
   );
 });
