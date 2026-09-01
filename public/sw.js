@@ -28,16 +28,21 @@ setInterval(async () => {
     const data = await response.json();
     
     if (currentVersion && data.version !== currentVersion) {
-      // Nova versão detectada
-      self.clients.matchAll().then((clients) => {
-        clients.forEach((client) => {
-          client.postMessage({
-            type: 'NEW_VERSION_AVAILABLE',
-            version: data.version
-          });
-        });
+  console.log('🔔 Service Worker: NOVA VERSÃO DETECTADA!', data.version);
+  console.log('🔔 Versão atual:', currentVersion);
+  console.log('🔔 Tentando enviar mensagem...');
+  
+  self.clients.matchAll().then((clients) => {
+    console.log('🔔 Clientes encontrados:', clients.length);
+    clients.forEach((client) => {
+      console.log('🔔 Enviando mensagem pra cliente:', client.url);
+      client.postMessage({
+        type: 'NEW_VERSION_AVAILABLE',
+        version: data.version
       });
-    }
+    });
+  });
+}
     currentVersion = data.version;
   } catch (err) {
     console.error('Erro ao verificar versão:', err);
