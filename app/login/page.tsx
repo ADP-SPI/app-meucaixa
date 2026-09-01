@@ -52,18 +52,18 @@ export default function LoginPage() {
               sessionStorage.clear();
               document.cookie.split(";").forEach((c) => {
                 document.cookie = c
-                  .replace(/^ +/, "")
+              .replace(/^ +/, "")
                   .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
               });
               window.location.reload();
            }}
            className="inline-block bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
       >
-      ✓ Fazer Login Novamente
-</button>   
+        ✓ Fazer Login Novamente
+      </button>   
         </div>
       </div>
-    );
+   );
   }
 
   const handleLogin = async (e: React.FormEvent) => {
