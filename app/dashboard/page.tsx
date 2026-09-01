@@ -100,8 +100,7 @@ export default function Dashboard() {
     setValidando(false);
   };
 
-  
-  const handleLogout = () => {
+    const handleLogout = () => {
     localStorage.removeItem('usuario_id');
     localStorage.removeItem('conta_id');
     localStorage.removeItem('usuario_nome');
@@ -110,16 +109,16 @@ export default function Dashboard() {
     localStorage.removeItem('tipo_plano');
     localStorage.removeItem('device_id');
     sessionStorage.clear();
-  
+    
     document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'conta_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    router.push('/login');
     document.cookie = 'usuario_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'tipo_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'empresa_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-
-    router.push('/login');
-  };
+    document.cookie = 'tipo_plano=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+    
+    window.location.href = '/login';
+}; 
 
   if (validando) {
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessão...</p></div>;
