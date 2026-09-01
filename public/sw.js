@@ -26,12 +26,17 @@ setInterval(async () => {
     }
     
     if (data.version !== lastVersion) {
-      lastVersion = data.version;
-      const clients = await self.clients.matchAll();
-      clients.forEach(client => {
-        client.postMessage({type: 'UPDATE', version: data.version});
-      });
-    }
+  console.log('🚀 Versão mudou de', lastVersion, 'para', data.version);
+  console.log('🚀 Buscando clientes...');
+  self.clients.matchAll().then(clients => {
+    console.log('🚀 Encontrados', clients.length, 'clientes');
+    clients.forEach(client => {
+      console.log('🚀 Enviando mensagem para:', client.url);
+      client.postMessage({type: 'UPDATE', version: data.version});
+    });
+  });
+}
+
   } catch(e) {
     console.error('Check version error:', e);
   }
