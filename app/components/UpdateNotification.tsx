@@ -8,15 +8,35 @@ export default function UpdateNotification() {
 
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      const registration = navigator.serviceWorker;
-      
-      registration.addEventListener('message', (event) => {
+      // Escuta mensagens do Service Worker
+      navigator.serviceWorker.onmessage = (event) => {
         if (event.data.type === 'NEW_VERSION_AVAILABLE') {
+          console.log('✨ Nova versão disponível:', event.data.version);
           setNewVersion(event.data.version);
           setShowUpdate(true);
         }
-      });
+      };
+
+      // Se já tem um controller ativo, escuta dele também
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.onmessage = (event) => {
+          if (event.data.type === 'NEW_VERSION_AVAILABLE') {
+            console.log('✨ Nova versão disponível:', event.data.version);
+            setNewVersion(event.data.version);
+            setShowUpdate(true);
+          }
+        };
+      }
     }
+
+    return () => {
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.onmessage = null;
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.onmessage = null;
+        }
+      }
+    };
   }, []);
 
   const handleUpdate = async () => {
@@ -27,14 +47,14 @@ export default function UpdateNotification() {
         cacheNames.map((cacheName) => caches.delete(cacheName))
       );
     }
-    
+
     // Limpa localStorage (exceto usuario_id para manter logado)
     const usuarioId = localStorage.getItem('usuario_id');
     localStorage.clear();
     if (usuarioId) {
       localStorage.setItem('usuario_id', usuarioId);
     }
-    
+
     // Recarrega
     window.location.reload();
   };
