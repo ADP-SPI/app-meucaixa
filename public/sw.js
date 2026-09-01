@@ -21,33 +21,44 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Verifica versão a cada 30 segundos
-setInterval(async () => {
-  try {
-    const response = await fetch('/api/manifest');
-    const data = await response.json();
-    
-    if (currentVersion && data.version !== currentVersion) {
-  console.log('🔔 Service Worker: NOVA VERSÃO DETECTADA!', data.version);
-  console.log('🔔 Versão atual:', currentVersion);
-  console.log('🔔 Tentando enviar mensagem...');
+// Verifica versão quando Service Worker ativa
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== STATIC_CACHE && !cacheName.includes('meucaixa-v1-')) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
   
-  self.clients.matchAll().then((clients) => {
-    console.log('🔔 Clientes encontrados:', clients.length);
-    clients.forEach((client) => {
-      console.log('🔔 Enviando mensagem pra cliente:', client.url);
-      client.postMessage({
-        type: 'NEW_VERSION_AVAILABLE',
-        version: data.version
-      });
-    });
-  });
-}
-    currentVersion = data.version;
-  } catch (err) {
-    console.error('Erro ao verificar versão:', err);
-  }
-}, 30000);
+  // Verifica versão a cada 30 segundos
+  setInterval(async () => {
+    try {
+      const response = await fetch('/api/manifest');
+      const data = await response.json();
+      
+      if (currentVersion && data.version !== currentVersion) {
+        console.log('🔔 NOVA VERSÃO:', data.version);
+        self.clients.matchAll().then((clients) => {
+          clients.forEach((client) => {
+            client.postMessage({
+              type: 'NEW_VERSION_AVAILABLE',
+              version: data.version
+            });
+          });
+        });
+      }
+      currentVersion = data.version;
+    } catch (err) {
+      console.error('Erro ao verificar versão:', err);
+    }
+  }, 30000);
+});
 
 self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
