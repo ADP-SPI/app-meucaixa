@@ -47,18 +47,17 @@ export default function LoginPage() {
             Você foi desconectado porque fez login em outro dispositivo.
           </p>
          
-         onClick={() => {
-              localStorage.clear();
-              sessionStorage.clear();
-              document.cookie.split(";").forEach((c) => {
-              document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-              });
-              window.location.reload();
-           }}
-           className="inline-block bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
-        ✓ Fazer Login Novamente
-      </button>   
-        </div>
+         <button
+  onClick={() => {
+    localStorage.clear();
+    window.location.reload();
+  }}
+  className="inline-block bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
+>
+  ✓ Fazer Login Novamente
+</button>
+      
+  </div>
       </div>
    );
   }
