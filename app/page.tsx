@@ -34,7 +34,7 @@ export default function LandingPage() {
       {/* HERO SECTION */}
       <section className="max-w-6xl mx-auto px-4 py-20 text-center">
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
-          Gestão Simples do Seu Negócio
+           Gestão Simples do Seu Negócio ✨
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Controle seu caixa, comanda, fiados e cardápio em um só lugar. 
