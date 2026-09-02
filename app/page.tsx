@@ -12,9 +12,6 @@ useEffect(() => {
     const usuarioId = localStorage.getItem('usuario_id');
     if (usuarioId) {
       window.location.href = '/dashboard';
-    } else {
-      // Se não está logado, redireciona pro login
-      window.location.href = '/login';
     }
   }, []);
 
