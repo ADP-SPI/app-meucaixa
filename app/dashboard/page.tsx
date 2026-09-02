@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import AvisoVencimento from './components/AvisoVencimento';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -124,11 +125,15 @@ export default function Dashboard() {
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessão...</p></div>;
   }
 
-  return (
-    <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
+    return (
+     <>
+      <AvisoVencimento />
+      <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
         <div className="mb-6 flex justify-between items-center">
           <div>
+        </div>
+       </>
             <p className="text-sm text-gray-600">Empresa:</p>
             <p className="text-lg font-bold text-gray-900">{nomeEmpresa}</p>
             <p className="text-sm text-gray-600 mt-2">Logado como:</p>
