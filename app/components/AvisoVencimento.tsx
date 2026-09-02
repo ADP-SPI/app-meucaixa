@@ -31,19 +31,19 @@ export default function AvisoVencimento() {
 
         setDiasRestantes(dias);
 
-        if (dias <= 0) {
+                if (dias <= 0) {
           setTipoAviso('vencido');
           setMostrarAviso(true);
-        } else if (dias === 1) {
+        } else if (dias <= 1) {
           setTipoAviso('1');
           setMostrarAviso(true);
-        } else if (dias === 3) {
+        } else if (dias <= 3) {
           setTipoAviso('3');
           setMostrarAviso(true);
-        } else if (dias === 5) {
+        } else if (dias <= 5) {
           setTipoAviso('5');
           setMostrarAviso(true);
-        } else if (dias === 10) {
+        } else if (dias <= 10) {
           setTipoAviso('10');
           setMostrarAviso(true);
         }
