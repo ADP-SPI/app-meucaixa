@@ -96,29 +96,37 @@ export default function AdminPage() {
     setCarregando(false);
   };
 
-  const getStatusColor = (status: string, vencimento: string) => {
-    if (status === 'pendente') return 'bg-red-100 text-red-800';
-    if (status === 'teste_ativo') {
-      const dias = Math.ceil((new Date(vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-      if (dias <= 3) return 'bg-yellow-100 text-yellow-800';
-      return 'bg-blue-100 text-blue-800';
-    }
-    if (status === 'ativo') return 'bg-green-100 text-green-800';
-    if (status === 'cancelado') return 'bg-gray-100 text-gray-800';
-    return 'bg-gray-100 text-gray-800';
-  };
+    const getStatusColor = (status: string, vencimento: string) => {
+  if (status === 'pendente') return 'bg-red-100 text-red-800';
+  if (status === 'teste_ativo') {
+    const dias = Math.ceil((new Date(vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    if (dias <= 0) return 'bg-red-200 text-red-900';
+    if (dias <= 1) return 'bg-red-100 text-red-800';
+    if (dias <= 3) return 'bg-yellow-100 text-yellow-800';
+    if (dias <= 5) return 'bg-yellow-50 text-yellow-700';
+    if (dias <= 10) return 'bg-blue-50 text-blue-700';
+    return 'bg-blue-100 text-blue-800';
+  }
+  if (status === 'ativo') return 'bg-green-100 text-green-800';
+  if (status === 'cancelado') return 'bg-gray-100 text-gray-800';
+  return 'bg-gray-100 text-gray-800';
+};
 
-  const getStatusLabel = (status: string, vencimento: string) => {
-    if (status === 'pendente') return '🔴 PENDENTE PAGAMENTO';
-    if (status === 'teste_ativo') {
-      const dias = Math.ceil((new Date(vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-      if (dias <= 3) return `🟡 VENCENDO (${dias}d)`;
-      return '🔵 TESTE ATIVO';
-    }
-    if (status === 'ativo') return '🟢 ATIVO';
-    if (status === 'cancelado') return '⚫ CANCELADO';
-    return status;
-  };
+const getStatusLabel = (status: string, vencimento: string) => {
+  if (status === 'pendente') return '🔴 PENDENTE PAGAMENTO';
+  if (status === 'teste_ativo') {
+    const dias = Math.ceil((new Date(vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+    if (dias <= 0) return '🔴 VENCIDO - BLOQUEADO';
+    if (dias <= 1) return `🔴 VENCENDO HOJE (${dias}d)`;
+    if (dias <= 3) return `🟡 AVISO 3 DIAS (${dias}d)`;
+    if (dias <= 5) return `🟡 AVISO 5 DIAS (${dias}d)`;
+    if (dias <= 10) return `🔵 AVISO 10 DIAS (${dias}d)`;
+    return '🔵 TESTE ATIVO';
+  }
+  if (status === 'ativo') return '🟢 ATIVO';
+  if (status === 'cancelado') return '⚫ CANCELADO';
+  return status;
+};
 
   const atualizarVencimento = async () => {
     if (!clienteEditando || !novoVencimento) return;
