@@ -40,12 +40,10 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-
     const usuarioId = localStorage.getItem('usuario_id');
     
     validarSessao();
     
-    // Só verifica device se estiver logado
     if (usuarioId) {
       const interval = setInterval(() => {
         verificarDeviceChange();
@@ -68,7 +66,6 @@ export default function Dashboard() {
         .eq('id', parseInt(usuarioId))        
         .single();
       
-      // Se device_id mudou no banco, desconecta
       if (usuario?.device_id && usuario.device_id !== deviceIdLocal) {
         localStorage.clear();
         router.push('/login?logado_outro_dispositivo=true');
@@ -101,7 +98,7 @@ export default function Dashboard() {
     setValidando(false);
   };
 
-    const handleLogout = () => {
+  const handleLogout = () => {
     localStorage.removeItem('usuario_id');
     localStorage.removeItem('conta_id');
     localStorage.removeItem('usuario_nome');
@@ -119,98 +116,89 @@ export default function Dashboard() {
     document.cookie = 'tipo_plano=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     
     window.location.href = '/login';
-}; 
+  };
 
   if (validando) {
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessão...</p></div>;
   }
 
-    return (
-     <>
+  return (
+    <>
       <AvisoVencimento />
       <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
-      <div className="w-full max-w-6xl">
-        <div className="mb-6 flex justify-between items-center">
-          <div>
-        </div>
-       </>
-            <p className="text-sm text-gray-600">Empresa:</p>
-            <p className="text-lg font-bold text-gray-900">{nomeEmpresa}</p>
-            <p className="text-sm text-gray-600 mt-2">Logado como:</p>
-            <p className="text-sm font-bold text-gray-900">{nomeUsuario}</p>
-            {tipoUsuario === 'proprietario' && (
-              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">
-                👤 Proprietário
-              </span>
+        <div className="w-full max-w-6xl">
+          <div className="mb-6 flex justify-between items-center">
+            <div>
+              <p className="text-sm text-gray-600">Empresa:</p>
+              <p className="text-lg font-bold text-gray-900">{nomeEmpresa}</p>
+              <p className="text-sm text-gray-600 mt-2">Logado como:</p>
+              <p className="text-sm font-bold text-gray-900">{nomeUsuario}</p>
+              {tipoUsuario === 'proprietario' && (
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">
+                  👤 Proprietário
+                </span>
+              )}
+            </div>
+            <button
+              onClick={handleLogout}
+              className="text-blue-600 hover:underline font-bold"
+            >
+              Sair / Trocar Usuário
+            </button>
+          </div>
+
+          <div className="text-center py-8 mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">Meu Caixa</h1>
+            <p className="text-gray-600 mt-2">Gestão simples do seu negócio</p>
+          </div>
+
+          <div className="space-y-3">
+            {tipoPlano !== 'pessoal' && (
+              <a href="/agenda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+                📅 AGENDA
+              </a>
+            )}
+
+            <a href="/caixa" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+              💰 CAIXA
+            </a>
+
+            {tipoPlano !== 'pessoal' && (
+              <a href="/fiados" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+                📝 FIADOS
+              </a>
+            )}
+
+            {tipoPlano !== 'pessoal' && (
+              <a href="/comanda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+                🍽️ COMANDA
+              </a>
+            )}
+
+            {tipoPlano !== 'pessoal' && (
+              <a href="/cardapio" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+                📋 CARDÁPIO
+              </a>
+            )}
+
+            <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+              📊 RELATÓRIOS
+            </a>
+
+            {tipoPlano !== 'pessoal' && tipoUsuario === 'proprietario' && (
+              <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+                👥 GERENCIAR USUÁRIOS
+              </a>
+            )}
+
+            {contaId === '4' && (
+              <a href="/admin" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
+                🔧 ADMIN
+              </a>
             )}
           </div>
-          <button
-            onClick={handleLogout}
-            className="text-blue-600 hover:underline font-bold"
-          >
-            Sair / Trocar Usuário
-          </button>
-        </div>
-
-        <div className="text-center py-8 mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Meu Caixa</h1>
-          <p className="text-gray-600 mt-2">Gestão simples do seu negócio</p>
-        </div>
-
-        <div className="space-y-3">
-          {/* AGENDA - Só empresas */}
-          {tipoPlano !== 'pessoal' && (
-            <a href="/agenda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              📅 AGENDA
-            </a>
-          )}
-
-          {/* CAIXA - Todos */}
-          <a href="/caixa" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-            💰 CAIXA
-          </a>
-
-          {/* FIADOS - Só empresas */}
-          {tipoPlano !== 'pessoal' && (
-            <a href="/fiados" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              📝 FIADOS
-            </a>
-          )}
-
-          {/* COMANDA - Só empresas */}
-          {tipoPlano !== 'pessoal' && (
-            <a href="/comanda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              🍽️ COMANDA
-            </a>
-          )}
-
-          {/* CARDÁPIO - Só empresas */}
-          {tipoPlano !== 'pessoal' && (
-            <a href="/cardapio" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              📋 CARDÁPIO
-            </a>
-          )}
-
-          {/* RELATÓRIOS - Todos */}
-          <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-            📊 RELATÓRIOS
-          </a>
-
-          {/* GERENCIAR USUÁRIOS - Só empresas proprietário */}
-          {tipoPlano !== 'pessoal' && tipoUsuario === 'proprietario' && (
-            <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              👥 GERENCIAR USUÁRIOS
-            </a>
-          )}
-
-          {/* ADMIN - Só você (conta_id: 4) */}
-          {contaId === '4' && (
-            <a href="/admin" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              🔧 ADMIN
-            </a>
-          )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
