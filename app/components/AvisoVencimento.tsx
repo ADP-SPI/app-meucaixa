@@ -90,7 +90,16 @@ export default function AvisoVencimento() {
 
   return (
     <div className={`fixed top-0 left-0 right-0 ${aviso.cor} text-white p-4 flex justify-between items-center z-50 shadow-lg`}>
-      <div>
+                    <p className="text-sm text-gray-600">Empresa:</p>
+            <p className="text-lg font-bold text-gray-900">{nomeEmpresa}</p>
+            <p className="text-sm text-gray-600 mt-2">Logado como:</p>
+            <p className="text-sm font-bold text-gray-900">{nomeUsuario}</p>
+            {tipoUsuario === 'proprietario' && (
+              <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">
+                👤 Proprietário
+              </span>
+            )}
+          </div>
         <p className="font-bold">{aviso.titulo}</p>
         <p className="text-sm">{diasRestantes} dias restantes</p>
       </div>
