@@ -39,7 +39,9 @@ export default function AvisoVencimento() {
           setAviso({tipo: '10dias', dias});
         }
       } catch (err) {
-        console.error('Erro vencimento:', err);
+          console.error('Erro vencimento:', err);
+          console.log('ContaId:', contaId, 'Erro:', err);
+      }
       }
     };
 
