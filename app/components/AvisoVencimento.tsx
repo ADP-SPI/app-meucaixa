@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 export default function AvisoVencimento() {
+  console.log('🔍 AvisoVencimento carregou');
   const router = useRouter();
   const [aviso, setAviso] = useState<{tipo: string; dias: number} | null>(null);
 
