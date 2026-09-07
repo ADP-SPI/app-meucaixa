@@ -13,25 +13,21 @@ export default function Dashboard() {
   const [contaId, setContaId] = useState('');
   const [tipoPlano, setTipoPlano] = useState('');
   const [validando, setValidando] = useState(true);
+  const [avisoVencimento, setAvisoVencimento] = useState<{tipo: string; dias: number} | null>(null);
 
-  // Pull-to-refresh
   useEffect(() => {
     let pullStartY = 0;
-
     const handleTouchStart = (e: TouchEvent) => {
       pullStartY = e.touches[0].clientY;
     };
-
     const handleTouchMove = (e: TouchEvent) => {
       const currentY = e.touches[0].clientY;
       if (currentY - pullStartY > 100 && window.scrollY === 0) {
         window.location.reload();
       }
     };
-
     window.addEventListener('touchstart', handleTouchStart, false);
     window.addEventListener('touchmove', handleTouchMove, false);
-
     return () => {
       window.removeEventListener('touchstart', handleTouchStart);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -40,31 +36,53 @@ export default function Dashboard() {
 
   useEffect(() => {
     const usuarioId = localStorage.getItem('usuario_id');
-    
     validarSessao();
-    
     if (usuarioId) {
       const interval = setInterval(() => {
         verificarDeviceChange();
       }, 5000);
-      
       return () => clearInterval(interval);
     }
+  }, []);
+
+  useEffect(() => {
+    const buscarVencimento = async () => {
+      const contaId = localStorage.getItem('conta_id');
+      if (!contaId) return;
+      const { data } = await supabase
+        .from('assinaturas')
+        .select('data_vencimento')
+        .eq('conta_id', contaId)
+        .single();
+      if (!data?.data_vencimento) return;
+      const hoje = new Date();
+      const vencimento = new Date(data.data_vencimento);
+      const dias = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+      if (dias <= 0) {
+        setAvisoVencimento({tipo: 'vencido', dias: 0});
+      } else if (dias <= 1) {
+        setAvisoVencimento({tipo: '1dia', dias});
+      } else if (dias <= 3) {
+        setAvisoVencimento({tipo: '3dias', dias});
+      } else if (dias <= 5) {
+        setAvisoVencimento({tipo: '5dias', dias});
+      } else if (dias <= 10) {
+        setAvisoVencimento({tipo: '10dias', dias});
+      }
+    };
+    buscarVencimento();
   }, []);
 
   const verificarDeviceChange = async () => {
     const usuarioId = localStorage.getItem('usuario_id');
     const deviceIdLocal = localStorage.getItem('device_id');
-    
     if (!usuarioId) return;
-    
     try {
       const { data: usuario } = await supabase
         .from('usuarios')
         .select('device_id')
-        .eq('id', parseInt(usuarioId))        
+        .eq('id', parseInt(usuarioId))
         .single();
-      
       if (usuario?.device_id && usuario.device_id !== deviceIdLocal) {
         localStorage.clear();
         router.push('/login?logado_outro_dispositivo=true');
@@ -81,14 +99,12 @@ export default function Dashboard() {
     const tipo = localStorage.getItem('tipo_usuario');
     const empresa = localStorage.getItem('empresa_nome');
     const tPlano = localStorage.getItem('tipo_plano');
-
     if (!usuarioId || !cId || !nome) {
       localStorage.clear();
       sessionStorage.clear();
       router.push('/login');
       return;
     }
-
     setNomeUsuario(nome);
     setTipoUsuario(tipo || '');
     setNomeEmpresa(empresa || '');
@@ -106,23 +122,64 @@ export default function Dashboard() {
     localStorage.removeItem('tipo_plano');
     localStorage.removeItem('device_id');
     sessionStorage.clear();
-    
     document.cookie = 'usuario_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'conta_id=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'usuario_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'tipo_usuario=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'empresa_nome=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
     document.cookie = 'tipo_plano=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
-    
     window.location.href = '/login';
   };
 
   if (validando) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessão...</p></div>;
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Carregando...</p></div>;
   }
 
   return (
     <>
+      {avisoVencimento && avisoVencimento.tipo === 'vencido' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-8 max-w-md text-center">
+            <h2 className="text-3xl font-bold text-red-600 mb-4">🔴 PLANO VENCIDO</h2>
+            <p className="text-gray-700 mb-6">Seu plano venceu. Renove agora para continuar usando.</p>
+            <button
+              onClick={() => router.push('/planos')}
+              className="w-full bg-red-600 text-white px-6 py-3 rounded font-bold hover:bg-red-700"
+            >
+              Renovar Plano
+            </button>
+          </div>
+        </div>
+      )}
+
+      {avisoVencimento && avisoVencimento.tipo !== 'vencido' && (
+        <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white p-4 flex justify-between items-center z-50 shadow-lg">
+          <div>
+            <p className="font-bold">
+              {avisoVencimento.tipo === '1dia' && '🔴 URGENTE: Vence Amanhã'}
+              {avisoVencimento.tipo === '3dias' && '🟡 ATENÇÃO: Vence em 3 Dias'}
+              {avisoVencimento.tipo === '5dias' && '🔵 AVISO: Vence em 5 Dias'}
+              {avisoVencimento.tipo === '10dias' && '🔵 INFO: Vence em 10 Dias'}
+            </p>
+            <p className="text-sm">{avisoVencimento.dias} dias restantes</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setAvisoVencimento(null)}
+              className="bg-white text-gray-800 px-4 py-2 rounded font-bold hover:bg-gray-100 text-sm"
+            >
+              Descartar
+            </button>
+            <button
+              onClick={() => router.push('/planos')}
+              className="bg-white text-gray-800 px-4 py-2 rounded font-bold hover:bg-gray-100 text-sm"
+            >
+              Renovar
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
         <div className="w-full max-w-6xl">
           <div className="mb-6 flex justify-between items-center">
@@ -156,39 +213,32 @@ export default function Dashboard() {
                 📅 AGENDA
               </a>
             )}
-
             <a href="/caixa" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
               💰 CAIXA
             </a>
-
             {tipoPlano !== 'pessoal' && (
               <a href="/fiados" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
                 📝 FIADOS
               </a>
             )}
-
             {tipoPlano !== 'pessoal' && (
               <a href="/comanda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
                 🍽️ COMANDA
               </a>
             )}
-
             {tipoPlano !== 'pessoal' && (
               <a href="/cardapio" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
                 📋 CARDÁPIO
               </a>
             )}
-
             <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
               📊 RELATÓRIOS
             </a>
-
             {tipoPlano !== 'pessoal' && tipoUsuario === 'proprietario' && (
               <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
                 👥 GERENCIAR USUÁRIOS
               </a>
             )}
-
             {contaId === '4' && (
               <a href="/admin" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
                 🔧 ADMIN
