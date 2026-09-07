@@ -15,12 +15,16 @@ export default function AvisoVencimento() {
         const contaId = localStorage.getItem('conta_id');
         if (!contaId) return;
 
-        const { data } = await supabase
+    const { data, error } = await supabase
           .from('assinaturas')
           .select('data_vencimento')
           .eq('conta_id', contaId)
           .single();
 
+    if (error) {
+       console.error('Erro Supabase:', error);
+    return;
+     }
         if (!data?.data_vencimento) return;
 
         const hoje = new Date();
