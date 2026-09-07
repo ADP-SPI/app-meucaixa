@@ -1,4 +1,3 @@
-cat > app/components/AvisoVencimento.tsx << 'EOF'
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -15,21 +14,22 @@ export default function AvisoVencimento() {
         const contaId = localStorage.getItem('conta_id');
         if (!contaId) return;
 
-    const { data, error } = await supabase
+        const { data, error } = await supabase
           .from('assinaturas')
           .select('data_vencimento')
           .eq('conta_id', contaId)
           .single();
 
-    if (error) {
-       console.error('Erro Supabase:', error);
-    return;
-     }
-        if (!data?.data_vencimento) return;
+        if (error || !data?.data_vencimento) {
+          console.log('Sem assinatura encontrada');
+          return;
+        }
 
         const hoje = new Date();
         const vencimento = new Date(data.data_vencimento);
         const dias = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+        console.log('Dias restantes:', dias);
 
         if (dias <= 0) {
           setAviso({tipo: 'vencido', dias: 0});
@@ -43,9 +43,7 @@ export default function AvisoVencimento() {
           setAviso({tipo: '10dias', dias});
         }
       } catch (err) {
-          console.error('Erro vencimento:', err);
-          console.log('ContaId:', contaId, 'Erro:', err);
-      }
+        console.error('Erro vencimento:', err);
       }
     };
 
@@ -120,4 +118,3 @@ export default function AvisoVencimento() {
     </div>
   );
 }
-EOF
