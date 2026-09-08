@@ -336,6 +336,34 @@ export default function Comanda() {
               )}
             </div>
           </div>
+       
+                  )}
+
+        {notaGerada && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
+              <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(3, '0')} Gerada!</h2>
+              <p className="text-gray-600 mb-6">Cliente: {notaGerada.comanda}</p>
+              <p className="text-3xl font-bold text-green-600 mb-6">R$ {notaGerada.subtotal.toFixed(2)}</p>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    window.print();
+                    setNotaGerada(null);
+                  }}
+                  className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
+                >
+                  Imprimir Agora
+                </button>
+                <button
+                  onClick={() => setNotaGerada(null)}
+                  className="w-full bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500"
+                >
+                  Imprimir Depois
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
