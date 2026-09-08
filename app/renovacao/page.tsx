@@ -8,7 +8,7 @@ const PLANOS = [
   { id: 1, nome: 'Básico', preco: 29.90 },
   { id: 2, nome: 'Pro', preco: 49.90 },
   { id: 3, nome: 'Enterprise', preco: 79.90 },
-  { id: 4, nome: 'Individual', preco: 9.90 },
+  { id: 4, nome: 'Individual', preco: 19.90 },
   { id: 5, nome: 'Casal', preco: 29.90 }
 ];
 
@@ -56,7 +56,7 @@ export default function Renovacao() {
 
   const handleAssinarRenovar = () => {
     if (!planoEscolhido) return;
-    const telefone = '5544999999999';
+    const telefone = '5543996838274';
     const mensagem = `Olá, quero renovar o plano ${planoEscolhido.nome} por ${duracao?.label} - R$${precoTotal.toFixed(2)}`;
     const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
