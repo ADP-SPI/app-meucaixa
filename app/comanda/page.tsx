@@ -173,13 +173,18 @@ export default function Comanda() {
             itens: comanda.itens || []
           }]);
 
-        await supabase
+                  await supabase
           .from('comandas')
           .delete()
           .eq('id', comandaId);
-
-        alert(`Nota #${String(numeroNota).padStart(3, '0')} gerada! Fiado de R$ ${subtotal.toFixed(2)} adicionado ao caixa.`);
-      } else {
+        
+        setNotaGerada({
+          id: comandaId,
+          numero: numeroNota,
+          comanda: comanda.nome,
+          subtotal: subtotal
+        });      
+} else {
         await supabase
           .from('transacoes')
           .insert([{
