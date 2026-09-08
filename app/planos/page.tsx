@@ -25,11 +25,11 @@ export default function PlanosPage() {
   const [dataVencimento, setDataVencimento] = useState('');
 
   const planos = [
-    { id: 1, nome: 'Básico', preco: 29.90, usuarios: 1, itens: 50, mesas: 10, tipo: 'empresa', descricao: '1 acesso, 50 itens, 10 mesas' },
-    { id: 2, nome: 'Pro', preco: 49.90, usuarios: 3, itens: 100, mesas: 30, tipo: 'empresa', descricao: '3 acessos, 100 itens, 30 mesas' },
-    { id: 3, nome: 'Enterprise', preco: 79.90, usuarios: 999, itens: 999, mesas: 999, tipo: 'empresa', descricao: 'Ilimitado' },
-    { id: 4, nome: 'Individual', preco: 19.90, usuarios: 1, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
-    { id: 5, nome: 'Casal', preco: 29.90, usuarios: 2, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
+    { id: 1, nome: 'Básico', preco: 29,90, usuarios: 1, itens: 50, mesas: 10, tipo: 'empresa', descricao: '1 acesso, 50 itens, 10 mesas' },
+    { id: 2, nome: 'Pro', preco: 49,90, usuarios: 3, itens: 100, mesas: 30, tipo: 'empresa', descricao: '3 acessos, 100 itens, 30 mesas' },
+    { id: 3, nome: 'Enterprise', preco: 79,90, usuarios: 999, itens: 999, mesas: 999, tipo: 'empresa', descricao: 'Ilimitado' },
+    { id: 4, nome: 'Individual', preco: 19,90, usuarios: 1, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
+    { id: 5, nome: 'Casal', preco: 29,90, usuarios: 2, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
   ];
 
   const handleSelecionarPlano = (plano: any) => {
