@@ -224,7 +224,7 @@ export default function Dashboard() {
             )}
             {tipoPlano !== 'pessoal' && (
               <a href="/comanda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                🍽️ COMAND / ORÇAMENTO / PEDIDOA
+                🍽️ COMANAD / ORÇAMENTO / PEDID
               </a>
             )}
             {tipoPlano !== 'pessoal' && (
