@@ -195,17 +195,8 @@ export default function PlanosPage() {
               <h3 className="text-2xl font-bold mb-4">{plano.nome}</h3>
               
               {plano.id === 4 ? (
-                <div className="mb-6">
-                  <div className="mb-4">
-                    <span className="text-4xl font-bold text-red-600">9,90</span>
-                    <span className="text-red-600 font-bold"> 🏷️ NO PRIMEIRO MÊS</span>
-                  </div>
-                  <p className="text-sm font-bold text-red-600 mb-4">PROMOÇÃO POR TEMPO LIMITADO</p>
-                  <p className="text-green-600 text-sm mb-4">Depois: R$ 19,90/mês</p>
-                </div>
-              ) : (
-                <div className="mb-6">
-                  <p className="text-3xl font-bold text-green-600">R$ {plano.preco.toFixed(2)}<span className="text-sm">/mês</span></p>
+                 <div className="mb-6">
+                  <p className="text-3xl font-bold text-green-600">R$ {plano.preco.toFixed(2)}<span className="text-lg">/mês</span></p>
                 </div>
               )}
 
