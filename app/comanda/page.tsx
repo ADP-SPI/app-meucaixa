@@ -338,14 +338,22 @@ export default function Comanda() {
           </div>
        
                   )}
-
-        {notaGerada && (
+                   {notaGerada && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
               <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(3, '0')} Gerada!</h2>
               <p className="text-gray-600 mb-6">Cliente: {notaGerada.comanda}</p>
               <p className="text-3xl font-bold text-green-600 mb-6">R$ {notaGerada.subtotal.toFixed(2)}</p>
               <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => {
+                    alert('Assinar na tela - em desenvolvimento para celular');
+                    setNotaGerada(null);
+                  }}
+                  className="w-full bg-purple-600 text-white p-3 rounded font-bold hover:bg-purple-700"
+                >
+                  Assinar na Tela
+                </button>
                 <button
                   onClick={() => {
                     window.print();
