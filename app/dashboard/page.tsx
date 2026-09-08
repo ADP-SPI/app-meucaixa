@@ -224,12 +224,12 @@ export default function Dashboard() {
             )}
             {tipoPlano !== 'pessoal' && (
               <a href="/comanda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                Comanda / Orcamento / Pedido
+                Comanda / Orçamento / Pedido
               </a>
             )}
             {tipoPlano !== 'pessoal' && (
               <a href="/cardapio" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                Cardapio / Produtos ou Servicos
+                Cardapio / Produtos ou Serviços
               </a>
             )}
             <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
