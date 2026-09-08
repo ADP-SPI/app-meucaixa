@@ -143,7 +143,7 @@ export default function Dashboard() {
             <h2 className="text-3xl font-bold text-red-600 mb-4">🔴 PLANO VENCIDO</h2>
             <p className="text-gray-700 mb-6">Seu plano venceu. Renove agora para continuar usando.</p>
             <button
-              onClick={() => router.push('/planos')}
+              DonClick={() => router.push('/renovacao')}
               className="w-full bg-red-600 text-white px-6 py-3 rounded font-bold hover:bg-red-700"
             >
               Renovar Plano
@@ -171,7 +171,7 @@ export default function Dashboard() {
               Descartar
             </button>
             <button
-              onClick={() => router.push('/planos')}
+              onClick={() => router.push('/renovacao')}
               className="bg-white text-gray-800 px-4 py-2 rounded font-bold hover:bg-gray-100 text-sm"
             >
               Renovar
