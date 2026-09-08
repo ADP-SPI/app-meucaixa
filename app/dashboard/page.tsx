@@ -146,7 +146,7 @@ export default function Dashboard() {
       {avisoVencimento && avisoVencimento.tipo === 'vencido' && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg p-8 max-w-md text-center">
-            <h2 className="text-3xl font-bold text-red-600 mb-4">🔴 PLANO VENCIDO</h2>
+            <h2 className="text-3xl font-bold text-red-600 mb-4">PLANO VENCIDO</h2>
             <p className="text-gray-700 mb-6">Seu plano venceu. Renove agora para continuar usando.</p>
             <button
               onClick={() => router.push('/renovacao')}
@@ -161,8 +161,8 @@ export default function Dashboard() {
       {avisoVencimento && avisoVencimento.tipo === 'ultimo5' && (
         <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white p-4 flex justify-between items-center z-50 shadow-lg">
           <div>
-            <p className="font-bold">🔵 AVISO: Vence em {avisoVencimento.dias} dia{avisoVencimento.dias > 1 ? 's' : ''}</p>
-            <p className="text-sm">Últimos dias para renovar seu plano</p>
+            <p className="font-bold">AVISO: Vence em {avisoVencimento.dias} dia{avisoVencimento.dias > 1 ? 's' : ''}</p>
+            <p className="text-sm">Ultimos dias para renovar seu plano</p>
           </div>
           <div className="flex gap-2">
             <button
@@ -191,7 +191,7 @@ export default function Dashboard() {
               <p className="text-sm font-bold text-gray-900">{nomeUsuario}</p>
               {tipoUsuario === 'proprietario' && (
                 <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded mt-1 inline-block">
-                  👤 Proprietário
+                  Proprietario
                 </span>
               )}
             </div>
@@ -199,50 +199,50 @@ export default function Dashboard() {
               onClick={handleLogout}
               className="text-blue-600 hover:underline font-bold"
             >
-              Sair / Trocar Usuário
+              Sair / Trocar Usuario
             </button>
           </div>
 
           <div className="text-center py-8 mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Meu Caixa</h1>
-            <p className="text-gray-600 mt-2">Gestão simples do seu negócio</p>
+            <p className="text-gray-600 mt-2">Gestao simples do seu negocio</p>
           </div>
 
           <div className="space-y-3">
             {tipoPlano !== 'pessoal' && (
               <a href="/agenda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                📅 AGENDA
+                Agenda
               </a>
             )}
             <a href="/caixa" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              💰 CAIXA
+              Caixa
             </a>
             {tipoPlano !== 'pessoal' && (
               <a href="/fiados" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                📝 FIADOS
+                Fiados
               </a>
             )}
             {tipoPlano !== 'pessoal' && (
               <a href="/comanda" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                🍽️ COMANAD / ORÇAMENTO / PEDID
+                Comanda / Orcamento / Pedido
               </a>
             )}
             {tipoPlano !== 'pessoal' && (
               <a href="/cardapio" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                📋 CARDÁPIO / PRODUTOS OU SERVIÇOS
+                Cardapio / Produtos ou Servicos
               </a>
             )}
             <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              📊 RELATÓRIOS
+              Relatorios
             </a>
             {tipoPlano !== 'pessoal' && tipoUsuario === 'proprietario' && (
               <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                👥 GERENCIAR USUÁRIOS
+                Gerenciar Usuarios
               </a>
             )}
             {contaId === '4' && (
               <a href="/admin" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                🔧 ADMIN
+                Admin
               </a>
             )}
           </div>
