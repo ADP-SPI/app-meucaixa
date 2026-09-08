@@ -194,11 +194,9 @@ export default function PlanosPage() {
             <div key={plano.id} className="border-2 border-gray-200 bg-white rounded-lg p-6 hover:border-green-600 transition">
               <h3 className="text-2xl font-bold mb-4">{plano.nome}</h3>
               
-              {plano.id === 4 ? (
-                 <div className="mb-6">
+              <div className="mb-6">
                   <p className="text-3xl font-bold text-green-600">R$ {plano.preco.toFixed(2)}<span className="text-lg">/mês</span></p>
                 </div>
-              )}
 
               {plano.tipo === 'pessoal' ? (
                 <p className="text-gray-600 mb-6">{plano.descricao}</p>
