@@ -56,21 +56,16 @@ export default function Renovacao() {
 
   const handleAssinarRenovar = () => {
     if (!planoEscolhido) return;
-
     const telefone = '5544999999999';
     const mensagem = `Olá, quero renovar o plano ${planoEscolhido.nome} por ${duracao?.label} - R$${precoTotal.toFixed(2)}`;
     const url = `https://wa.me/${telefone}?text=${encodeURIComponent(mensagem)}`;
-    
     window.open(url, '_blank');
   };
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-2xl">
-        <button
-          onClick={() => router.back()}
-          className="text-blue-600 hover:underline font-bold mb-4"
-        >
+        <button onClick={() => router.back()} className="text-blue-600 hover:underline font-bold mb-4">
           ← Voltar
         </button>
 
@@ -86,15 +81,7 @@ export default function Renovacao() {
           <h2 className="text-lg font-bold text-gray-900 mb-3">Escolher Plano</h2>
           <div className="space-y-2 mb-6">
             {PLANOS.map(plano => (
-              <button
-                key={plano.id}
-                onClick={() => setPlanoSelecionado(plano.id)}
-                className={`w-full p-3 rounded text-left font-bold transition ${
-                  planoSelecionado === plano.id
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'
-                }`}
-              >
+              <button key={plano.id} onClick={() => setPlanoSelecionado(plano.id)} className={`w-full p-3 rounded text-left font-bold transition ${planoSelecionado === plano.id ? 'bg-blue-600 text-white' : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'}`}>
                 {plano.nome} - R${plano.preco.toFixed(2)}/mês
               </button>
             ))}
@@ -105,9 +92,24 @@ export default function Renovacao() {
               <h2 className="text-lg font-bold text-gray-900 mb-3">Escolher Duração</h2>
               <div className="space-y-2 mb-6">
                 {DURAÇÕES.map(dur => (
-                  <button
-                    key={dur.meses}
-                    onClick={() => setDuracaoSelecionada(dur.meses)}
-                    className={`w-full p-3 rounded text-left font-bold transition ${
-                      duracaoSelecionada === dur.meses
-                        ? 'bg-green-600
+                  <button key={dur.meses} onClick={() => setDuracaoSelecionada(dur.meses)} className={`w-full p-3 rounded text-left font-bold transition ${duracaoSelecionada === dur.meses ? 'bg-green-600 text-white' : 'bg-gray-50 text-gray-900 border border-gray-200 hover:bg-gray-100'}`}>
+                    {dur.label} - R${(planoEscolhido!.preco * dur.meses).toFixed(2)}
+                  </button>
+                ))}
+              </div>
+
+              <div className="bg-blue-50 p-4 rounded mb-6">
+                <p className="text-sm text-gray-600">Total a pagar:</p>
+                <p className="text-2xl font-bold text-blue-600">R${precoTotal.toFixed(2)}</p>
+              </div>
+
+              <button onClick={handleAssinarRenovar} className="w-full bg-green-600 text-white px-6 py-4 rounded font-bold text-lg hover:bg-green-700 transition">
+                Renovar via WhatsApp
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
