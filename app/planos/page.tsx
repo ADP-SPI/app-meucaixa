@@ -1,5 +1,4 @@
 'use client';
-
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -9,6 +8,10 @@ const supabase = createClient(
   'https://rbocrgnmsadkbfoqbzpe.supabase.co',
   'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
 );
+
+const formatarPreco = (valor: number) => {
+  return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
 
 export default function PlanosPage() {
   const router = useRouter();
@@ -28,8 +31,8 @@ export default function PlanosPage() {
     { id: 1, nome: 'Básico', preco: 29.90, usuarios: 1, itens: 50, mesas: 10, tipo: 'empresa', descricao: '1 acesso, 50 itens, 10 mesas' },
     { id: 2, nome: 'Pro', preco: 49.90, usuarios: 3, itens: 100, mesas: 30, tipo: 'empresa', descricao: '3 acessos, 100 itens, 30 mesas' },
     { id: 3, nome: 'Enterprise', preco: 79.90, usuarios: 999, itens: 999, mesas: 999, tipo: 'empresa', descricao: 'Ilimitado' },
-    { id: 4, nome: 'Individual', preco: 19.90, usuarios: 1, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
-    { id: 5, nome: 'Casal', preco: 29.90, usuarios: 2, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
+    { id: 4, nome: 'Individual', preco: 19.90, usuarios: 1, itens: 50, mesas: 0, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
+    { id: 5, nome: 'Casal', preco: 29.90, usuarios: 2, itens: 50, mesas: 0, tipo: 'pessoal', descricao: 'Acesso ao Caixa, Lançamentos e Relatórios' },
   ];
 
   const handleSelecionarPlano = (plano: any) => {
@@ -49,70 +52,54 @@ export default function PlanosPage() {
       return;
     }
 
-    if (!planoSelecionado) {
-      setErro('Selecione um plano');
-      return;
-    }
-
     setCarregando(true);
-    setErro('');
 
     try {
-      // 1. Criar conta
-      const { data: conta, error: erroConta } = await supabase
+      const { data: contaExistente } = await supabase
+        .from('contas')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (contaExistente) {
+        setErro('Email já cadastrado');
+        setCarregando(false);
+        return;
+      }
+
+      const { data: novaConta, error: erroContaError } = await supabase
         .from('contas')
         .insert([{
           nome: nomeEmpresa,
           email: email,
           whatsapp: whatsapp,
           plano_id: planoSelecionado.id,
-          status_assinatura: 'pendente',
+          status_assinatura: 'ativa',
           ativo: true
         }])
-        .select()
-        .single();
-      console.log('Response:', { data: conta, error: erroConta }); 
+        .select();
 
-
-      if (erroConta || !conta) {
-        console.log('Erro ao criar conta:', erroConta);
-        setErro(erroConta?.message || 'Email ou empresa já cadastrada');
-        setCarregando(false);
-        return;
-      }
-     
-      // 2. Criar usuário
-      const { data: usuario, error: erroUsuario } = await supabase
-        .from('usuarios')
-        .insert([{
-          conta_id: conta.id,
-          email: email,
-          senha_hash: senha,
-          nome: nomeUsuario,
-          tipo: 'proprietario',
-          ativo: true
-        }])
-        .select()
-        .single();
-
-      if (erroUsuario || !usuario) {
-        setErro('Erro ao criar usuário');
+      if (erroContaError || !novaConta || novaConta.length === 0) {
+        setErro('Erro ao criar conta');
         setCarregando(false);
         return;
       }
 
-      // 3. Criar assinatura com 15 dias
-      const vencimento = new Date();
-      vencimento.setDate(vencimento.getDate() + 15);
-      
+      const contaId = novaConta[0].id;
+
+      const dataInicio = new Date();
+      const dataVenc = new Date(dataInicio);
+      dataVenc.setDate(dataVenc.getDate() + 15);
+
       const { error: erroAssinatura } = await supabase
         .from('assinaturas')
         .insert([{
-          conta_id: conta.id,
+          conta_id: contaId,
           plano_id: planoSelecionado.id,
           status: 'teste_ativo',
           tipo_assinatura: 'teste',
-          data_vencimento: vencimento.toISOString()
+          data_inicio: dataInicio.toISOString(),
+          data_vencimento: dataVenc.toISOString()
         }]);
 
       if (erroAssinatura) {
@@ -121,59 +108,77 @@ export default function PlanosPage() {
         return;
       }
 
-      // 4. Salvar em localStorage
-      localStorage.setItem('usuario_id', usuario.id.toString());
-      localStorage.setItem('conta_id', conta.id.toString());
-      localStorage.setItem('usuario_nome', usuario.nome);
-      localStorage.setItem('tipo_usuario', 'proprietario');
-      localStorage.setItem('empresa_nome', nomeEmpresa);
-      localStorage.setItem('tipo_plano', planoSelecionado.tipo);
+      const deviceId = `device_${Math.random().toString(36).substr(2, 9)}_${Date.now()}`;
 
-      // 5. Mostrar modal de sucesso
-      setDataVencimento(vencimento.toLocaleDateString('pt-BR'));
-      setModalAberto(false);
+      const { data: novoUsuario, error: erroUsuario } = await supabase
+        .from('usuarios')
+        .insert([{
+          conta_id: contaId,
+          email: email,
+          senha_hash: senha,
+          nome: nomeUsuario,
+          tipo: 'proprietario',
+          ativo: true,
+          device_id: deviceId
+        }])
+        .select();
+
+      if (erroUsuario || !novoUsuario || novoUsuario.length === 0) {
+        setErro('Erro ao criar usuário');
+        setCarregando(false);
+        return;
+      }
+
+      setDataVencimento(dataVenc.toLocaleDateString('pt-BR'));
       setSuccessModal(true);
-      
-    } catch (err) {
-      console.error('Erro:', err);
-      setErro('Erro ao processar cadastro');
-    }
+      setModalAberto(false);
 
-    setCarregando(false);
+      setTimeout(() => {
+        localStorage.setItem('usuario_id', novoUsuario[0].id.toString());
+        localStorage.setItem('conta_id', contaId.toString());
+        localStorage.setItem('usuario_nome', nomeUsuario);
+        localStorage.setItem('tipo_usuario', 'proprietario');
+        localStorage.setItem('empresa_nome', nomeEmpresa);
+        localStorage.setItem('tipo_plano', planoSelecionado.tipo);
+        localStorage.setItem('device_id', deviceId);
+        router.push('/dashboard');
+      }, 2000);
+    } catch (error) {
+      setErro('Erro inesperado');
+      console.error(error);
+    } finally {
+      setCarregando(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-6xl mx-auto">
-        <Link href="/" className="text-blue-600 hover:underline mb-4 inline-block">
-          ← Voltar
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white p-6">
+      <div className="max-w-7xl mx-auto">
+        <Link href="/" className="text-blue-600 hover:underline font-bold mb-8 inline-block">
+          ← Voltar para Home
         </Link>
 
-        {/* HEADER */}
-        <div className="text-center mb-12">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Escolha o Seu Plano</h1>
-          <p className="text-2xl font-bold text-red-600 mb-4">⏰ 15 dias de teste grátis</p>
-          <p className="text-gray-600 mb-8">Formas de Pagamento: Cartão de Crédito ou Pix</p>
-        </div>
+        <h1 className="text-4xl font-bold text-center text-gray-900 mb-4">Escolha seu Plano</h1>
+        <p className="text-center text-gray-600 mb-12">Selecione o plano ideal para sua necessidade</p>
 
         {/* PLANOS EMPRESARIAIS */}
-        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">PLANOS EMPRESARIAIS</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">PLANOS PARA EMPRESAS</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 max-w-5xl mx-auto">
           {planos.filter(p => p.tipo === 'empresa').map((plano) => (
-            <div key={plano.id} className="border-2 border-gray-200 bg-white rounded-lg p-6 hover:border-green-600 transition">
-              <h3 className="text-2xl font-bold mb-2">{plano.nome}</h3>
-              <p className="text-gray-600 mb-4">{plano.descricao}</p>
-              <div className="text-3xl font-bold text-green-600 mb-6">
-                R$ {plano.preco.toFixed(2)}<span className="text-sm">/mês</span>
+            <div key={plano.id} className="border-2 border-gray-200 bg-white rounded-lg p-6 hover:border-green-600 transition shadow-lg">
+              <h3 className="text-2xl font-bold mb-4">{plano.nome}</h3>
+              <div className="mb-6">
+                <p className="text-3xl font-bold text-green-600">{formatarPreco(plano.preco)}<span className="text-lg">/mês</span></p>
               </div>
-            <ul className="space-y-2 text-gray-700 mb-6">
+              <p className="text-gray-600 mb-4">{plano.descricao}</p>
+              <ul className="space-y-2 text-gray-700 mb-6">
                 <li>✓ {plano.usuarios} acesso{plano.usuarios > 1 ? 's' : ''}</li>
                 <li>✓ {plano.itens} itens cardápio</li>
                 <li>✓ {plano.mesas} mesas/comandas</li>
               </ul>
               <button
                 onClick={() => handleSelecionarPlano(plano)}
-                className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700"
+                className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700 transition"
               >
                 Selecionar
               </button>
@@ -181,38 +186,19 @@ export default function PlanosPage() {
           ))}
         </div>
 
-        {/* DIVISÓRIA */}
-        <div className="flex items-center gap-4 my-12">
-          <div className="flex-1 h-px bg-gray-300"></div>
-          <div className="flex-1 h-px bg-gray-300"></div>
-        </div>
-
         {/* PLANOS PESSOAIS */}
         <h2 className="text-2xl font-bold text-gray-900 mb-8 text-center">PLANOS PARA USO PESSOAL</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-2xl mx-auto">
           {planos.filter(p => p.tipo === 'pessoal').map((plano) => (
-            <div key={plano.id} className="border-2 border-gray-200 bg-white rounded-lg p-6 hover:border-green-600 transition">
+            <div key={plano.id} className="border-2 border-gray-200 bg-white rounded-lg p-6 hover:border-green-600 transition shadow-lg">
               <h3 className="text-2xl font-bold mb-4">{plano.nome}</h3>
-              
               <div className="mb-6">
-                  <p className="text-3xl font-bold text-green-600">R$ {plano.preco.toFixed(2)}<span className="text-lg">/mês</span></p>
-                </div>
-
-              {plano.tipo === 'pessoal' ? (
-                <p className="text-gray-600 mb-6">{plano.descricao}</p>
-              ) : (
-                <>
-                  <p className="text-gray-600 mb-4">{plano.descricao}</p>
-                  <ul className="space-y-2 text-gray-700 mb-6">
-                    <li>✓ {plano.usuarios} acesso{plano.usuarios > 1 ? 's' : ''}</li>
-                    <li>✓ {plano.itens} itens cardápio</li>
-                    <li>✓ {plano.mesas} mesas/comandas</li>
-                  </ul>
-                </>
-              )}
+                <p className="text-3xl font-bold text-green-600">{formatarPreco(plano.preco)}<span className="text-lg">/mês</span></p>
+              </div>
+              <p className="text-gray-600 mb-6">{plano.descricao}</p>
               <button
                 onClick={() => handleSelecionarPlano(plano)}
-                className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700"
+                className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700 transition"
               >
                 Selecionar
               </button>
@@ -221,97 +207,62 @@ export default function PlanosPage() {
         </div>
 
         {/* MODAL CADASTRO */}
-        {modalAberto && planoSelecionado && (
+        {modalAberto && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full max-h-screen overflow-y-auto">
-              <h3 className="text-xl font-bold mb-6">Cadastro - Plano {planoSelecionado.nome}</h3>
+            <div className="bg-white rounded-lg p-8 max-w-md w-full">
+              <h2 className="text-2xl font-bold mb-6">Cadastro - {planoSelecionado?.nome}</h2>
 
-              {erro && (
-                <div className="bg-red-100 text-red-700 p-3 rounded mb-4 text-sm">
-                  {erro}
-                </div>
-              )}
+              {erro && <p className="text-red-600 font-bold mb-4">{erro}</p>}
 
-              <div className="space-y-4 mb-6">
-                <div>
-                  <label className="block text-sm font-bold mb-2">Nome da Empresa/Negócio</label>
-                  <input
-                    type="text"
-                    value={nomeEmpresa}
-                    onChange={(e) => setNomeEmpresa(e.target.value)}
-                    placeholder="Ex: Barbearia João"
-                    className="w-full border border-gray-300 p-2 rounded"
-                  />
-                </div>
+              <input
+                type="text"
+                placeholder="Nome da Empresa"
+                value={nomeEmpresa}
+                onChange={(e) => setNomeEmpresa(e.target.value)}
+                className="w-full p-3 mb-4 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                placeholder="Seu Nome"
+                value={nomeUsuario}
+                onChange={(e) => setNomeUsuario(e.target.value)}
+                className="w-full p-3 mb-4 border border-gray-300 rounded"
+              />
+              <input
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full p-3 mb-4 border border-gray-300 rounded"
+              />
+              <input
+                type="text"
+                placeholder="WhatsApp"
+                value={whatsapp}
+                onChange={(e) => setWhatsapp(e.target.value)}
+                className="w-full p-3 mb-4 border border-gray-300 rounded"
+              />
+              <input
+                type="password"
+                placeholder="Senha"
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                className="w-full p-3 mb-6 border border-gray-300 rounded"
+              />
 
-                <div>
-                  <label className="block text-sm font-bold mb-2">Seu Nome</label>
-                  <input
-                    type="text"
-                    value={nomeUsuario}
-                    onChange={(e) => setNomeUsuario(e.target.value)}
-                    placeholder="Ex: João Silva"
-                    className="w-full border border-gray-300 p-2 rounded"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold mb-2">WhatsApp</label>
-                  <input
-                    type="tel"
-                    value={whatsapp}
-                    onChange={(e) => setWhatsapp(e.target.value)}
-                    placeholder="Ex: (44) 99999-9999"
-                    className="w-full border border-gray-300 p-2 rounded"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="seu@email.com"
-                    className="w-full border border-gray-300 p-2 rounded"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-bold mb-2">Senha</label>
-                  <input
-                    type="password"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full border border-gray-300 p-2 rounded"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <button
-                  onClick={handleCadastro}
-                  disabled={carregando}
-                  className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700 disabled:bg-gray-400"
-                >
-                  {carregando ? 'Processando...' : '✓ CONTRATAR PLANO'}
-                </button>
-
-                <button
-                  onClick={() => {
-                    setModalAberto(false);
-                    setPlanoSelecionado(null);
-                  }}
-                  className="w-full bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500"
-                >
-                  ✕ CANCELAR
-                </button>
-              </div>
-
-              <p className="text-center text-xs text-gray-600 mt-4">
-                Já tem conta? <Link href="/login" className="text-blue-600 hover:underline">Faça login</Link>
-              </p>
+              <button
+                onClick={handleCadastro}
+                disabled={carregando}
+                className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700 disabled:bg-gray-400"
+              >
+                {carregando ? 'Criando...' : 'Criar Conta'}
+              </button>
+              <button
+                onClick={() => setModalAberto(false)}
+                className="w-full mt-3 bg-gray-300 text-gray-800 p-3 rounded font-bold hover:bg-gray-400"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         )}
@@ -319,32 +270,11 @@ export default function PlanosPage() {
         {/* MODAL SUCESSO */}
         {successModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full text-center">
-              <h3 className="text-2xl font-bold text-green-600 mb-4">✅ TESTE ATIVADO!</h3>
-              
-              <div className="bg-green-50 p-6 rounded-lg mb-6">
-                <p className="text-gray-600 mb-2">Seu teste grátis vence em:</p>
-                <p className="text-3xl font-bold text-green-600 mb-4">📅 {dataVencimento}</p>
-                <p className="text-sm text-gray-600">(15 dias de teste grátis)</p>
-              </div>
-
-              <p className="text-gray-700 mb-6 font-semibold">
-                Aproveite seu sistema! Teste todas as funcionalidades e veja como funciona.
-              </p>
-
-              <button
-                onClick={() => {
-                  setSuccessModal(false);
-                  router.push('/login');
-                }}
-                className="w-full bg-green-600 text-white p-4 rounded font-bold hover:bg-green-700 mb-2"
-              >
-                🚀 COMEÇAR AGORA
-              </button>
-
-              <p className="text-xs text-gray-600">
-                Clique acima para fazer login e começar a usar seu sistema
-              </p>
+            <div className="bg-white rounded-lg p-8 max-w-md w-full text-center">
+              <h2 className="text-2xl font-bold text-green-600 mb-4">✓ Conta Criada!</h2>
+              <p className="text-gray-700 mb-4">Seu teste de 15 dias começou!</p>
+              <p className="text-sm text-gray-600">Vence em: {dataVencimento}</p>
+              <p className="text-sm text-gray-600 mt-2">Redirecionando...</p>
             </div>
           </div>
         )}
