@@ -5,11 +5,11 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
 const PLANOS = [
-  { id: 1, nome: 'Básico', preco: 29.90 },
-  { id: 2, nome: 'Pro', preco: 49.90 },
-  { id: 3, nome: 'Enterprise', preco: 79.90 },
-  { id: 4, nome: 'Individual', preco: 19.90 },
-  { id: 5, nome: 'Casal', preco: 29.90 }
+  { id: 1, nome: 'Básico', preco: 29,90 },
+  { id: 2, nome: 'Pro', preco: 49,90 },
+  { id: 3, nome: 'Enterprise', preco: 79,90 },
+  { id: 4, nome: 'Individual', preco: 19,90 },
+  { id: 5, nome: 'Casal', preco: 29,90 }
 ];
 
 const DURAÇÕES = [
