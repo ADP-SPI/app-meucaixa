@@ -133,42 +133,90 @@ export default function Comanda() {
     return comanda.itens.reduce((sum: number, item: any) => sum + item.preco * item.quantidade, 0);
   };
 
+   const gerarNumeroNota = async (cId: number) => {
+    const { data } = await supabase
+      .from('notas_fiados')
+      .select('numero_nota')
+      .eq('conta_id', cId)
+      .order('numero_nota', { ascending: false })
+      .limit(1);
+    
+    const ultimoNumero = data && data.length > 0 ? data[0].numero_nota : 0;
+    return (ultimoNumero + 1) % 10000;
+  };
+
   const fecharComanda = async (comandaId: number) => {
     const subtotal = calcularSubtotal(comandaId);
     const comanda = comandas.find(c => c.id === comandaId);
-
     if (subtotal === 0 || !comanda || !contaId) return;
-
+    
     try {
-      await supabase
-        .from('transacoes')
-        .insert([{
-          conta_id: contaId,
-          descricao: `Comanda: ${comanda.nome}`,
-          valor: subtotal,
-          tipo: 'receita',
-          formapagamento: formaPagamento,
-          hora: new Date().toLocaleTimeString('pt-BR'),
-          data: new Date().toISOString().split('T')[0],
-          origin: 'comanda',
-          itens: comanda.itens || []
-        }]);
-
-      await supabase
-        .from('comandas')
-        .delete()
-        .eq('id', comandaId);
-
+      if (formaPagamento === 'FIADO') {
+        const numeroNota = await gerarNumeroNota(contaId);
+        
+        await supabase
+          .from('notas_fiados')
+          .insert([{
+            conta_id: contaId,
+            numero_nota: numeroNota,
+            cliente_nome: comanda.nome,
+            itens: comanda.itens || [],
+            total_valor: subtotal,
+            status: 'aberta'
+          }]);
+        
+        await supabase
+          .from('transacoes')
+          .insert([{
+            conta_id: contaId,
+            descricao: `Fiado: ${comanda.nome}`,
+            valor: subtotal,
+            tipo: 'receita',
+            formapagamento: 'FIADO',
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            data: new Date().toISOString().split('T')[0],
+            origin: 'comanda',
+            itens: comanda.itens || []
+          }]);
+        
+        await supabase
+          .from('comandas')
+          .delete()
+          .eq('id', comandaId);
+        
+        alert(`Nota #${String(numeroNota).padStart(3, '0')} gerada! Fiado de R$ ${subtotal.toFixed(2)} adicionado ao caixa.`);
+      } else {
+        await supabase
+          .from('transacoes')
+          .insert([{
+            conta_id: contaId,
+            descricao: `Comanda: ${comanda.nome}`,
+            valor: subtotal,
+            tipo: 'receita',
+            formapagamento: formaPagamento,
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            data: new Date().toISOString().split('T')[0],
+            origin: 'comanda',
+            itens: comanda.itens || []
+          }]);
+        
+        await supabase
+          .from('comandas')
+          .delete()
+          .eq('id', comandaId);
+        
+        alert(`Comanda de ${comanda.nome} fechada! R$ ${subtotal.toFixed(2)} adicionado ao caixa.`);
+      }
+      
       setModalAberto(null);
       setFechando(false);
       setFormaPagamento('PIX');
-      alert(`Comanda de ${comanda.nome} fechada! R$ ${subtotal.toFixed(2)} adicionado ao caixa.`);
       carregarDados(contaId);
     } catch (err) {
       console.error('Erro:', err);
       alert('Erro ao fechar comanda');
     }
-  };
+  };  
 
   const deletarComanda = async (comandaId: number) => {
     try {
