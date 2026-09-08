@@ -48,13 +48,13 @@ export default function LoginPage() {
           </p>
          
          <button
-  onClick={() => {
+     onClick={() => {
     localStorage.clear();
-    window.location.reload();
-  }}
+    window.location.href = '/login';
+  }}  
   className="inline-block bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
 >
-  ✓ Fazer Login Novamente
+✓ Fazer Login Novamente
 </button>
       
   </div>
