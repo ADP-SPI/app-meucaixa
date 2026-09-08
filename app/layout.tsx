@@ -57,6 +57,9 @@ export default function RootLayout({
         {children}
         <script>
           {`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
           `}
         </script>
       </body>
