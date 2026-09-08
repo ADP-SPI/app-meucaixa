@@ -1,5 +1,4 @@
 'use client';
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -39,13 +38,11 @@ export default function Comanda() {
         .from('cardapio')
         .select('*')
         .eq('conta_id', cId);
-
       const { data: comandasData } = await supabase
         .from('comandas')
         .select('*')
         .eq('conta_id', cId)
         .order('created_at', { ascending: false });
-
       setCardapio(cardapioData || []);
       setComandas(comandasData || []);
     } catch (err) {
@@ -54,9 +51,24 @@ export default function Comanda() {
     setCarregando(false);
   };
 
+  const gerarNumeroNota = async (cId: number) => {
+    try {
+      const { data } = await supabase
+        .from('notas_fiados')
+        .select('numero_nota')
+        .eq('conta_id', cId)
+        .order('numero_nota', { ascending: false })
+        .limit(1);
+      
+      const ultimoNumero = data && data.length > 0 ? data[0].numero_nota : 0;
+      return (ultimoNumero + 1) % 10000;
+    } catch {
+      return Math.floor(Math.random() * 10000);
+    }
+  };
+
   const criarComanda = async () => {
     if (!nomeComanda.trim() || !contaId) return;
-
     try {
       const { error } = await supabase
         .from('comandas')
@@ -67,9 +79,7 @@ export default function Comanda() {
           data: new Date().toISOString().split('T')[0],
           hora: new Date().toLocaleTimeString('pt-BR')
         }]);
-
       if (error) throw error;
-
       setNomeComanda('');
       setAbrindoComanda(false);
       carregarDados(contaId);
@@ -82,7 +92,6 @@ export default function Comanda() {
   const adicionarItem = async (comandaId: number, item: any) => {
     const comanda = comandas.find(c => c.id === comandaId);
     if (!comanda) return;
-
     const itensAtualizados = [
       ...(comanda.itens || []),
       {
@@ -92,68 +101,52 @@ export default function Comanda() {
         quantidade: 1
       }
     ];
-
     try {
       const { error } = await supabase
         .from('comandas')
         .update({ itens: itensAtualizados })
         .eq('id', comandaId);
-
       if (error) throw error;
-
       setItemRapido('');
       setPrecoRapido('');
       carregarDados(contaId!);
     } catch (err) {
       console.error('Erro:', err);
+      alert('Erro ao adicionar item');
     }
   };
 
   const removerItem = async (comandaId: number, itemId: number) => {
     const comanda = comandas.find(c => c.id === comandaId);
     if (!comanda) return;
-
-    const itensAtualizados = (comanda.itens || []).filter((i: any) => i.id !== itemId);
-
+    const itensAtualizados = (comanda.itens || []).filter((item: any) => item.id !== itemId);
     try {
       await supabase
         .from('comandas')
         .update({ itens: itensAtualizados })
         .eq('id', comandaId);
-
       carregarDados(contaId!);
     } catch (err) {
       console.error('Erro:', err);
+      alert('Erro ao remover item');
     }
   };
 
   const calcularSubtotal = (comandaId: number) => {
     const comanda = comandas.find(c => c.id === comandaId);
     if (!comanda || !comanda.itens) return 0;
-    return comanda.itens.reduce((sum: number, item: any) => sum + item.preco * item.quantidade, 0);
-  };
-
-   const gerarNumeroNota = async (cId: number) => {
-    const { data } = await supabase
-      .from('notas_fiados')
-      .select('numero_nota')
-      .eq('conta_id', cId)
-      .order('numero_nota', { ascending: false })
-      .limit(1);
-    
-    const ultimoNumero = data && data.length > 0 ? data[0].numero_nota : 0;
-    return (ultimoNumero + 1) % 10000;
+    return comanda.itens.reduce((total: number, item: any) => total + (item.quantidade * item.preco), 0);
   };
 
   const fecharComanda = async (comandaId: number) => {
     const subtotal = calcularSubtotal(comandaId);
     const comanda = comandas.find(c => c.id === comandaId);
     if (subtotal === 0 || !comanda || !contaId) return;
-    
+
     try {
       if (formaPagamento === 'FIADO') {
         const numeroNota = await gerarNumeroNota(contaId);
-        
+
         await supabase
           .from('notas_fiados')
           .insert([{
@@ -164,7 +157,7 @@ export default function Comanda() {
             total_valor: subtotal,
             status: 'aberta'
           }]);
-        
+
         await supabase
           .from('transacoes')
           .insert([{
@@ -178,12 +171,12 @@ export default function Comanda() {
             origin: 'comanda',
             itens: comanda.itens || []
           }]);
-        
+
         await supabase
           .from('comandas')
           .delete()
           .eq('id', comandaId);
-        
+
         alert(`Nota #${String(numeroNota).padStart(3, '0')} gerada! Fiado de R$ ${subtotal.toFixed(2)} adicionado ao caixa.`);
       } else {
         await supabase
@@ -199,15 +192,15 @@ export default function Comanda() {
             origin: 'comanda',
             itens: comanda.itens || []
           }]);
-        
+
         await supabase
           .from('comandas')
           .delete()
           .eq('id', comandaId);
-        
+
         alert(`Comanda de ${comanda.nome} fechada! R$ ${subtotal.toFixed(2)} adicionado ao caixa.`);
       }
-      
+
       setModalAberto(null);
       setFechando(false);
       setFormaPagamento('PIX');
@@ -216,7 +209,7 @@ export default function Comanda() {
       console.error('Erro:', err);
       alert('Erro ao fechar comanda');
     }
-  };  
+  };
 
   const deletarComanda = async (comandaId: number) => {
     try {
@@ -224,92 +217,58 @@ export default function Comanda() {
         .from('comandas')
         .delete()
         .eq('id', comandaId);
-
       setModalAberto(null);
       carregarDados(contaId!);
     } catch (err) {
       console.error('Erro:', err);
+      alert('Erro ao deletar comanda');
     }
   };
 
-  if (carregando) return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Carregando...</p></div>;
+  if (carregando) {
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Carregando...</p></div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
         <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
-          ← Voltar
+          Voltar
         </Link>
-
-        <h1 className="text-2xl font-bold mb-6">Comanda</h1>
-
+        <h1 className="text-2xl font-bold mb-6">Comanda / Orcamento / Pedido</h1>
         <div className="mb-6">
-          <label className="block text-sm font-bold mb-2">Modo de Operação</label>
+          <label className="block text-sm font-bold mb-2">Modo de Operacao</label>
           <select value={modo} onChange={(e) => setModo(e.target.value)} className="w-full border border-gray-300 p-2 rounded">
-            <option value="cardapio">Usar Cardápio</option>
-            <option value="rapido">Modo Rápido (digitar)</option>
+            <option value="cardapio">Usar Cardapio</option>
+            <option value="rapido">Modo Rapido (digitar)</option>
           </select>
         </div>
-
         {!abrindoComanda && modalAberto === null && (
           <button onClick={() => setAbrindoComanda(true)} className="w-full bg-green-600 text-white p-4 rounded font-bold hover:bg-green-700 mb-6">
             + ABRIR COMANDA
           </button>
         )}
-
         {abrindoComanda && (
-          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-            <h2 className="text-lg font-bold mb-4">Nova Comanda</h2>
-            <div className="mb-4">
-              <label className="block text-sm font-bold mb-2">Mesa ou Nome do Cliente</label>
-              <input type="text" value={nomeComanda} onChange={(e) => setNomeComanda(e.target.value)} placeholder="Ex: Mesa 1, João Silva..." className="w-full border border-gray-300 p-2 rounded" />
-            </div>
+          <div className="bg-white rounded-lg p-4 mb-6 border-2 border-blue-200">
+            <input type="text" placeholder="Nome do cliente" value={nomeComanda} onChange={(e) => setNomeComanda(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-3" />
             <div className="flex gap-2">
-              <button onClick={criarComanda} className="flex-1 bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">✓ ABRIR</button>
-              <button onClick={() => setAbrindoComanda(false)} className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500">✕ CANCELAR</button>
+              <button onClick={criarComanda} className="flex-1 bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700">Criar</button>
+              <button onClick={() => setAbrindoComanda(false)} className="flex-1 bg-gray-400 text-white p-2 rounded font-bold hover:bg-gray-500">Cancelar</button>
             </div>
           </div>
         )}
-
-        {modalAberto === null && comandas.length > 0 && (
-          <div>
-            <h2 className="text-lg font-bold mb-4">Comandas Abertas ({comandas.length})</h2>
-            <div className="space-y-2">
-              {comandas.map(cmd => (
-                <button key={cmd.id} onClick={() => setModalAberto(cmd.id)} className="w-full bg-white border border-gray-200 p-4 rounded text-left hover:bg-gray-50">
-                  <p className="font-bold text-lg">{cmd.nome}</p>
-                  <p className="text-sm text-gray-600">{(cmd.itens || []).length} itens - R$ {calcularSubtotal(cmd.id).toFixed(2)}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {modalAberto !== null && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-            <div className="bg-white p-6 rounded-lg shadow-lg max-w-2xl w-full max-h-screen overflow-y-auto flex flex-col">
-              <h2 className="text-xl font-bold mb-4">{comandas.find(c => c.id === modalAberto)?.nome}</h2>
-
-              <div className="bg-gray-100 p-4 rounded-lg mb-4">
-                {modo === 'cardapio' ? (
-                  <>
-                    <label className="block text-sm font-bold mb-2">Selecione um item</label>
-                    <select value="" onChange={(e) => {if (e.target.value) {const item = cardapio.find(i => i.id.toString() === e.target.value); if (item) adicionarItem(modalAberto, item); e.target.value = '';}}} className="w-full border border-gray-300 p-2 rounded">
-                      <option value="">-- Escolha um item --</option>
-                      {cardapio.map(item => (<option key={item.id} value={item.id}>{item.nome} - R$ {item.preco.toFixed(2)}</option>))}
-                    </select>
-                  </>
-                ) : (
-                  <>
-                    <div className="mb-3">
-                      <input type="text" value={itemRapido} onChange={(e) => setItemRapido(e.target.value)} placeholder="Nome do item" className="w-full border border-gray-300 p-2 rounded mb-2" />
-                      <input type="number" value={precoRapido} onChange={(e) => setPrecoRapido(e.target.value)} placeholder="Preço" step="0.01" className="w-full border border-gray-300 p-2 rounded" />
-                    </div>
-                    <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700">+ ADICIONAR ITEM</button>
-                  </>
-                )}
-              </div>
-
+        <div className="space-y-2 mb-6">
+          {comandas.map((comanda) => (
+            <button key={comanda.id} onClick={() => setModalAberto(comanda.id)} className="w-full bg-white text-left p-4 rounded border-2 border-gray-200 hover:border-blue-600 transition">
+              <p className="font-bold">{comanda.nome}</p>
+              <p className="text-sm text-gray-600">{(comanda.itens || []).length} itens - R$ {calcularSubtotal(comanda.id).toFixed(2)}</p>
+            </button>
+          ))}
+        </div>
+        {modalAberto && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-screen overflow-y-auto">
+              <h2 className="text-2xl font-bold mb-4">{comandas.find(c => c.id === modalAberto)?.nome}</h2>
               <div className="mb-4 flex-1">
                 <h3 className="font-bold mb-2">Itens</h3>
                 {(comandas.find(c => c.id === modalAberto)?.itens || []).length === 0 ? (
@@ -322,18 +281,36 @@ export default function Comanda() {
                           <p className="font-bold">{item.nome}</p>
                           <p className="text-sm text-gray-600">{item.quantidade}x R$ {item.preco.toFixed(2)} = R$ {(item.quantidade * item.preco).toFixed(2)}</p>
                         </div>
-                        <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">✕</button>
+                        <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">X</button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-
+              {modo === 'cardapio' && (
+                <div className="mb-4">
+                  <h3 className="font-bold mb-2">Adicionar do Cardapio</h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {cardapio.map((item) => (
+                      <button key={item.id} onClick={() => adicionarItem(modalAberto, item)} className="w-full text-left bg-blue-50 p-2 rounded hover:bg-blue-100 text-sm">
+                        {item.nome} - R$ {item.preco.toFixed(2)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {modo === 'rapido' && (
+                <div className="mb-4">
+                  <h3 className="font-bold mb-2">Adicionar Rapido</h3>
+                  <input type="text" placeholder="Nome do item" value={itemRapido} onChange={(e) => setItemRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
+                  <input type="number" placeholder="Preco" value={precoRapido} onChange={(e) => setPrecoRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
+                  <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-blue-600 text-white p-2 rounded font-bold hover:bg-blue-700">Adicionar</button>
+                </div>
+              )}
               <div className="bg-blue-100 p-4 rounded-lg mb-4 text-center">
                 <p className="text-sm text-gray-600">SUBTOTAL</p>
                 <p className="text-3xl font-bold text-blue-600">R$ {calcularSubtotal(modalAberto).toFixed(2)}</p>
               </div>
-
               {!fechando && (
                 <div className="flex gap-2">
                   <button onClick={() => setFechando(true)} className="flex-1 bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">Fechar Comanda</button>
@@ -341,19 +318,18 @@ export default function Comanda() {
                   <button onClick={() => setModalAberto(null)} className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500">Voltar</button>
                 </div>
               )}
-
               {fechando && (
                 <div className="mb-4">
                   <label className="block text-sm font-bold mb-2">Forma de Pagamento</label>
                   <select value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-4">
                     <option>PIX</option>
                     <option>DINHEIRO</option>
-                    <option>CARTÃO</option>
+                    <option>CARTAO</option>
                     <option>FIADO</option>
                   </select>
                   <div className="flex gap-2">
-                    <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">✓ Confirmar</button>
-                    <button onClick={() => setFechando(false)} className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500">✕ Cancelar</button>
+                    <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">Confirmar</button>
+                    <button onClick={() => setFechando(false)} className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500">Cancelar</button>
                   </div>
                 </div>
               )}
