@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [tipoPlano, setTipoPlano] = useState('');
   const [validando, setValidando] = useState(true);
   const [avisoVencimento, setAvisoVencimento] = useState<{tipo: string; dias: number} | null>(null);
+  const [ultimoDiaVerificado, setUltimoDiaVerificado] = useState<number>(new Date().getDate());
 
   useEffect(() => {
     let pullStartY = 0;
@@ -46,32 +47,37 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    const buscarVencimento = async () => {
-      const contaId = localStorage.getItem('conta_id');
-      if (!contaId) return;
-      const { data } = await supabase
-        .from('assinaturas')
-        .select('data_vencimento')
-        .eq('conta_id', contaId)
-        .single();
-      if (!data?.data_vencimento) return;
-      const hoje = new Date();
-      const vencimento = new Date(data.data_vencimento);
-      const dias = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-      if (dias <= 0) {
-        setAvisoVencimento({tipo: 'vencido', dias: 0});
-      } else if (dias <= 1) {
-        setAvisoVencimento({tipo: '1dia', dias});
-      } else if (dias <= 3) {
-        setAvisoVencimento({tipo: '3dias', dias});
-      } else if (dias <= 5) {
-        setAvisoVencimento({tipo: '5dias', dias});
-      } else if (dias <= 10) {
-        setAvisoVencimento({tipo: '10dias', dias});
-      }
-    };
     buscarVencimento();
-  }, []);
+    const interval = setInterval(() => {
+      const hoje = new Date().getDate();
+      if (hoje !== ultimoDiaVerificado) {
+        setUltimoDiaVerificado(hoje);
+        buscarVencimento();
+      }
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [ultimoDiaVerificado]);
+
+  const buscarVencimento = async () => {
+    const contaId = localStorage.getItem('conta_id');
+    if (!contaId) return;
+    const { data } = await supabase
+      .from('assinaturas')
+      .select('data_vencimento')
+      .eq('conta_id', contaId)
+      .single();
+    if (!data?.data_vencimento) return;
+    const hoje = new Date();
+    const vencimento = new Date(data.data_vencimento);
+    const dias = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+    if (dias <= 0) {
+      setAvisoVencimento({tipo: 'vencido', dias: 0});
+    } else if (dias >= 1 && dias <= 5) {
+      setAvisoVencimento({tipo: 'ultimo5', dias});
+    } else {
+      setAvisoVencimento(null);
+    }
+  };
 
   const verificarDeviceChange = async () => {
     const usuarioId = localStorage.getItem('usuario_id');
@@ -152,16 +158,11 @@ export default function Dashboard() {
         </div>
       )}
 
-      {avisoVencimento && avisoVencimento.tipo !== 'vencido' && (
+      {avisoVencimento && avisoVencimento.tipo === 'ultimo5' && (
         <div className="fixed top-0 left-0 right-0 bg-blue-500 text-white p-4 flex justify-between items-center z-50 shadow-lg">
           <div>
-            <p className="font-bold">
-              {avisoVencimento.tipo === '1dia' && '🔴 URGENTE: Vence Amanhã'}
-              {avisoVencimento.tipo === '3dias' && '🟡 ATENÇÃO: Vence em 3 Dias'}
-              {avisoVencimento.tipo === '5dias' && '🔵 AVISO: Vence em 5 Dias'}
-              {avisoVencimento.tipo === '10dias' && '🔵 INFO: Vence em 10 Dias'}
-            </p>
-            <p className="text-sm">{avisoVencimento.dias} dias restantes</p>
+            <p className="font-bold">🔵 AVISO: Vence em {avisoVencimento.dias} dia{avisoVencimento.dias > 1 ? 's' : ''}</p>
+            <p className="text-sm">Últimos dias para renovar seu plano</p>
           </div>
           <div className="flex gap-2">
             <button
