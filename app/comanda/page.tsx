@@ -178,13 +178,16 @@ export default function Comanda() {
           .delete()
           .eq('id', comandaId);
         
-        setNotaGerada({
+                 setNotaGerada({
           id: comandaId,
           numero: numeroNota,
           comanda: comanda.nome,
           subtotal: subtotal
-        });      
-} else {
+        });
+        setModalAberto(null);
+        setFechando(false);
+      } else {
+
         await supabase
           .from('transacoes')
           .insert([{
@@ -204,11 +207,7 @@ export default function Comanda() {
           .delete()
           .eq('id', comandaId);
 
-        alert(`Comanda de ${comanda.nome} fechada! R$ ${subtotal.toFixed(2)} adicionado ao caixa.`);
       }
-
-      setModalAberto(null);
-      setFechando(false);
       setFormaPagamento('PIX');
       carregarDados(contaId);
     } catch (err) {
