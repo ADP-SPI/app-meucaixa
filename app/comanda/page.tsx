@@ -139,6 +139,66 @@ export default function Comanda() {
     return comanda.itens.reduce((total: number, item: any) => total + (item.quantidade * item.preco), 0);
   };
 
+  const gerarHTMLNota = (numero: number, cliente: string, itens: any[], total: number) => {
+  const dataHora = new Date().toLocaleString('pt-BR');
+  const nomeEmpresa = 'Meu Caixa';
+  
+  const linhasItens = itens
+    .map(item => `<tr style="font-size: 11px; border-bottom: 1px dashed #ccc;">
+      <td style="text-align: left; width: 70%;">${item.descricao || ''}</td>
+      <td style="text-align: right; width: 30%;">R$ ${(parseFloat(item.valor) || 0).toFixed(2)}</td>
+    </tr>`)
+    .join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; }
+    body { font-family: monospace; width: 48mm; padding: 2mm; }
+    .nota { border: 1px solid #000; padding: 3mm; font-size: 11px; }
+    .header { text-align: center; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 2mm; margin-bottom: 2mm; }
+    .info { text-align: center; font-size: 10px; margin: 1mm 0; }
+    table { width: 100%; margin: 2mm 0; border-collapse: collapse; }
+    th { border-bottom: 1px solid #000; padding: 1mm; font-size: 10px; text-align: left; }
+    td { padding: 1mm; }
+    .total { text-align: right; font-weight: bold; font-size: 12px; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 2mm; margin: 2mm 0; }
+    .assinatura { margin-top: 8mm; text-align: center; font-size: 9px; }
+    .linha { border-top: 1px solid #000; width: 100%; margin-bottom: 2mm; height: 15px; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="nota">
+    <div class="header">${nomeEmpresa}</div>
+    <div class="info">Nota #${String(numero).padStart(4, '0')}</div>
+    <div class="info">Cliente: ${cliente}</div>
+    <div class="info">${dataHora}</div>
+    
+    <table>
+      <thead>
+        <tr style="border-bottom: 1px solid #000;">
+          <th>Descrição</th>
+          <th style="text-align: right;">Valor</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${linhasItens}
+      </tbody>
+    </table>
+    
+    <div class="total">Total: R$ ${total.toFixed(2)}</div>
+    
+    <div class="assinatura">
+      <div class="linha"></div>
+      Assinatura do Cliente
+    </div>
+  </div>
+</body>
+</html>`;
+}; 
+
   const fecharComanda = async (comandaId: number) => {
     const subtotal = calcularSubtotal(comandaId);
     const comanda = comandas.find(c => c.id === comandaId);
@@ -360,9 +420,17 @@ export default function Comanda() {
                 </button>
                 <button
                   onClick={() => {
-                    window.print();
+                    if (notaGerada) {
+                      const html = gerarHTMLNota(notaGerada.numero, notaGerada.comanda, notaGerada.itens || [], notaGerada.subtotal);
+                      const novaAba = window.open('', '', 'width=600,height=800');
+                      if (novaAba) {
+                        novaAba.document.write(html);
+                        novaAba.document.close();
+                        setTimeout(() => novaAba.print(), 300);
+                      }
+                    }
                     setNotaGerada(null);
-                  }}
+                  }}                  
                   className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
                 >
                   Imprimir Agora
