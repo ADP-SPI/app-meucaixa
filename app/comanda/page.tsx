@@ -139,16 +139,59 @@ export default function Comanda() {
     return comanda.itens.reduce((total: number, item: any) => total + (item.quantidade * item.preco), 0);
   };
 
-  const gerarHTMLNota = (numero: number, cliente: string, itens: any[], total: number) => {
+    const gerarHTMLNota = (numero: number, cliente: string, itens: any[], total: number) => {
   const dataHora = new Date().toLocaleString('pt-BR');
   const nomeEmpresa = 'Meu Caixa';
   
   const linhasItens = itens
     .map(item => `<tr style="font-size: 11px; border-bottom: 1px dashed #ccc;">
       <td style="text-align: left; width: 70%;">${item.descricao || ''}</td>
-      <td style="text-align: right; width: 30%;">R$ ${(parseFloat(item.valor) || 0).toFixed(2)}</td>
+      <td style="text-align: right; width: 30%;">${(parseFloat(item.valor) || 0).toFixed(2).replace('.', ',')}</td>
     </tr>`)
     .join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; }
+    body { font-family: monospace; width: 48mm; padding: 2mm; }
+    .nota { border: 1px solid #000; padding: 3mm; font-size: 11px; }
+    .header { text-align: center; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 2mm; margin-bottom: 2mm; }
+    .info { text-align: center; font-size: 10px; margin: 1mm 0; }
+    table { width: 100%; margin: 2mm 0; border-collapse: collapse; }
+    th { border-bottom: 1px solid #000; padding: 1mm; font-size: 10px; text-align: left; }
+    td { padding: 1mm; }
+    .total { text-align: center; font-weight: bold; font-size: 12px; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: 2mm; margin: 2mm 0; }
+    .assinatura { margin-top: 6mm; text-align: center; font-size: 9px; }
+    .linha { border-top: 1px solid #000; width: 100%; margin-bottom: 1mm; height: 12px; }
+    @media print { body { margin: 0; } }
+  </style>
+</head>
+<body>
+  <div class="nota">
+    <div class="header">${nomeEmpresa}</div>
+    <div class="info">Nota #${String(numero).padStart(4, '0')}</div>
+    <div class="info">Cliente: ${cliente}</div>
+    <div class="info">${dataHora}</div>
+    
+    <table>
+      <tbody>
+        ${linhasItens}
+      </tbody>
+    </table>
+    
+    <div class="total">${total.toFixed(2).replace('.', ',')}</div>
+    
+    <div class="assinatura">
+      <div class="linha"></div>
+      <div>Assinatura do Cliente</div>
+    </div>
+  </div>
+</body>
+</html>`;
+};
 
   return `<!DOCTYPE html>
 <html>
