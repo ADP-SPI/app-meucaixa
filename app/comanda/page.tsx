@@ -22,7 +22,7 @@ export default function Comanda() {
   const [fechando, setFechando] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState('PIX');
   const [contaId, setContaId] = useState<number | null>(null);
-  const [notaGerada, setNotaGerada] = useState<{id: number; numero: number; comanda: string; subtotal: number} | null>(null);  
+  const [notaGerada, setNotaGerada] = useState<{id: number; numero: number; comanda: string; subtotal: number; itens: any[]} | null>(null);
   const [carregando, setCarregando] = useState(true);
 
   useEffect(() => {
