@@ -238,11 +238,12 @@ export default function Comanda() {
           .delete()
           .eq('id', comandaId);
         
-                 setNotaGerada({
+                  setNotaGerada({
           id: comandaId,
           numero: numeroNota,
           comanda: comanda.nome,
-          subtotal: subtotal
+          subtotal: subtotal,
+          itens: comanda.itens || []
         });
         setModalAberto(null);
         setFechando(false);
