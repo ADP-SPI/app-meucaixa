@@ -77,10 +77,15 @@ export default function Comanda() {
   };
 
   const gerarNotaPDF = (notaData: any, assinatura?: string) => {
+    const numItens = (notaData.itens || []).length;
+    const alturaItem = 5;
+    const alturaBase = 60;
+    const alturaTotal = alturaBase + (numItens * alturaItem) + 15;
+
     const doc: any = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: [48, 210]
+      format: [48, alturaTotal]
     });
 
     let yPos = 10;
@@ -103,9 +108,16 @@ export default function Comanda() {
     doc.text(agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR'), pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 10;
 
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.setFont(undefined, 'normal');
-    
+    doc.text('Item', 5, yPos);
+    doc.text('Total', pageWidth - 5, yPos, { align: 'right' } as any);
+    yPos += 3;
+    doc.setDrawColor(0);
+    doc.line(3, yPos, pageWidth - 3, yPos);
+    yPos += 5;
+
+    doc.setFontSize(9);
     (notaData.itens || []).forEach((item: any) => {
       const nomeItem = item.nome.substring(0, 20);
       const valor = `${(item.quantidade * item.preco).toFixed(2).replace('.', ',')}`;
@@ -114,25 +126,26 @@ export default function Comanda() {
       yPos += 5;
     });
 
-    yPos += 3;
+    yPos += 2;
     doc.setDrawColor(0);
     doc.line(3, yPos, pageWidth - 3, yPos);
     yPos += 5;
 
     doc.setFont(undefined, 'bold');
     doc.setFontSize(11);
-    const totalTexto = `R$ ${notaData.subtotal.toFixed(2).replace('.', ',')}`;
+    const totalTexto = `TOTAL R$ ${notaData.subtotal.toFixed(2).replace('.', ',')}`;
     doc.text(totalTexto, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 10;
+    yPos += 8;
 
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8);
     doc.line(10, yPos, pageWidth - 10, yPos);
     yPos += 5;
     doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
+    yPos += 8;
 
     if (assinatura) {
-      doc.addImage(assinatura, 'PNG', 5, yPos + 2, pageWidth - 10, 15);
+      doc.addImage(assinatura, 'PNG', 5, yPos, pageWidth - 10, 12);
     }
 
     return doc;
