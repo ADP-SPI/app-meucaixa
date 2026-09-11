@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-import jsPDF from 'jspdf';
 
 const supabase = createClient(
   'https://rbocrgnmsadkbfoqbzpe.supabase.co',
@@ -23,9 +22,8 @@ export default function Comanda() {
   const [fechando, setFechando] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState('PIX');
   const [contaId, setContaId] = useState<number | null>(null);
-  const [notaGerada, setNotaGerada] = useState<{id: number; numero: number; comanda: string; subtotal: number; itens: any[]} | null>(null);  
+  const [notaGerada, setNotaGerada] = useState<{id: number; numero: number; comanda: string; subtotal: number} | null>(null);  
   const [carregando, setCarregando] = useState(true);
-  const [mostrandoOpcoeNota, setMostrandoOpcoeNota] = useState(false);
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -67,88 +65,6 @@ export default function Comanda() {
       return (ultimoNumero + 1) % 10000;
     } catch {
       return Math.floor(Math.random() * 10000);
-    }
-  };
-
-  const gerarNotaPDF = (notaData: any) => {
-    const doc: any = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [48, 210]
-    });
-
-    let yPos = 10;
-    const pageWidth = doc.internal.pageSize.getWidth();
-
-    doc.setFontSize(12);
-    doc.setFont(undefined, 'bold');
-    doc.text('MEU CAIXA', pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 8;
-
-    doc.setFontSize(10);
-    doc.text(`Nota #${String(notaData.numero).padStart(4, '0')}`, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 6;
-
-    doc.text(notaData.comanda, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 6;
-
-    const agora = new Date();
-    doc.setFontSize(9);
-    doc.text(agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR'), pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 10;
-
-    doc.setFontSize(9);
-    doc.setFont(undefined, 'normal');
-    
-    (notaData.itens || []).forEach((item: any) => {
-      const nomeItem = item.nome.substring(0, 20);
-      const valor = `${(item.quantidade * item.preco).toFixed(2).replace('.', ',')}`;
-      doc.text(nomeItem, 5, yPos);
-      doc.text(valor, pageWidth - 5, yPos, { align: 'right' } as any);
-      yPos += 5;
-    });
-
-    yPos += 3;
-    doc.setDrawColor(0);
-    doc.line(3, yPos, pageWidth - 3, yPos);
-    yPos += 5;
-
-    doc.setFont(undefined, 'bold');
-    doc.setFontSize(11);
-    const totalTexto = `R$ ${notaData.subtotal.toFixed(2).replace('.', ',')}`;
-    doc.text(totalTexto, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 10;
-
-    doc.setFont(undefined, 'normal');
-    doc.setFontSize(8);
-    doc.line(10, yPos, pageWidth - 10, yPos);
-    yPos += 5;
-    doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
-
-    return doc;
-  };
-
-  const salvarNotaSupabase = async (notaData: any, doc: any) => {
-    try {
-      const pdfBlob = doc.output('blob');
-      const nomeArquivo = `nota_${notaData.numero}_${Date.now()}.pdf`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('notas-fiados')
-        .upload(`${contaId}/${nomeArquivo}`, pdfBlob, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-      if (uploadError) throw uploadError;
-
-      const dataExpiracao = new Date();
-      dataExpiracao.setDate(dataExpiracao.getDate() + 5);
-
-      return true;
-    } catch (err) {
-      console.error('Erro ao salvar PDF:', err);
-      return false;
     }
   };
 
@@ -257,19 +173,17 @@ export default function Comanda() {
             itens: comanda.itens || []
           }]);
 
-        await supabase
+                  await supabase
           .from('comandas')
           .delete()
           .eq('id', comandaId);
         
-        setNotaGerada({
+                 setNotaGerada({
           id: comandaId,
           numero: numeroNota,
           comanda: comanda.nome,
-          subtotal: subtotal,
-          itens: comanda.itens || []
+          subtotal: subtotal
         });
-        setMostrandoOpcoeNota(true);
         setModalAberto(null);
         setFechando(false);
       } else {
@@ -426,48 +340,38 @@ export default function Comanda() {
               )}
             </div>
           </div>
-        )}
-        {notaGerada && mostrandoOpcoeNota && (
+       
+                  )}
+                   {notaGerada && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
-              <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(4, '0')} Gerada!</h2>
-              <p className="text-gray-600 mb-2">Cliente: {notaGerada.comanda}</p>
+              <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(3, '0')} Gerada!</h2>
+              <p className="text-gray-600 mb-6">Cliente: {notaGerada.comanda}</p>
               <p className="text-3xl font-bold text-green-600 mb-6">R$ {notaGerada.subtotal.toFixed(2)}</p>
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={async () => {
-                    alert('Assinatura digital - em desenvolvimento');
-                    const doc = gerarNotaPDF(notaGerada);
-                    await salvarNotaSupabase(notaGerada, doc);
+                  onClick={() => {
+                    alert('Assinar na tela - em desenvolvimento para celular');
                     setNotaGerada(null);
-                    setMostrandoOpcoeNota(false);
                   }}
                   className="w-full bg-purple-600 text-white p-3 rounded font-bold hover:bg-purple-700"
                 >
                   Assinar na Tela
                 </button>
                 <button
-                  onClick={async () => {
-                    const doc = gerarNotaPDF(notaGerada);
+                  onClick={() => {
                     window.print();
-                    await salvarNotaSupabase(notaGerada, doc);
                     setNotaGerada(null);
-                    setMostrandoOpcoeNota(false);
                   }}
                   className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
                 >
                   Imprimir Agora
                 </button>
                 <button
-                  onClick={async () => {
-                    const doc = gerarNotaPDF(notaGerada);
-                    await salvarNotaSupabase(notaGerada, doc);
-                    setNotaGerada(null);
-                    setMostrandoOpcoeNota(false);
-                  }}
-                  className="w-full bg-gray-600 text-white p-3 rounded font-bold hover:bg-gray-700"
+                  onClick={() => setNotaGerada(null)}
+                  className="w-full bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500"
                 >
-                  Salvar Impressão
+                  Imprimir Depois
                 </button>
               </div>
             </div>
