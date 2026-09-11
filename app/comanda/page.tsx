@@ -14,6 +14,7 @@ const supabase = createClient(
 export default function Comanda() {
   const router = useRouter();
   const sigCanvas = useRef<any>(null);
+  const printRef = useRef<any>(null);
   const [cardapio, setCardapio] = useState<any[]>([]);
   const [modo, setModo] = useState('cardapio');
   const [comandas, setComandas] = useState<any[]>([]);
@@ -29,6 +30,8 @@ export default function Comanda() {
   const [carregando, setCarregando] = useState(true);
   const [mostrandoOpcoeNota, setMostrandoOpcoeNota] = useState(false);
   const [mostrandoAssinatura, setMostrandoAssinatura] = useState(false);
+  const [mostrandoPreview, setMostrandoPreview] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string>('');
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -148,7 +151,6 @@ export default function Comanda() {
         });
 
       if (uploadError) console.log('Upload:', uploadError);
-
       return true;
     } catch (err) {
       console.error('Erro ao salvar PDF:', err);
@@ -433,7 +435,7 @@ export default function Comanda() {
             </div>
           </div>
         )}
-        {notaGerada && mostrandoOpcoeNota && !mostrandoAssinatura && (
+        {notaGerada && mostrandoOpcoeNota && !mostrandoAssinatura && !mostrandoPreview && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
               <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(4, '0')} Gerada!</h2>
@@ -451,10 +453,9 @@ export default function Comanda() {
                 <button
                   onClick={async () => {
                     const doc = gerarNotaPDF(notaGerada);
-                    await salvarNotaSupabase(notaGerada, doc);
-                    window.print();
-                    setNotaGerada(null);
-                    setMostrandoOpcoeNota(false);
+                    const url = doc.output('dataurlstring');
+                    setPdfUrl(url);
+                    setMostrandoPreview(true);
                   }}
                   className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
                 >
@@ -470,6 +471,47 @@ export default function Comanda() {
                   className="w-full bg-gray-600 text-white p-3 rounded font-bold hover:bg-gray-700"
                 >
                   Salvar Impressão
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {mostrandoPreview && pdfUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-auto">
+              <h2 className="text-2xl font-bold mb-4">Preview Nota</h2>
+              <iframe
+                ref={printRef}
+                src={pdfUrl}
+                className="w-full h-96 border-2 border-gray-300 rounded mb-4"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={async () => {
+                    const doc = gerarNotaPDF(notaGerada);
+                    await salvarNotaSupabase(notaGerada, doc);
+                    if (printRef.current) {
+                      printRef.current.contentWindow?.print();
+                    }
+                    setTimeout(() => {
+                      setMostrandoPreview(false);
+                      setNotaGerada(null);
+                      setMostrandoOpcoeNota(false);
+                      setPdfUrl('');
+                    }, 500);
+                  }}
+                  className="flex-1 bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
+                >
+                  Imprimir
+                </button>
+                <button
+                  onClick={() => {
+                    setMostrandoPreview(false);
+                    setPdfUrl('');
+                  }}
+                  className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500"
+                >
+                  Cancelar
                 </button>
               </div>
             </div>
