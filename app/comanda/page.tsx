@@ -1,8 +1,9 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import SignatureCanvas from 'react-signature-canvas';
 import jsPDF from 'jspdf';
 
 const supabase = createClient(
@@ -12,6 +13,7 @@ const supabase = createClient(
 
 export default function Comanda() {
   const router = useRouter();
+  const sigCanvas = useRef<any>(null);
   const [cardapio, setCardapio] = useState<any[]>([]);
   const [modo, setModo] = useState('cardapio');
   const [comandas, setComandas] = useState<any[]>([]);
@@ -23,9 +25,10 @@ export default function Comanda() {
   const [fechando, setFechando] = useState(false);
   const [formaPagamento, setFormaPagamento] = useState('PIX');
   const [contaId, setContaId] = useState<number | null>(null);
-  const [notaGerada, setNotaGerada] = useState<{id: number; numero: number; comanda: string; subtotal: number; itens: any[]} | null>(null);  
+  const [notaGerada, setNotaGerada] = useState<any | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [mostrandoOpcoeNota, setMostrandoOpcoeNota] = useState(false);
+  const [mostrandoAssinatura, setMostrandoAssinatura] = useState(false);
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -70,7 +73,7 @@ export default function Comanda() {
     }
   };
 
-  const gerarNotaPDF = (notaData: any) => {
+  const gerarNotaPDF = (notaData: any, assinatura?: string) => {
     const doc: any = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
@@ -125,6 +128,10 @@ export default function Comanda() {
     yPos += 5;
     doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
 
+    if (assinatura) {
+      doc.addImage(assinatura, 'PNG', 5, yPos + 2, pageWidth - 10, 15);
+    }
+
     return doc;
   };
 
@@ -140,10 +147,7 @@ export default function Comanda() {
           upsert: false
         });
 
-      if (uploadError) throw uploadError;
-
-      const dataExpiracao = new Date();
-      dataExpiracao.setDate(dataExpiracao.getDate() + 5);
+      if (uploadError) console.log('Upload:', uploadError);
 
       return true;
     } catch (err) {
@@ -293,6 +297,8 @@ export default function Comanda() {
           .delete()
           .eq('id', comandaId);
 
+        setModalAberto(null);
+        setFechando(false);
       }
       setFormaPagamento('PIX');
       carregarDados(contaId);
@@ -427,7 +433,7 @@ export default function Comanda() {
             </div>
           </div>
         )}
-        {notaGerada && mostrandoOpcoeNota && (
+        {notaGerada && mostrandoOpcoeNota && !mostrandoAssinatura && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
               <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(4, '0')} Gerada!</h2>
@@ -435,12 +441,8 @@ export default function Comanda() {
               <p className="text-3xl font-bold text-green-600 mb-6">R$ {notaGerada.subtotal.toFixed(2)}</p>
               <div className="flex flex-col gap-3">
                 <button
-                  onClick={async () => {
-                    alert('Assinatura digital - em desenvolvimento');
-                    const doc = gerarNotaPDF(notaGerada);
-                    await salvarNotaSupabase(notaGerada, doc);
-                    setNotaGerada(null);
-                    setMostrandoOpcoeNota(false);
+                  onClick={() => {
+                    setMostrandoAssinatura(true);
                   }}
                   className="w-full bg-purple-600 text-white p-3 rounded font-bold hover:bg-purple-700"
                 >
@@ -449,8 +451,8 @@ export default function Comanda() {
                 <button
                   onClick={async () => {
                     const doc = gerarNotaPDF(notaGerada);
-                    window.print();
                     await salvarNotaSupabase(notaGerada, doc);
+                    window.print();
                     setNotaGerada(null);
                     setMostrandoOpcoeNota(false);
                   }}
@@ -468,6 +470,47 @@ export default function Comanda() {
                   className="w-full bg-gray-600 text-white p-3 rounded font-bold hover:bg-gray-700"
                 >
                   Salvar Impressão
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {mostrandoAssinatura && notaGerada && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              <h2 className="text-2xl font-bold mb-4">Assinar Nota</h2>
+              <p className="text-sm text-gray-600 mb-2">Assine no espaço abaixo:</p>
+              <div className="border-2 border-gray-300 rounded mb-4 bg-white">
+                <SignatureCanvas
+                  ref={sigCanvas}
+                  canvasProps={{ width: 300, height: 150, className: 'border rounded' }}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => sigCanvas.current?.clear()}
+                  className="flex-1 bg-gray-400 text-white p-2 rounded font-bold hover:bg-gray-500"
+                >
+                  Limpar
+                </button>
+                <button
+                  onClick={async () => {
+                    const sig = sigCanvas.current?.toDataURL();
+                    const doc = gerarNotaPDF(notaGerada, sig);
+                    await salvarNotaSupabase(notaGerada, doc);
+                    setMostrandoAssinatura(false);
+                    setNotaGerada(null);
+                    setMostrandoOpcoeNota(false);
+                  }}
+                  className="flex-1 bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700"
+                >
+                  Salvar
+                </button>
+                <button
+                  onClick={() => setMostrandoAssinatura(false)}
+                  className="flex-1 bg-red-600 text-white p-2 rounded font-bold hover:bg-red-700"
+                >
+                  Cancelar
                 </button>
               </div>
             </div>
