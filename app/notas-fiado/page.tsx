@@ -27,7 +27,6 @@ export default function NotasFiado() {
         .from('notas_fiados')
         .select('*')
         .eq('conta_id', cId)
-        .gte('data_expiracao', new Date().toISOString())
         .order('created_at', { ascending: false });
       setNotas(data || []);
     } catch (err) {
@@ -43,6 +42,8 @@ export default function NotasFiado() {
           .from('notas-fiados')
           .getPublicUrl(`${contaId}/${nota.arquivo_nome}`);
         window.open(data.publicUrl, '_blank');
+      } else {
+        alert('Arquivo não encontrado');
       }
     } catch (err) {
       console.error('Erro ao imprimir:', err);
@@ -85,6 +86,7 @@ export default function NotasFiado() {
                   <p className="font-bold">Nota #{String(nota.numero_nota).padStart(4, '0')}</p>
                   <p className="text-sm text-gray-600">Cliente: {nota.cliente_nome}</p>
                   <p className="text-sm text-gray-600">Total: R$ {nota.total_valor.toFixed(2)}</p>
+                  <p className="text-xs text-gray-500">Status: {nota.status}</p>
                 </div>
                 <div className="flex gap-2">
                   <button 
