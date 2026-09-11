@@ -163,7 +163,16 @@ export default function Comanda() {
           upsert: false
         });
 
-      if (uploadError) console.log('Upload:', uploadError);
+      if (uploadError) {
+        console.log('Upload:', uploadError);
+        return false;
+      }
+
+      await supabase
+        .from('notas_fiados')
+        .update({ arquivo_nome: nomeArquivo })
+        .eq('id', notaData.id);
+
       return true;
     } catch (err) {
       console.error('Erro ao salvar PDF:', err);
@@ -251,7 +260,7 @@ export default function Comanda() {
       if (formaPagamento === 'FIADO') {
         const numeroNota = await gerarNumeroNota(contaId);
 
-        await supabase
+        const { data: notaData } = await supabase
           .from('notas_fiados')
           .insert([{
             conta_id: contaId,
@@ -260,7 +269,8 @@ export default function Comanda() {
             itens: comanda.itens || [],
             total_valor: subtotal,
             status: 'aberta'
-          }]);
+          }])
+          .select();
 
         await supabase
           .from('transacoes')
@@ -282,7 +292,7 @@ export default function Comanda() {
           .eq('id', comandaId);
         
         setNotaGerada({
-          id: comandaId,
+          id: notaData?.[0]?.id || 0,
           numero: numeroNota,
           comanda: comanda.nome,
           subtotal: subtotal,
