@@ -24,8 +24,17 @@ export default function NotasFiado() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!contaId) return;
+    
+    const interval = setInterval(() => {
+      carregarNotas(contaId);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [contaId]);
+
   const carregarNotas = async (cId: number) => {
-    setCarregando(true);
     try {
       const { data, error } = await supabase
         .from('notas_fiados')
@@ -88,24 +97,15 @@ export default function NotasFiado() {
           Voltar
         </Link>
         
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Notas de Fiado</h1>
-          <button 
-            onClick={() => contaId && carregarNotas(contaId)}
-            disabled={carregando}
-            className="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700 disabled:bg-gray-400"
-          >
-            {carregando ? 'Recarregando...' : 'Recarregar'}
-          </button>
-        </div>
+        <h1 className="text-2xl font-bold mb-6">Notas de Fiado</h1>
 
-        {carregando && <p className="text-center text-gray-600">Carregando notas...</p>}
+        {carregando && notas.length === 0 && <p className="text-center text-gray-600">Carregando notas...</p>}
 
-        {!carregando && notas.length === 0 && (
+        {notas.length === 0 && !carregando && (
           <p className="text-gray-500 text-center py-8">Nenhuma nota disponível</p>
         )}
 
-        {!carregando && notas.length > 0 && (
+        {notas.length > 0 && (
           <div className="space-y-2">
             {notas.map((nota) => (
               <div key={nota.id} className="bg-white p-4 rounded border-2 border-gray-200 flex justify-between items-center">
