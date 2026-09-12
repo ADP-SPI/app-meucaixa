@@ -11,6 +11,11 @@ const supabase = createClient(
   'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
 );
 
+const getDataBrasil = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+};
+
 export default function Comanda() {
   const router = useRouter();
   const sigCanvas = useRef<any>(null);
@@ -200,7 +205,7 @@ export default function Comanda() {
           conta_id: contaId,
           nome: nomeComanda,
           itens: [],
-          data: new Date().toISOString().split('T')[0],
+          data: getDataBrasil(),
           hora: new Date().toLocaleTimeString('pt-BR')
         }]);
       if (error) throw error;
@@ -296,7 +301,7 @@ export default function Comanda() {
             tipo: 'receita',
             formapagamento: 'FIADO',
             hora: new Date().toLocaleTimeString('pt-BR'),
-            data: new Date().toISOString().split('T')[0],
+            data: getDataBrasil(),
             origin: 'comanda',
             itens: comanda.itens || []
           }]);
@@ -327,7 +332,7 @@ export default function Comanda() {
             tipo: 'receita',
             formapagamento: formaPagamento,
             hora: new Date().toLocaleTimeString('pt-BR'),
-            data: new Date().toISOString().split('T')[0],
+            data: getDataBrasil(),
             origin: 'comanda',
             itens: comanda.itens || []
           }]);
