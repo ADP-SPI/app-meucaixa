@@ -23,11 +23,15 @@ export default function NotasFiado() {
 
   const carregarNotas = async (cId: number) => {
     try {
-      const { data } = await supabase
+      console.log('Carregando notas para conta:', cId);
+      const { data, error } = await supabase
         .from('notas_fiados')
         .select('*')
         .eq('conta_id', cId)
         .order('created_at', { ascending: false });
+      
+      console.log('Notas carregadas:', data);
+      if (error) console.error('Erro Supabase:', error);
       setNotas(data || []);
     } catch (err) {
       console.error('Erro ao carregar notas:', err);
@@ -37,13 +41,15 @@ export default function NotasFiado() {
 
   const imprimirNota = async (nota: any) => {
     try {
+      console.log('Tentando imprimir nota:', nota);
       if (nota.arquivo_nome) {
         const { data } = await supabase.storage
           .from('notas-fiados')
           .getPublicUrl(`${contaId}/${nota.arquivo_nome}`);
+        console.log('URL da nota:', data.publicUrl);
         window.open(data.publicUrl, '_blank');
       } else {
-        alert('Arquivo não encontrado');
+        alert('Arquivo não encontrado para esta nota');
       }
     } catch (err) {
       console.error('Erro ao imprimir:', err);
@@ -53,11 +59,18 @@ export default function NotasFiado() {
 
   const deletarNota = async (notaId: number) => {
     try {
-      await supabase
+      console.log('Deletando nota:', notaId);
+      const { error } = await supabase
         .from('notas_fiados')
         .delete()
         .eq('id', notaId);
-      carregarNotas(contaId!);
+      
+      if (error) {
+        console.error('Erro ao deletar:', error);
+        alert('Erro ao deletar nota');
+      } else {
+        carregarNotas(contaId!);
+      }
     } catch (err) {
       console.error('Erro ao deletar:', err);
       alert('Erro ao deletar nota');
@@ -86,7 +99,7 @@ export default function NotasFiado() {
                   <p className="font-bold">Nota #{String(nota.numero_nota).padStart(4, '0')}</p>
                   <p className="text-sm text-gray-600">Cliente: {nota.cliente_nome}</p>
                   <p className="text-sm text-gray-600">Total: R$ {nota.total_valor.toFixed(2)}</p>
-                  <p className="text-xs text-gray-500">Status: {nota.status}</p>
+                  <p className="text-xs text-gray-500">Status: {nota.status} | Arquivo: {nota.arquivo_nome ? 'Sim' : 'Não'}</p>
                 </div>
                 <div className="flex gap-2">
                   <button 
