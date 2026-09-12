@@ -168,10 +168,21 @@ export default function Comanda() {
         return false;
       }
 
-      await supabase
+      const dataExpiracao = new Date();
+      dataExpiracao.setDate(dataExpiracao.getDate() + 5);
+
+      const { error: updateError } = await supabase
         .from('notas_fiados')
-        .update({ arquivo_nome: nomeArquivo })
+        .update({ 
+          arquivo_nome: nomeArquivo,
+          data_expiracao: dataExpiracao.toISOString()
+        })
         .eq('id', notaData.id);
+
+      if (updateError) {
+        console.log('Update:', updateError);
+        return false;
+      }
 
       return true;
     } catch (err) {
@@ -260,6 +271,9 @@ export default function Comanda() {
       if (formaPagamento === 'FIADO') {
         const numeroNota = await gerarNumeroNota(contaId);
 
+        const dataExpiracao = new Date();
+        dataExpiracao.setDate(dataExpiracao.getDate() + 5);
+
         const { data: notaData } = await supabase
           .from('notas_fiados')
           .insert([{
@@ -268,7 +282,8 @@ export default function Comanda() {
             cliente_nome: comanda.nome,
             itens: comanda.itens || [],
             total_valor: subtotal,
-            status: 'aberta'
+            status: 'aberta',
+            data_expiracao: dataExpiracao.toISOString()
           }])
           .select();
 
