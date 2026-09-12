@@ -151,20 +151,20 @@ export default function Comanda() {
     return doc;
   };
 
-  const salvarNotaSupabase = async (notaData: any, doc: any) => {
+  const salvarNotaSupabase = async (notaData: any, doc: any, assinatura?: string) => {
     try {
       const pdfBlob = doc.output('blob');
       const nomeArquivo = `nota_${notaData.numero}_${Date.now()}.pdf`;
       
       const { error: uploadError } = await supabase.storage
         .from('notas-fiados')
-        .upload(`${contaId}/${nomeArquivo}`, pdfBlob, {
+        .upload(nomeArquivo, pdfBlob, {
           cacheControl: '3600',
           upsert: false
         });
 
       if (uploadError) {
-        console.log('Upload:', uploadError);
+        console.error('Upload falhou:', uploadError);
         return false;
       }
 
@@ -175,18 +175,19 @@ export default function Comanda() {
         .from('notas_fiados')
         .update({ 
           arquivo_nome: nomeArquivo,
+          assinatura_digital: assinatura || null,
           data_expiracao: dataExpiracao.toISOString()
         })
         .eq('id', notaData.id);
 
       if (updateError) {
-        console.log('Update:', updateError);
+        console.error('Update falhou:', updateError);
         return false;
       }
 
       return true;
     } catch (err) {
-      console.error('Erro ao salvar PDF:', err);
+      console.error('Erro:', err);
       return false;
     }
   };
@@ -577,7 +578,7 @@ export default function Comanda() {
                   onClick={async () => {
                     const sig = sigCanvas.current?.toDataURL();
                     const doc = gerarNotaPDF(notaGerada, sig);
-                    await salvarNotaSupabase(notaGerada, doc);
+                    await salvarNotaSupabase(notaGerada, doc, sig);
                     setMostrandoAssinatura(false);
                     setNotaGerada(null);
                     setMostrandoOpcoeNota(false);
