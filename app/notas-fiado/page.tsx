@@ -1,12 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
-  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
-);
+import { supabase } from '@/lib/supabase';
 
 export default function NotasFiado() {
   const [notas, setNotas] = useState<any[]>([]);

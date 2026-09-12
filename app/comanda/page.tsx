@@ -2,14 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import SignatureCanvas from 'react-signature-canvas';
 import jsPDF from 'jspdf';
-
-const supabase = createClient(
-  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
-  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
-);
 
 const getDataBrasil = () => {
   const d = new Date();
