@@ -156,23 +156,17 @@ export default function Comanda() {
       const pdfBlob = doc.output('blob');
       const nomeArquivo = `nota_${notaData.numero}_${Date.now()}.pdf`;
       
-      console.log('📤 Iniciando upload:', nomeArquivo);
-      
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('notas-fiados')
         .upload(`${contaId}/${nomeArquivo}`, pdfBlob, {
           cacheControl: '3600',
           upsert: false
         });
 
-      console.log('Upload resultado:', uploadData, uploadError);
-
       if (uploadError) {
-        console.error('❌ Upload falhou:', uploadError);
+        console.log('Upload:', uploadError);
         return false;
       }
-
-      console.log('✅ Upload sucesso, atualizando banco');
 
       const dataExpiracao = new Date();
       dataExpiracao.setDate(dataExpiracao.getDate() + 5);
@@ -185,17 +179,14 @@ export default function Comanda() {
         })
         .eq('id', notaData.id);
 
-      console.log('Update resultado:', updateError);
-
       if (updateError) {
-        console.error('❌ Update falhou:', updateError);
+        console.log('Update:', updateError);
         return false;
       }
 
-      console.log('✅ Nota salva com sucesso');
       return true;
     } catch (err) {
-      console.error('❌ Erro geral:', err);
+      console.error('Erro ao salvar PDF:', err);
       return false;
     }
   };
