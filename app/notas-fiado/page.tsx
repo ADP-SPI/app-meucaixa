@@ -16,22 +16,26 @@ export default function NotasFiado() {
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
     if (conta) {
-      setContaId(parseInt(conta));
-      carregarNotas(parseInt(conta));
+      const cId = parseInt(conta);
+      setContaId(cId);
+      carregarNotas(cId);
+    } else {
+      setCarregando(false);
     }
   }, []);
 
   const carregarNotas = async (cId: number) => {
+    setCarregando(true);
     try {
-      console.log('Carregando notas para conta:', cId);
       const { data, error } = await supabase
         .from('notas_fiados')
         .select('*')
         .eq('conta_id', cId)
         .order('created_at', { ascending: false });
       
-      console.log('Notas carregadas:', data);
-      if (error) console.error('Erro Supabase:', error);
+      if (error) {
+        console.error('Erro Supabase:', error);
+      }
       setNotas(data || []);
     } catch (err) {
       console.error('Erro ao carregar notas:', err);
@@ -41,12 +45,10 @@ export default function NotasFiado() {
 
   const imprimirNota = async (nota: any) => {
     try {
-      console.log('Tentando imprimir nota:', nota);
       if (nota.arquivo_nome) {
         const { data } = await supabase.storage
           .from('notas-fiados')
           .getPublicUrl(`${contaId}/${nota.arquivo_nome}`);
-        console.log('URL da nota:', data.publicUrl);
         window.open(data.publicUrl, '_blank');
       } else {
         alert('Arquivo não encontrado para esta nota');
@@ -59,14 +61,12 @@ export default function NotasFiado() {
 
   const deletarNota = async (notaId: number) => {
     try {
-      console.log('Deletando nota:', notaId);
       const { error } = await supabase
         .from('notas_fiados')
         .delete()
         .eq('id', notaId);
       
       if (error) {
-        console.error('Erro ao deletar:', error);
         alert('Erro ao deletar nota');
       } else {
         carregarNotas(contaId!);
@@ -77,8 +77,8 @@ export default function NotasFiado() {
     }
   };
 
-  if (carregando) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Carregando...</p></div>;
+  if (!contaId && !carregando) {
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Erro: Conta não encontrada</p></div>;
   }
 
   return (
@@ -87,11 +87,25 @@ export default function NotasFiado() {
         <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
           Voltar
         </Link>
-        <h1 className="text-2xl font-bold mb-6">Notas de Fiado</h1>
         
-        {notas.length === 0 ? (
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Notas de Fiado</h1>
+          <button 
+            onClick={() => contaId && carregarNotas(contaId)}
+            disabled={carregando}
+            className="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700 disabled:bg-gray-400"
+          >
+            {carregando ? 'Recarregando...' : 'Recarregar'}
+          </button>
+        </div>
+
+        {carregando && <p className="text-center text-gray-600">Carregando notas...</p>}
+
+        {!carregando && notas.length === 0 && (
           <p className="text-gray-500 text-center py-8">Nenhuma nota disponível</p>
-        ) : (
+        )}
+
+        {!carregando && notas.length > 0 && (
           <div className="space-y-2">
             {notas.map((nota) => (
               <div key={nota.id} className="bg-white p-4 rounded border-2 border-gray-200 flex justify-between items-center">
