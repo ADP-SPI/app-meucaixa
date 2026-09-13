@@ -158,7 +158,7 @@ export default function Comanda() {
       
       const { error: uploadError } = await supabase.storage
         .from('notas-fiados')
-        .upload(`${contaId}/${nomeArquivo}`, pdfBlob, {
+        .upload(nomeArquivo, pdfBlob, {
           cacheControl: '3600',
           upsert: false
         });
