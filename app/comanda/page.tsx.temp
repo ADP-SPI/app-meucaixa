@@ -94,29 +94,28 @@ export default function Comanda() {
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.text('MEU CAIXA', pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 5;
+    yPos += 8;
 
     doc.setFontSize(10);
     doc.text(`Nota #${String(notaData.numero).padStart(4, '0')}`, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 5;
+    yPos += 6;
 
     doc.text(notaData.comanda, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 5;
+    yPos += 6;
 
     const agora = new Date();
     doc.setFontSize(9);
     doc.text(agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR'), pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 5;
+    yPos += 10;
 
     doc.setFontSize(8);
     doc.setFont(undefined, 'normal');
-    doc.setDrawColor(0);
-    doc.line(3, yPos, pageWidth - 3, yPos);
-    yPos += 3;
-
     doc.text('Item', 5, yPos);
     doc.text('Total', pageWidth - 5, yPos, { align: 'right' } as any);
-    yPos += 4;
+    yPos += 3;
+    doc.setDrawColor(0);
+    doc.line(3, yPos, pageWidth - 3, yPos);
+    yPos += 5;
 
     doc.setFontSize(9);
     (notaData.itens || []).forEach((item: any) => {
@@ -136,24 +135,18 @@ export default function Comanda() {
     doc.setFontSize(11);
     const totalTexto = `TOTAL R$ ${notaData.subtotal.toFixed(2).replace('.', ',')}`;
     doc.text(totalTexto, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 10;
+    yPos += 8;
 
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8);
-
-    if (assinatura && assinatura.startsWith('data:')) {
-      try {
-        doc.addImage(assinatura, 'PNG', 8, yPos, pageWidth - 16, 10);
-      } catch (e) {
-        console.warn('Erro ao adicionar assinatura ao PDF:', e);
-      }
-    }
-
-    yPos += 12;
-    doc.setDrawColor(0);
     doc.line(10, yPos, pageWidth - 10, yPos);
     yPos += 5;
     doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
+    yPos += 8;
+
+    if (assinatura) {
+      doc.addImage(assinatura, 'PNG', 5, yPos, pageWidth - 10, 12);
+    }
 
     return doc;
   };
@@ -171,7 +164,7 @@ export default function Comanda() {
         });
 
       if (uploadError) {
-        console.error('Upload falhou:', uploadError);
+        console.log('Upload:', uploadError);
         return false;
       }
 
@@ -187,13 +180,13 @@ export default function Comanda() {
         .eq('id', notaData.id);
 
       if (updateError) {
-        console.error('Update falhou:', updateError);
+        console.log('Update:', updateError);
         return false;
       }
 
       return true;
     } catch (err) {
-      console.error('Erro:', err);
+      console.error('Erro ao salvar PDF:', err);
       return false;
     }
   };
