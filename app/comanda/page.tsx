@@ -94,7 +94,7 @@ export default function Comanda() {
     doc.setFontSize(12);
     doc.setFont(undefined, 'bold');
     doc.text('MEU CAIXA', pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 8;
+    yPos += 15;
 
     doc.setFontSize(10);
     doc.text(`Nota #${String(notaData.numero).padStart(4, '0')}`, pageWidth / 2, yPos, { align: 'center' } as any);
@@ -135,14 +135,14 @@ export default function Comanda() {
     doc.setFontSize(11);
     const totalTexto = `TOTAL R$ ${notaData.subtotal.toFixed(2).replace('.', ',')}`;
     doc.text(totalTexto, pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 8;
+    yPos += 15;
 
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8);
     doc.line(10, yPos, pageWidth - 10, yPos);
     yPos += 5;
     doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 8;
+    yPos += 15;
 
     if (assinatura && assinatura.startsWith('data:')) {
       try {
