@@ -175,7 +175,6 @@ export default function Comanda() {
         .from('notas_fiados')
         .update({ 
           arquivo_nome: nomeArquivo,
-          assinatura_digital: assinatura || null,
           data_expiracao: dataExpiracao.toISOString()
         })
         .eq('id', notaData.id);
