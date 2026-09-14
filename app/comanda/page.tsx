@@ -104,7 +104,7 @@ export default function Comanda() {
     yPos += 5;
 
     const agora = new Date();
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     doc.text(agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR'), pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 5;
 
@@ -528,27 +528,29 @@ export default function Comanda() {
         )}
         {mostrandoPreview && pdfUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-screen overflow-auto">
-              <h2 className="text-2xl font-bold mb-4">Preview Nota</h2>
-              <iframe
-                ref={printRef}
-                src={pdfUrl}
-                className="w-full h-96 border-2 border-gray-300 rounded mb-4"
-              />
+            <div className="bg-white rounded-lg p-6 w-full max-w-sm max-h-screen overflow-auto">
+              <h2 className="text-2xl font-bold mb-4">Preview Nota (48mm)</h2>
+              <div className="flex justify-center mb-4">
+                <iframe
+                  ref={printRef}
+                  src={pdfUrl}
+                  className="w-48 h-96 border-2 border-gray-300 rounded"
+                />
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={async () => {
                     const doc = gerarNotaPDF(notaGerada);
                     await salvarNotaSupabase(notaGerada, doc);
-                    if (printRef.current) {
-                      printRef.current.contentWindow?.print();
-                    }
+                    setTimeout(() => {
+                      window.print();
+                    }, 300);
                     setTimeout(() => {
                       setMostrandoPreview(false);
                       setNotaGerada(null);
                       setMostrandoOpcoeNota(false);
                       setPdfUrl('');
-                    }, 500);
+                    }, 1000);
                   }}
                   className="flex-1 bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
                 >
