@@ -77,11 +77,10 @@ export default function Comanda() {
   };
 
   const gerarNotaPDF = (notaData: any, assinatura?: string) => {
-    console.log("gerarNotaPDF recebeu assinatura?", assinatura ? "SIM" : "NAO");
     const numItens = (notaData.itens || []).length;
     const alturaItem = 5;
     const alturaBase = 60;
-    const alturaTotal = alturaBase + (numItens * alturaItem) + 15;
+    const alturaTotal = alturaBase + (numItens * alturaItem) + 20;
 
     const doc: any = new jsPDF({
       orientation: 'portrait',
@@ -145,14 +144,18 @@ export default function Comanda() {
     doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 8;
 
-    if (assinatura) {
-      doc.addImage(assinatura, 'PNG', 5, yPos, pageWidth - 10, 12);
+    if (assinatura && assinatura.startsWith('data:')) {
+      try {
+        doc.addImage(assinatura, 'PNG', 8, yPos, pageWidth - 16, 10);
+      } catch (e) {
+        console.warn('Erro ao adicionar assinatura ao PDF:', e);
+      }
     }
 
     return doc;
   };
 
-  const salvarNotaSupabase = async (notaData: any, doc: any, assinatura?: string) => {
+  const salvarNotaSupabase = async (notaData: any, doc: any) => {
     try {
       const pdfBlob = doc.output('blob');
       const nomeArquivo = `nota_${notaData.numero}_${Date.now()}.pdf`;
@@ -578,7 +581,7 @@ export default function Comanda() {
                   onClick={async () => {
                     const sig = sigCanvas.current?.toDataURL();
                     const doc = gerarNotaPDF(notaGerada, sig);
-                    await salvarNotaSupabase(notaGerada, doc, sig);
+                    await salvarNotaSupabase(notaGerada, doc);
                     setMostrandoAssinatura(false);
                     setNotaGerada(null);
                     setMostrandoOpcoeNota(false);
