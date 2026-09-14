@@ -14,7 +14,6 @@ const getDataBrasil = () => {
 export default function Comanda() {
   const router = useRouter();
   const sigCanvas = useRef<any>(null);
-  const printRef = useRef<any>(null);
   const [cardapio, setCardapio] = useState<any[]>([]);
   const [modo, setModo] = useState('cardapio');
   const [comandas, setComandas] = useState<any[]>([]);
@@ -85,7 +84,7 @@ export default function Comanda() {
     const doc: any = new jsPDF({
       orientation: 'portrait',
       unit: 'mm',
-      format: [48, alturaTotal]
+      format: [52, alturaTotal]
     });
 
     let yPos = 10;
@@ -529,12 +528,11 @@ export default function Comanda() {
         {mostrandoPreview && pdfUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm max-h-screen overflow-auto">
-              <h2 className="text-2xl font-bold mb-4">Preview Nota (48mm)</h2>
+              <h2 className="text-2xl font-bold mb-4">Preview Nota (52mm)</h2>
               <div className="flex justify-center mb-4">
                 <iframe
-                  ref={printRef}
                   src={pdfUrl}
-                  className="w-48 h-96 border-2 border-gray-300 rounded"
+                  className="w-52 h-96 border-2 border-gray-300 rounded"
                 />
               </div>
               <div className="flex gap-2">
@@ -543,7 +541,10 @@ export default function Comanda() {
                     const doc = gerarNotaPDF(notaGerada);
                     await salvarNotaSupabase(notaGerada, doc);
                     setTimeout(() => {
-                      window.print();
+                      const newWindow = window.open(pdfUrl, '_blank');
+                      setTimeout(() => {
+                        if (newWindow) newWindow.print();
+                      }, 500);
                     }, 300);
                     setTimeout(() => {
                       setMostrandoPreview(false);
