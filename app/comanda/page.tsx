@@ -130,7 +130,7 @@ export default function Comanda() {
       yPos += 5;
     });
 
-    yPos += 2;
+    yPos += 0;
     doc.setDrawColor(0);
     doc.line(3, yPos, pageWidth - 3, yPos);
     yPos += 5;
@@ -157,6 +157,7 @@ export default function Comanda() {
     doc.line(10, yPos, pageWidth - 10, yPos);
     yPos += 5;
     doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
+    yPos += 5;
 
     return doc;
   };
