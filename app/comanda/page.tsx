@@ -114,8 +114,11 @@ export default function Comanda() {
     doc.line(3, yPos, pageWidth - 3, yPos);
     yPos += 3;
 
+    doc.setDrawColor(0);
+    doc.line(3, yPos, pageWidth - 3, yPos);
+    yPos += 3;
     doc.text('Item', 5, yPos);
-    doc.text('Total', pageWidth - 5, yPos, { align: 'right' } as any);
+    doc.text('Valor', pageWidth - 5, yPos, { align: 'right' } as any);
     yPos += 4;
 
     doc.setFontSize(9);
