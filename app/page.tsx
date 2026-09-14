@@ -10,14 +10,6 @@ export default function LandingPage() {
 
   useEffect(() => {
     const usuarioId = localStorage.getItem('usuario_id');
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
-    if (usuarioId) {
-      window.location.href = '/dashboard';
-    } else {
-      if (isPWA) {
-      window.location.href = '/login';
-    }
-    // Se é browser sem usuário: fica na landing page
     }
   }, []);
 
