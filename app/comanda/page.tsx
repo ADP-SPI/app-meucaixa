@@ -77,6 +77,7 @@ export default function Comanda() {
   };
 
   const gerarNotaPDF = (notaData: any, assinatura?: string) => {
+    console.log("gerarNotaPDF recebeu assinatura?", assinatura ? "SIM" : "NAO");
     const numItens = (notaData.itens || []).length;
     const alturaItem = 5;
     const alturaBase = 60;
