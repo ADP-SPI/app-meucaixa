@@ -104,7 +104,7 @@ export default function Comanda() {
     yPos += 5;
 
     const agora = new Date();
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     doc.text(agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR'), pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 5;
 
@@ -122,7 +122,7 @@ export default function Comanda() {
     doc.line(3, yPos, pageWidth - 3, yPos);
     yPos += 4;
 
-    doc.setFontSize(9);
+    doc.setFontSize(8);
     (notaData.itens || []).forEach((item: any) => {
       const nomeItem = item.nome.substring(0, 20);
       const valor = `${(item.quantidade * item.preco).toFixed(2).replace('.', ',')}`;
