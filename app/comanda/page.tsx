@@ -380,10 +380,10 @@ export default function Comanda() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
-        <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
+        <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">← 
           Voltar
         </Link>
-        <h1 className="text-2xl font-bold mb-6">Comanda / Orcamento / Pedido</h1>
+        <h1 className="text-2xl font-bold mb-6">Comanda / Orçamento / Pedido</h1>
         <div className="mb-6">
           <label className="block text-sm font-bold mb-2">Modo de Operacao</label>
           <select value={modo} onChange={(e) => setModo(e.target.value)} className="w-full border border-gray-300 p-2 rounded">
