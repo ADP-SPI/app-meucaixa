@@ -10,19 +10,22 @@ export default function LandingPage() {
 
   useEffect(() => {
     const usuarioId = localStorage.getItem('usuario_id');
-    const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+    
     if (usuarioId) {
+      // Se está logado, vai pro dashboard (PWA ou browser)
       window.location.href = '/dashboard';
     } else {
+      // Se NÃO está logado
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches;
       if (isPWA) {
-      window.location.href = '/login';
-    }
-    // Se é browser sem usuário: fica na landing page
+        // PWA sem login → vai pro login
+        window.location.href = '/login';
+      }
+      // Browser sem login → fica na landing page (sem redirect)
     }
   }, []);
 
   console.log('Landing Page carregado');
-
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
@@ -82,16 +85,16 @@ export default function LandingPage() {
             <div className="text-4xl mb-4">📝</div>
             <h3 className="text-xl font-bold mb-2">Controle de Fiados</h3>
             <p className="text-gray-600">
-              Registre quem deve, quando pagou e quanto falta receber.
+              Acompanhe quem deve e quando vence. Nunca mais perca uma cobrança.
             </p>
           </div>
 
           {/* Card 4 */}
           <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition">
-            <div className="text-4xl mb-4">📋</div>
-            <h3 className="text-xl font-bold mb-2">Cardápio Online</h3>
+            <div className="text-4xl mb-4">🍔</div>
+            <h3 className="text-xl font-bold mb-2">Cardápio Personalizado</h3>
             <p className="text-gray-600">
-              Gerencie seus itens, preços e promoções facilmente.
+              Crie seu cardápio com preços. Atualize quando quiser.
             </p>
           </div>
 
@@ -100,149 +103,36 @@ export default function LandingPage() {
             <div className="text-4xl mb-4">📊</div>
             <h3 className="text-xl font-bold mb-2">Relatórios</h3>
             <p className="text-gray-600">
-              Veja quanto você ganhou, gastou e lucrou em cada período.
+              Veja gráficos e estatísticas do seu negócio. Tome melhores decisões.
             </p>
           </div>
 
           {/* Card 6 */}
           <div className="bg-white p-8 rounded-lg shadow-md hover:shadow-lg transition">
-            <div className="text-4xl mb-4">👥</div>
-            <h3 className="text-xl font-bold mb-2">Múltiplos Usuários</h3>
+            <div className="text-4xl mb-4">📱</div>
+            <h3 className="text-xl font-bold mb-2">Funciona no Celular</h3>
             <p className="text-gray-600">
-              Adicione funcionários e controle quem acessa o que.
+              Use no iPhone, Android ou qualquer navegador. Instale como app.
             </p>
           </div>
         </div>
       </section>
 
-      {/* PLANOS */}
-      <section className="bg-white py-20 border-t border-gray-200">
-        <div className="max-w-6xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Escolha o Plano Ideal</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Plano Básico */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 hover:border-green-600 transition">
-              <h3 className="text-2xl font-bold mb-2">Básico</h3>
-              <p className="text-gray-600 mb-4">Para começar</p>
-              <div className="text-3xl font-bold text-green-600 mb-6">
-                R$ 29,90<span className="text-sm text-gray-600">/mês</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-gray-700">
-                <li>✓ 1 acesso</li>
-                <li>✓ 50 itens no cardápio</li>
-                <li>✓ 10 mesas/comandas</li>
-                <li>✓ Suporte por email</li>
-              </ul>
-              <Link 
-                href="/planos"
-                className="w-full block text-center bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded font-bold hover:bg-green-50 transition"
-              >
-                Teste Grátis
-              </Link>
-            </div>
-
-            {/* Plano Pro */}
-            <div className="border-2 border-green-600 rounded-lg p-8 bg-gradient-to-b from-green-50 to-white relative">
-              <div className="absolute top-4 right-4 bg-green-600 text-white px-4 py-1 rounded-full text-sm font-bold">
-                Popular
-              </div>
-              <h3 className="text-2xl font-bold mb-2">Pro</h3>
-              <p className="text-gray-600 mb-4">Melhor custo-benefício</p>
-              <div className="text-3xl font-bold text-green-600 mb-6">
-                R$ 49,90<span className="text-sm text-gray-600">/mês</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-gray-700">
-                <li>✓ 3 acessos</li>
-                <li>✓ 100 itens no cardápio</li>
-                <li>✓ 30 mesas/comandas</li>
-                <li>✓ Suporte por email + WhatsApp</li>
-              </ul>
-              <Link 
-                href="/planos"
-                className="w-full block text-center bg-green-600 text-white px-4 py-2 rounded font-bold hover:bg-green-700 transition"
-              >
-                Teste Grátis
-              </Link>
-            </div>
-
-            {/* Plano Enterprise */}
-            <div className="border-2 border-gray-200 rounded-lg p-8 hover:border-green-600 transition">
-              <h3 className="text-2xl font-bold mb-2">Enterprise</h3>
-              <p className="text-gray-600 mb-4">Sem limites</p>
-              <div className="text-3xl font-bold text-green-600 mb-6">
-                R$ 79,90<span className="text-sm text-gray-600">/mês</span>
-              </div>
-              <ul className="space-y-2 mb-6 text-gray-700">
-                <li>✓ Acessos ilimitados</li>
-                <li>✓ Itens ilimitados</li>
-                <li>✓ Mesas ilimitadas</li>
-                <li>✓ Suporte prioritário</li>
-              </ul>
-              <Link 
-                href="/planos"
-                className="w-full block text-center bg-white border-2 border-green-600 text-green-600 px-4 py-2 rounded font-bold hover:bg-green-50 transition"
-              >
-                Teste Grátis
-              </Link>
-            </div>
-          </div>
-
-          <p className="text-center text-gray-600 mt-8">
-            💚 Todos os planos incluem 15 dias de teste grátis. Sem cartão de crédito!
+      {/* CTA FOOTER */}
+      <section className="bg-green-600 text-white py-20">
+        <div className="max-w-2xl mx-auto text-center px-4">
+          <h2 className="text-4xl font-bold mb-4">Pronto para começar?</h2>
+          <p className="text-lg mb-8">
+            15 dias de teste grátis. Sem cartão de crédito. Sem compromisso.
           </p>
+          <Link 
+            href="/planos"
+            className="inline-block bg-white text-green-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition"
+          >
+            Começar Agora
+          </Link>
         </div>
       </section>
-
-      {/* CTA FINAL */}
-      <section className="max-w-6xl mx-auto px-4 py-20 text-center">
-        <h2 className="text-3xl font-bold mb-4">Pronto para começar?</h2>
-        <p className="text-xl text-gray-600 mb-8">
-          15 dias grátis para testar tudo. Sem compromisso.
-        </p>
-        <Link 
-          href="/planos"
-          className="inline-block bg-green-600 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-green-700 transition"
-        >
-          Começar Agora
-        </Link>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="bg-gray-900 text-gray-300 py-8 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h3 className="font-bold text-white mb-4">Meu Caixa</h3>
-              <p className="text-sm">Gestão simples do seu negócio.</p>
-            </div>
-            <div>
-              <h3 className="font-bold text-white mb-4">Produto</h3>
-              <ul className="space-y-2 text-sm">
-                <li><Link href="/planos" className="hover:text-white">Planos</Link></li>
-                <li><Link href="/planos" className="hover:text-white">Recursos</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold text-white mb-4">Suporte</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="mailto:contato@meucaixa.com.br" className="hover:text-white">Email</a></li>
-                <li><a href="https://wa.me/5544999999999" className="hover:text-white">WhatsApp</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-bold text-white mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">Privacidade</a></li>
-                <li><a href="#" className="hover:text-white">Termos</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 pt-8 text-center text-sm">
-            <p>&copy; 2026 Meu Caixa. Todos os direitos reservados.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
