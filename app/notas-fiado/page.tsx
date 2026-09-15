@@ -49,54 +49,42 @@ export default function NotasFiado() {
 
   const imprimirNota = async (nota: any) => {
     try {
-      if (nota.arquivo_nome) {
-        const { data } = await supabase.storage
-          .from('notas-fiados')
-          .getPublicUrl(`${contaId}/${nota.arquivo_nome}`);
-        window.open(data.publicUrl, '_blank');
-      } else {
-        alert('Arquivo não encontrado para esta nota');
-      }
+      const pdfUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/notas-fiados/${nota.conta_id}/${nota.arquivo_nome}`;
+      window.open(pdfUrl, '_blank');
     } catch (err) {
-      console.error('Erro ao imprimir:', err);
-      alert('Erro ao acessar nota');
+      alert('Erro ao abrir nota');
     }
   };
 
   const deletarNota = async (notaId: number) => {
+    if (!confirm('Tem certeza que deseja deletar esta nota?')) return;
+
     try {
-      const { error } = await supabase
+      await supabase
         .from('notas_fiados')
         .delete()
         .eq('id', notaId);
-      
-      if (error) {
-        alert('Erro ao deletar nota');
-      } else {
-        carregarNotas(contaId!);
-      }
+
+      carregarNotas(contaId!);
     } catch (err) {
-      console.error('Erro ao deletar:', err);
       alert('Erro ao deletar nota');
     }
   };
 
-  if (!contaId && !carregando) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Erro: Conta não encontrada</p></div>;
+  if (carregando) {
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Carregando...</p></div>;
   }
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
-      <div className="w-full max-w-4xl">
+      <div className="w-full max-w-6xl">
         <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
-          Voltar
+          ← Voltar
         </Link>
-        
+
         <h1 className="text-2xl font-bold mb-6">Notas de Fiado</h1>
 
-        {carregando && notas.length === 0 && <p className="text-center text-gray-600">Carregando notas...</p>}
-
-        {notas.length === 0 && !carregando && (
+        {notas.length === 0 && (
           <p className="text-gray-500 text-center py-8">Nenhuma nota disponível</p>
         )}
 
@@ -113,13 +101,13 @@ export default function NotasFiado() {
                 <div className="flex gap-2">
                   <button 
                     onClick={() => imprimirNota(nota)}
-                    className="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700"
+                    className="bg-blue-100 text-blue-600 border border-blue-300 px-4 py-2 rounded font-bold hover:bg-blue-200"
                   >
                     Imprimir
                   </button>
                   <button 
                     onClick={() => deletarNota(nota.id)}
-                    className="bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700"
+                    className="bg-red-100 text-red-600 border border-red-300 px-4 py-2 rounded font-bold hover:bg-red-200"
                   >
                     Deletar
                   </button>
