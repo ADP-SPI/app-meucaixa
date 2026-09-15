@@ -59,7 +59,7 @@ export default function Agenda() {
   return (
     <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
       <div className="w-full max-w-6xl">
-      <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
+        <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
           ← Voltar
         </Link>
 
@@ -93,7 +93,7 @@ export default function Agenda() {
 
           <button
             onClick={adicionarAgenda}
-            className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
+            className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200"
           >
             + AGENDAR
           </button>
