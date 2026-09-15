@@ -154,7 +154,7 @@ export default function Relatorios() {
           <div className="flex gap-2">
             <button
               onClick={() => setFiltroAplicado(true)}
-              className="flex-1 bg-blue-600 text-white p-2 rounded font-bold hover:bg-blue-700 text-sm"
+              className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-2 rounded font-bold hover:bg-blue-200 text-sm"
             >
               FILTRAR
             </button>
@@ -166,13 +166,13 @@ export default function Relatorios() {
                 setDataFim('');
                 setFiltroAplicado(false);
               }}
-              className="flex-1 bg-gray-400 text-white p-2 rounded font-bold hover:bg-gray-500 text-sm"
+              className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-2 rounded font-bold hover:bg-gray-200 text-sm"
             >
               LIMPAR
             </button>
             <button
               onClick={() => setMostrarTotaisIndividuais(!mostrarTotaisIndividuais)}
-              className="flex-1 bg-purple-600 text-white p-2 rounded font-bold hover:bg-purple-700 text-sm"
+              className="flex-1 bg-purple-100 text-purple-600 border border-purple-300 p-2 rounded font-bold hover:bg-purple-200 text-sm"
             >
               {mostrarTotaisIndividuais ? 'RESUMO' : 'DETALHES'}
             </button>
