@@ -1,15 +1,9 @@
-
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  'https://rbocrgnmsadkbfoqbzpe.supabase.co',
-  'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
-);
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 interface Cliente {
   id: number;
@@ -22,21 +16,21 @@ interface Cliente {
   usuarios_count: number;
 }
 
-export default function AdminPage() {
+export default function Admin() {
   const router = useRouter();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [carregando, setCarregando] = useState(true);
-  const [filtro, setFiltro] = useState<string>('todos');
+  const [filtro, setFiltro] = useState('todos');
   const [modalAberto, setModalAberto] = useState(false);
   const [clienteEditando, setClienteEditando] = useState<Cliente | null>(null);
   const [novoVencimento, setNovoVencimento] = useState('');
+  const [novoPlano, setNovoPlano] = useState<number | null>(null);
+  const [planos, setPlanos] = useState<any[]>([]);
 
   useEffect(() => {
-    // Verificar se é admin (você)
     const usuarioId = localStorage.getItem('usuario_id');
     const contaId = localStorage.getItem('conta_id');
 
-    // Apenas o admin (conta_id: 4) pode acessar
     if (contaId !== '4') {
       alert('❌ Acesso negado');
       router.push('/dashboard');
@@ -44,11 +38,24 @@ export default function AdminPage() {
     }
 
     carregarClientes();
+    carregarPlanos();
   }, [router]);
+
+  const carregarPlanos = async () => {
+    try {
+      const { data: planosData } = await supabase
+        .from('planos')
+        .select('*')
+        .order('nome');
+
+      setPlanos(planosData || []);
+    } catch (err) {
+      console.error('Erro ao carregar planos:', err);
+    }
+  };
 
   const carregarClientes = async () => {
     try {
-      // Buscar todas as contas
       const { data: contas, error: erroContas } = await supabase
         .from('contas')
         .select('*')
@@ -56,22 +63,18 @@ export default function AdminPage() {
 
       if (erroContas) throw erroContas;
 
-      // Buscar assinaturas
       const { data: assinaturas } = await supabase
         .from('assinaturas')
         .select('*');
 
-      // Buscar planos
       const { data: planos } = await supabase
         .from('planos')
         .select('*');
 
-      // Buscar usuários por conta
       const { data: usuarios } = await supabase
         .from('usuarios')
         .select('conta_id');
 
-      // Montar lista de clientes com dados combinados
       const clientesProcessados: Cliente[] = contas?.map((conta: any) => {
         const assinatura = assinaturas?.find((a: any) => a.conta_id === conta.id);
         const plano = planos?.find((p: any) => p.id === conta.plano_id);
@@ -96,40 +99,42 @@ export default function AdminPage() {
     setCarregando(false);
   };
 
-    const getStatusColor = (status: string, vencimento: string) => {
-  if (status === 'pendente') return 'bg-red-100 text-red-800';
-  if (status === 'teste_ativo') {
-    const dias = Math.ceil((new Date(vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    if (dias <= 0) return 'bg-red-200 text-red-900';
-    if (dias <= 1) return 'bg-red-100 text-red-800';
-    if (dias <= 3) return 'bg-yellow-100 text-yellow-800';
-    if (dias <= 5) return 'bg-yellow-50 text-yellow-700';
-    if (dias <= 10) return 'bg-blue-50 text-blue-700';
-    return 'bg-blue-100 text-blue-800';
-  }
-  if (status === 'ativo') return 'bg-green-100 text-green-800';
-  if (status === 'cancelado') return 'bg-gray-100 text-gray-800';
-  return 'bg-gray-100 text-gray-800';
-};
+  const getStatusColor = (status: string, vencimento: string) => {
+    if (status === 'pendente') return 'bg-red-100 text-red-800';
+    if (status === 'cancelado') return 'bg-gray-100 text-gray-800';
+    if (status === 'teste_ativo') return 'bg-yellow-100 text-yellow-800';
 
-const getStatusLabel = (status: string, vencimento: string) => {
-  if (status === 'pendente') return '🔴 PENDENTE PAGAMENTO';
-  if (status === 'teste_ativo') {
-    const dias = Math.ceil((new Date(vencimento).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    if (dias <= 0) return '🔴 VENCIDO - BLOQUEADO';
-    if (dias <= 1) return `🔴 VENCENDO HOJE (${dias}d)`;
-    if (dias <= 3) return `🟡 AVISO 3 DIAS (${dias}d)`;
-    if (dias <= 5) return `🟡 AVISO 5 DIAS (${dias}d)`;
-    if (dias <= 10) return `🔵 AVISO 10 DIAS (${dias}d)`;
-    return '🔵 TESTE ATIVO';
-  }
-  if (status === 'ativo') return '🟢 ATIVO';
-  if (status === 'cancelado') return '⚫ CANCELADO';
-  return status;
-};
+    if (status === 'ativo') {
+      const hoje = new Date();
+      const venc = new Date(vencimento);
+      const diasRestantes = Math.ceil((venc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diasRestantes <= 5) return 'bg-orange-100 text-orange-800';
+      return 'bg-green-100 text-green-800';
+    }
+
+    return 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusLabel = (status: string, vencimento: string) => {
+    if (status === 'pendente') return 'Pendente';
+    if (status === 'cancelado') return 'Cancelado';
+    if (status === 'teste_ativo') return 'Em Teste';
+
+    if (status === 'ativo') {
+      const hoje = new Date();
+      const venc = new Date(vencimento);
+      const diasRestantes = Math.ceil((venc.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
+
+      if (diasRestantes <= 5) return `⚠️ Vence em ${diasRestantes}d`;
+      return '✅ Ativo';
+    }
+
+    return status;
+  };
 
   const atualizarVencimento = async () => {
-    if (!clienteEditando || !novoVencimento) return;
+    if (!clienteEditando) return;
 
     try {
       const { error } = await supabase
@@ -145,7 +150,29 @@ const getStatusLabel = (status: string, vencimento: string) => {
       carregarClientes();
     } catch (err) {
       console.error('Erro:', err);
-      alert('Erro ao atualizar');
+      alert('Erro ao atualizar vencimento');
+    }
+  };
+
+  const atualizarPlano = async () => {
+    if (!clienteEditando || novoPlano === null) return;
+
+    try {
+      const { error } = await supabase
+        .from('contas')
+        .update({ plano_id: novoPlano })
+        .eq('id', clienteEditando.id);
+
+      if (error) throw error;
+
+      alert('✅ Plano alterado com sucesso!');
+      setModalAberto(false);
+      setClienteEditando(null);
+      setNovoPlano(null);
+      carregarClientes();
+    } catch (err) {
+      console.error('Erro:', err);
+      alert('Erro ao atualizar plano');
     }
   };
 
@@ -199,31 +226,10 @@ const getStatusLabel = (status: string, vencimento: string) => {
 
         <h1 className="text-3xl font-bold mb-6">🔧 PAINEL ADMINISTRATIVO</h1>
 
-        {/* ESTATÍSTICAS */}
-        <div className="grid grid-cols-4 gap-4 mb-6">
-          <div className="bg-white p-4 rounded shadow">
-            <p className="text-sm text-gray-600">Total de Clientes</p>
-            <p className="text-2xl font-bold">{clientes.length}</p>
-          </div>
-          <div className="bg-red-100 p-4 rounded shadow">
-            <p className="text-sm text-red-800">Pendentes</p>
-            <p className="text-2xl font-bold">{clientes.filter(c => c.status_assinatura === 'pendente').length}</p>
-          </div>
-          <div className="bg-blue-100 p-4 rounded shadow">
-            <p className="text-sm text-blue-800">Em Teste</p>
-            <p className="text-2xl font-bold">{clientes.filter(c => c.status_assinatura === 'teste_ativo').length}</p>
-          </div>
-          <div className="bg-green-100 p-4 rounded shadow">
-            <p className="text-sm text-green-800">Ativos</p>
-            <p className="text-2xl font-bold">{clientes.filter(c => c.status_assinatura === 'ativo').length}</p>
-          </div>
-        </div>
-
-        {/* FILTROS */}
-        <div className="mb-6 flex gap-2">
+        <div className="space-x-2 mb-6">
           <button
             onClick={() => setFiltro('todos')}
-            className={`px-4 py-2 rounded ${filtro === 'todos' ? 'bg-gray-900 text-white' : 'bg-white'}`}
+            className={`px-4 py-2 rounded ${filtro === 'todos' ? 'bg-blue-600 text-white' : 'bg-white'}`}
           >
             Todos
           </button>
@@ -235,7 +241,7 @@ const getStatusLabel = (status: string, vencimento: string) => {
           </button>
           <button
             onClick={() => setFiltro('teste')}
-            className={`px-4 py-2 rounded ${filtro === 'teste' ? 'bg-blue-600 text-white' : 'bg-white'}`}
+            className={`px-4 py-2 rounded ${filtro === 'teste' ? 'bg-yellow-600 text-white' : 'bg-white'}`}
           >
             Em Teste
           </button>
@@ -247,7 +253,6 @@ const getStatusLabel = (status: string, vencimento: string) => {
           </button>
         </div>
 
-        {/* TABELA */}
         <div className="bg-white rounded shadow overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-200">
@@ -289,6 +294,7 @@ const getStatusLabel = (status: string, vencimento: string) => {
                       onClick={() => {
                         setClienteEditando(cliente);
                         setNovoVencimento(cliente.data_vencimento);
+                        setNovoPlano(cliente.plano_id);
                         setModalAberto(true);
                       }}
                       className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
@@ -315,6 +321,20 @@ const getStatusLabel = (status: string, vencimento: string) => {
               <h3 className="text-xl font-bold mb-4">Editar {clienteEditando.nome}</h3>
 
               <div className="mb-4">
+                <label className="block text-sm font-bold mb-2">Tipo de Plano</label>
+                <select
+                  value={novoPlano || ''}
+                  onChange={(e) => setNovoPlano(parseInt(e.target.value))}
+                  className="w-full border border-gray-300 p-2 rounded"
+                >
+                  <option value="">Selecione um plano</option>
+                  {planos.map(plano => (
+                    <option key={plano.id} value={plano.id}>{plano.nome}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-4">
                 <label className="block text-sm font-bold mb-2">Data de Vencimento</label>
                 <input
                   type="date"
@@ -326,10 +346,16 @@ const getStatusLabel = (status: string, vencimento: string) => {
 
               <div className="space-y-2">
                 <button
+                  onClick={atualizarPlano}
+                  className="w-full bg-purple-600 text-white p-3 rounded font-bold hover:bg-purple-700"
+                >
+                  💾 ATUALIZAR PLANO
+                </button>
+                <button
                   onClick={atualizarVencimento}
                   className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700"
                 >
-                  ✓ SALVAR
+                  ✓ ATUALIZAR VENCIMENTO
                 </button>
                 <button
                   onClick={() => setModalAberto(false)}
