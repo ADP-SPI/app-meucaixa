@@ -392,7 +392,7 @@ export default function Comanda() {
           </select>
         </div>
         {!abrindoComanda && modalAberto === null && (
-          <button onClick={() => setAbrindoComanda(true)} className="w-full bg-green-600 text-white p-4 rounded font-bold hover:bg-green-700 mb-6">
+          <button onClick={() => setAbrindoComanda(true)} className="w-full bg-green-100 text-green-600 border border-green-300 p-4 rounded font-bold hover:bg-green-200 mb-6">
             + ABRIR COMANDA
           </button>
         )}
@@ -400,8 +400,8 @@ export default function Comanda() {
           <div className="bg-white rounded-lg p-4 mb-6 border-2 border-blue-200">
             <input type="text" placeholder="Nome do cliente" value={nomeComanda} onChange={(e) => setNomeComanda(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-3" />
             <div className="flex gap-2">
-              <button onClick={criarComanda} className="flex-1 bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700">Criar</button>
-              <button onClick={() => setAbrindoComanda(false)} className="flex-1 bg-gray-400 text-white p-2 rounded font-bold hover:bg-gray-500">Cancelar</button>
+              <button onClick={criarComanda} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-2 rounded font-bold hover:bg-green-200">Criar</button>
+              <button onClick={() => setAbrindoComanda(false)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-2 rounded font-bold hover:bg-gray-200">Cancelar</button>
             </div>
           </div>
         )}
@@ -429,7 +429,7 @@ export default function Comanda() {
                           <p className="font-bold">{item.nome}</p>
                           <p className="text-sm text-gray-600">{item.quantidade}x R$ {item.preco.toFixed(2)} = R$ {(item.quantidade * item.preco).toFixed(2)}</p>
                         </div>
-                        <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">X</button>
+                        <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-100 text-red-600 border border-red-300 px-3 py-1 rounded text-sm hover:bg-red-200">X</button>
                       </div>
                     ))}
                   </div>
@@ -452,7 +452,7 @@ export default function Comanda() {
                   <h3 className="font-bold mb-2">Adicionar Rapido</h3>
                   <input type="text" placeholder="Nome do item" value={itemRapido} onChange={(e) => setItemRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
                   <input type="number" placeholder="Preco" value={precoRapido} onChange={(e) => setPrecoRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
-                  <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-blue-600 text-white p-2 rounded font-bold hover:bg-blue-700">Adicionar</button>
+                  <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-2 rounded font-bold hover:bg-blue-200">Adicionar</button>
                 </div>
               )}
               <div className="bg-blue-100 p-4 rounded-lg mb-4 text-center">
@@ -461,9 +461,9 @@ export default function Comanda() {
               </div>
               {!fechando && (
                 <div className="flex gap-2">
-                  <button onClick={() => setFechando(true)} className="flex-1 bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">Fechar Comanda</button>
-                  <button onClick={() => deletarComanda(modalAberto)} className="flex-1 bg-red-600 text-white p-3 rounded font-bold hover:bg-red-700">Excluir</button>
-                  <button onClick={() => setModalAberto(null)} className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500">Voltar</button>
+                  <button onClick={() => setFechando(true)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200">Fechar Comanda</button>
+                  <button onClick={() => deletarComanda(modalAberto)} className="flex-1 bg-red-100 text-red-600 border border-red-300 p-3 rounded font-bold hover:bg-red-200">Excluir</button>
+                  <button onClick={() => setModalAberto(null)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Voltar</button>
                 </div>
               )}
               {fechando && (
@@ -476,8 +476,8 @@ export default function Comanda() {
                     <option>FIADO</option>
                   </select>
                   <div className="flex gap-2">
-                    <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700">Confirmar</button>
-                    <button onClick={() => setFechando(false)} className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500">Cancelar</button>
+                    <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200">Confirmar</button>
+                    <button onClick={() => setFechando(false)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Cancelar</button>
                   </div>
                 </div>
               )}
@@ -495,7 +495,7 @@ export default function Comanda() {
                   onClick={() => {
                     setMostrandoAssinatura(true);
                   }}
-                  className="w-full bg-purple-600 text-white p-3 rounded font-bold hover:bg-purple-700"
+                  className="w-full bg-purple-100 text-purple-600 border border-purple-300 p-3 rounded font-bold hover:bg-purple-200"
                 >
                   Assinar na Tela
                 </button>
@@ -506,7 +506,7 @@ export default function Comanda() {
                     setPdfUrl(url);
                     setMostrandoPreview(true);
                   }}
-                  className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
+                  className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200"
                 >
                   Imprimir Agora
                 </button>
@@ -517,7 +517,7 @@ export default function Comanda() {
                     setNotaGerada(null);
                     setMostrandoOpcoeNota(false);
                   }}
-                  className="w-full bg-gray-600 text-white p-3 rounded font-bold hover:bg-gray-700"
+                  className="w-full bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200"
                 >
                   Salvar Impressão
                 </button>
@@ -553,7 +553,7 @@ export default function Comanda() {
                       setPdfUrl('');
                     }, 1000);
                   }}
-                  className="flex-1 bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700"
+                  className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200"
                 >
                   Imprimir
                 </button>
@@ -562,7 +562,7 @@ export default function Comanda() {
                     setMostrandoPreview(false);
                     setPdfUrl('');
                   }}
-                  className="flex-1 bg-gray-400 text-white p-3 rounded font-bold hover:bg-gray-500"
+                  className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200"
                 >
                   Cancelar
                 </button>
@@ -584,7 +584,7 @@ export default function Comanda() {
               <div className="flex gap-2">
                 <button
                   onClick={() => sigCanvas.current?.clear()}
-                  className="flex-1 bg-gray-400 text-white p-2 rounded font-bold hover:bg-gray-500"
+                  className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-2 rounded font-bold hover:bg-gray-200"
                 >
                   Limpar
                 </button>
@@ -597,13 +597,13 @@ export default function Comanda() {
                     setNotaGerada(null);
                     setMostrandoOpcoeNota(false);
                   }}
-                  className="flex-1 bg-green-600 text-white p-2 rounded font-bold hover:bg-green-700"
+                  className="flex-1 bg-green-100 text-green-600 border border-green-300 p-2 rounded font-bold hover:bg-green-200"
                 >
                   Salvar
                 </button>
                 <button
                   onClick={() => setMostrandoAssinatura(false)}
-                  className="flex-1 bg-red-600 text-white p-2 rounded font-bold hover:bg-red-700"
+                  className="flex-1 bg-red-100 text-red-600 border border-red-300 p-2 rounded font-bold hover:bg-red-200"
                 >
                   Cancelar
                 </button>
