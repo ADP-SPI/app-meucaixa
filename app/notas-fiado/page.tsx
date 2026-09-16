@@ -49,7 +49,7 @@ export default function NotasFiado() {
 
   const imprimirNota = async (nota: any) => {
     try {
-      const pdfUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/notas-fiados/${nota.conta_id}/${nota.arquivo_nome}`;
+      const pdfUrl = `https://rbocrgnmsadkbfoqbzpe.supabase.co/storage/v1/object/public/notas-fiados/${nota.conta_id}/${nota.arquivo_nome}`;
       window.open(pdfUrl, '_blank');
     } catch (err) {
       alert('Erro ao abrir nota');
