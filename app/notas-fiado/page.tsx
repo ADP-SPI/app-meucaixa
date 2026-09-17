@@ -173,17 +173,12 @@ export default function NotasFiado() {
               <div className="flex gap-2">
                 <button
                   onClick={() => {
-                    setTimeout(() => {
-                      const newWindow = window.open(pdfUrl, '_blank');
-                      setTimeout(() => {
-                        if (newWindow) newWindow.print();
-                      }, 500);
-                    }, 300);
+                    window.print();
                     setTimeout(() => {
                       setMostrandoPreview(false);
                       setNotaSelecionada(null);
                       setPdfUrl('');
-                    }, 1000);
+                    }, 500);
                   }}
                   className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200"
                 >
