@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase, getDataBrasil } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 export default function Caixa() {
   const [transacoes, setTransacoes] = useState<any[]>([]);
@@ -60,7 +60,7 @@ export default function Caixa() {
             tipo: tipoOperacao,
             formapagamento: formapagamento,
             hora: new Date().toLocaleTimeString('pt-BR'),
-            data: getDataBrasil(),
+            data: new Date().toISOString().split('T')[0],
             created_at: new Date().toISOString()
           }
         ]);
@@ -262,12 +262,12 @@ export default function Caixa() {
         {/* MOVIMENTAÇÕES DO DIA */}
         <div>
           <h2 className="text-lg font-bold mb-3">Movimentações de Hoje</h2>
-          {transacoes.filter(t => t.data === getDataBrasil()).length === 0 ? (
+          {transacoes.filter(t => t.data === new Date().toISOString().split('T')[0]).length === 0 ? (
             <p className="text-gray-500">Nenhuma movimentação</p>
           ) : (
             <div className="space-y-2">
               {transacoes.map((t) => (
-                t && t.data === getDataBrasil() ? (
+                t && t.data === new Date().toISOString().split('T')[0] ? (
                   <div
                     key={t.id}
                     className={`p-2 rounded border-l-4 ${
