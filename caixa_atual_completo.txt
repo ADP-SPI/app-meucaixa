@@ -110,11 +110,8 @@ export default function Caixa() {
     let receita = 0;
     let despesa = 0;
     let retirada = 0;
-    const dataHoje = getDataBrasil();
 
     transacoes.forEach((t) => {
-      if (t.data !== dataHoje) return;
-
       if (t.tipo === 'receita' && t.formapagamento !== 'FIADO') {
         receita += t.valor;
       } else if (t.tipo === 'despesa') {
