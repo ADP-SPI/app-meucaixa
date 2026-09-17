@@ -46,15 +46,15 @@ export default function ConfigImpressora() {
         throw new Error('Seu navegador não suporta Bluetooth. Use Chrome/Edge no Android.');
       }
 
-      // Solicita dispositivo Bluetooth
+      // Solicita dispositivo Bluetooth (SEM serviços inválidos)
       const device = await nav.bluetooth.requestDevice({
         filters: [
           { namePrefix: 'KA-' },
           { namePrefix: 'Thermal' },
           { namePrefix: 'PRINTER' },
           { namePrefix: 'ESC' },
+          { namePrefix: 'BT' },
         ],
-        optionalServices: ['serial', 'device_information'],
       });
 
       if (device) {
@@ -149,8 +149,9 @@ export default function ConfigImpressora() {
           <div className="mt-6 p-4 bg-gray-50 rounded text-xs text-gray-600">
             <p className="font-bold mb-2">ℹ️ Como usar:</p>
             <ol className="list-decimal list-inside space-y-1">
+              <li>Certifique-se que a impressora está ligada</li>
               <li>Clique em "Conectar Impressora"</li>
-              <li>Escolha sua impressora Bluetooth</li>
+              <li>Escolha sua impressora Bluetooth na lista</li>
               <li>Pronto! Ficará salva automaticamente</li>
               <li>Próximas vezes: já estará conectada</li>
             </ol>
@@ -159,7 +160,9 @@ export default function ConfigImpressora() {
           {/* Nota Importante */}
           <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
             <p className="font-bold">⚠️ Importante:</p>
-            <p>Funciona apenas no Android com Chrome/Edge. A impressora deve estar ligada e próxima do celular.</p>
+            <p className="mb-2">✅ Funciona no Android com Chrome/Edge</p>
+            <p className="mb-2">❌ Não funciona em Safari (limitação Apple)</p>
+            <p>A impressora deve estar ligada e próxima do celular.</p>
           </div>
         </div>
       </div>
