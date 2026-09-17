@@ -9,9 +9,6 @@ export default function NotasFiado() {
   const [notas, setNotas] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [contaId, setContaId] = useState<number | null>(null);
-  const [mostrandoPreview, setMostrandoPreview] = useState(false);
-  const [notaSelecionada, setNotaSelecionada] = useState<any | null>(null);
-  const [pdfUrl, setPdfUrl] = useState<string>('');
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -112,9 +109,12 @@ export default function NotasFiado() {
   const handleImprimir = (nota: any) => {
     const doc = gerarNotaPDF(nota);
     const url = doc.output('dataurlstring');
-    setPdfUrl(url);
-    setNotaSelecionada(nota);
-    setMostrandoPreview(true);
+    
+    // Abre print dialog DIRETO (sem preview)
+    const novaJanela = window.open(url);
+    if (novaJanela) {
+      novaJanela.print();
+    }
   };
 
   if (carregando) {
@@ -156,46 +156,6 @@ export default function NotasFiado() {
                 </div>
               </div>
             ))}
-          </div>
-        )}
-
-        {/* PREVIEW + IMPRIMIR */}
-        {mostrandoPreview && pdfUrl && notaSelecionada && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-6 w-full max-w-sm max-h-screen overflow-auto">
-              <h2 className="text-2xl font-bold mb-4">Preview Nota (52mm)</h2>
-              <div className="flex justify-center mb-4">
-                <iframe
-                  src={pdfUrl}
-                  className="w-52 h-96 border-2 border-gray-300 rounded"
-                />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    window.print();
-                    setTimeout(() => {
-                      setMostrandoPreview(false);
-                      setNotaSelecionada(null);
-                      setPdfUrl('');
-                    }, 500);
-                  }}
-                  className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200"
-                >
-                  Imprimir
-                </button>
-                <button
-                  onClick={() => {
-                    setMostrandoPreview(false);
-                    setNotaSelecionada(null);
-                    setPdfUrl('');
-                  }}
-                  className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </div>
