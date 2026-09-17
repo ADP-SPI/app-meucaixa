@@ -128,12 +128,12 @@ export default function Caixa() {
   };
 
   const totalFiados = transacoes
-    .filter((t) => t.tipo === 'receita' && t.formapagamento === 'FIADO')
+    .filter((t) => t.tipo === 'receita' && t.formapagamento === 'FIADO' && t.data === getDataBrasil())
     .reduce((sum, t) => sum + t.valor, 0);
 
   const receitasPorForma = (forma: string) => {
     return transacoes
-      .filter((t) => t.tipo === 'receita' && t.formapagamento === forma)
+      .filter((t) => t.tipo === 'receita' && t.formapagamento === forma && t.data === getDataBrasil())
       .reduce((sum, t) => sum + t.valor, 0)
       .toFixed(2)
       .replace('.', ',');
