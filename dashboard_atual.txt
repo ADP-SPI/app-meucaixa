@@ -219,11 +219,6 @@ export default function Dashboard() {
                 Gerenciar Usuarios
               </a>
             )}
-            {tipoPlano !== 'pessoal' && (
-              <a href="/config-impressora" className="block bg-orange-100 text-orange-700 p-4 rounded border border-orange-300 text-center font-bold hover:bg-orange-200 transition">
-                🖨️ Configurar Impressora
-              </a>
-            )}
             {contaId === '4' && (
               <a href="/admin" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
                 Admin
