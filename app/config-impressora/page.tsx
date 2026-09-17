@@ -8,6 +8,12 @@ interface BluetoothDevice {
   id: string;
 }
 
+interface NavigatorWithBluetooth extends Navigator {
+  bluetooth?: {
+    requestDevice(options: any): Promise<any>;
+  };
+}
+
 export default function ConfigImpressora() {
   const [impressoras, setImpressoras] = useState<BluetoothDevice[]>([]);
   const [impressoraConectada, setImpressoraConectada] = useState<BluetoothDevice | null>(null);
@@ -33,13 +39,15 @@ export default function ConfigImpressora() {
     setErro('');
 
     try {
+      const nav = navigator as NavigatorWithBluetooth;
+      
       // Verifica se o navegador suporta Web Bluetooth API
-      if (!navigator.bluetooth) {
+      if (!nav.bluetooth) {
         throw new Error('Seu navegador não suporta Bluetooth. Use Chrome/Edge no Android.');
       }
 
       // Solicita dispositivo Bluetooth
-      const device = await navigator.bluetooth.requestDevice({
+      const device = await nav.bluetooth.requestDevice({
         filters: [
           { namePrefix: 'KA-' },
           { namePrefix: 'Thermal' },
