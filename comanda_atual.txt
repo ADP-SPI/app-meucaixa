@@ -11,12 +11,6 @@ const getDataBrasil = () => {
   return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 };
 
-interface NavigatorWithBluetooth extends Navigator {
-  bluetooth?: {
-    requestDevice(options: any): Promise<any>;
-  };
-}
-
 export default function Comanda() {
   const router = useRouter();
   const sigCanvas = useRef<any>(null);
@@ -37,24 +31,12 @@ export default function Comanda() {
   const [mostrandoAssinatura, setMostrandoAssinatura] = useState(false);
   const [mostrandoPreview, setMostrandoPreview] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string>('');
-  const [impressoraConectada, setImpressoraConectada] = useState<any | null>(null);
-  const [mensagemImpressora, setMensagemImpressora] = useState('');
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
     if (conta) {
       setContaId(parseInt(conta));
       carregarDados(parseInt(conta));
-    }
-    
-    // Carregar impressora salva
-    const impressora = localStorage.getItem('impressora_conectada');
-    if (impressora) {
-      try {
-        setImpressoraConectada(JSON.parse(impressora));
-      } catch (e) {
-        console.error('Erro ao carregar impressora:', e);
-      }
     }
   }, []);
 
@@ -180,38 +162,6 @@ export default function Comanda() {
     return doc;
   };
 
-  const imprimirComBluetoothOuNormal = async (notaData: any) => {
-    const doc = gerarNotaPDF(notaData);
-    
-    // Se tem impressora Bluetooth conectada, tenta imprimir via Bluetooth
-    if (impressoraConectada) {
-      try {
-        setMensagemImpressora('Enviando para impressora Bluetooth...');
-        const pdfBlob = doc.output('blob');
-        
-        // Aqui você poderia implementar a comunicação com a impressora
-        // Por enquanto, vamos usar o método padrão mesmo com Bluetooth
-        
-        // Salvar nota antes de imprimir
-        await salvarNotaSupabase(notaData, doc);
-        
-        // Abrir dialog de impressão (que vai detectar impressora Bluetooth salva)
-        window.print();
-        
-        setMensagemImpressora(`✅ Enviado: ${impressoraConectada.name}`);
-        setTimeout(() => setMensagemImpressora(''), 3000);
-      } catch (err) {
-        console.error('Erro ao imprimir:', err);
-        setMensagemImpressora('Erro ao imprimir. Tente novamente.');
-      }
-    } else {
-      // Sem impressora Bluetooth, usa window.print() normal
-      const url = doc.output('dataurlstring');
-      setPdfUrl(url);
-      setMostrandoPreview(true);
-    }
-  };
-
   const salvarNotaSupabase = async (notaData: any, doc: any) => {
     try {
       const pdfBlob = doc.output('blob');
@@ -236,7 +186,6 @@ export default function Comanda() {
         .from('notas_fiados')
         .update({ 
           arquivo_nome: nomeArquivo,
-          arquivo_url: `${contaId}/${nomeArquivo}`,
           data_expiracao: dataExpiracao.toISOString()
         })
         .eq('id', notaData.id);
@@ -248,137 +197,179 @@ export default function Comanda() {
 
       return true;
     } catch (err) {
-      console.error('Erro ao salvar nota:', err);
+      console.error('Erro:', err);
       return false;
     }
   };
 
   const criarComanda = async () => {
     if (!nomeComanda.trim() || !contaId) return;
-
     try {
       const { error } = await supabase
         .from('comandas')
-        .insert({
+        .insert([{
           conta_id: contaId,
           nome: nomeComanda,
           itens: [],
-          subtotal: 0,
-          data: getDataBrasil()
-        });
-
+          data: getDataBrasil(),
+          hora: new Date().toLocaleTimeString('pt-BR')
+        }]);
       if (error) throw error;
-
       setNomeComanda('');
+      setAbrindoComanda(false);
       carregarDados(contaId);
     } catch (err) {
-      console.error('Erro ao criar comanda:', err);
+      console.error('Erro:', err);
+      alert('Erro ao criar comanda');
     }
   };
 
-  const abrirComanda = (id: number) => {
-    setModalAberto(id);
-    setModo('cardapio');
-  };
-
-  const calcularSubtotal = (id: number | null) => {
-    if (!id) return 0;
-    const comanda = comandas.find((c) => c.id === id);
-    if (!comanda) return 0;
-    return (comanda.itens || []).reduce((sum: number, item: any) => {
-      return sum + item.quantidade * item.preco;
-    }, 0);
-  };
-
-  const adicionarItem = (id: number | null, item: any) => {
-    if (!id) return;
-    const comanda = comandas.find((c) => c.id === id);
+  const adicionarItem = async (comandaId: number, item: any) => {
+    const comanda = comandas.find(c => c.id === comandaId);
     if (!comanda) return;
-
-    const novoItem = {
-      id: Date.now(),
-      nome: item.nome || itemRapido,
-      preco: parseFloat(item.preco || precoRapido),
-      quantidade: 1,
-    };
-
-    const novasComandas = comandas.map((c) =>
-      c.id === id ? { ...c, itens: [...(c.itens || []), novoItem] } : c
-    );
-
-    setComandas(novasComandas);
-    setItemRapido('');
-    setPrecoRapido('');
-  };
-
-  const removerItem = (id: number | null, itemId: number) => {
-    if (!id) return;
-    const novasComandas = comandas.map((c) =>
-      c.id === id ? { ...c, itens: (c.itens || []).filter((i: any) => i.id !== itemId) } : c
-    );
-    setComandas(novasComandas);
-  };
-
-  const deletarComanda = async (id: number | null) => {
-    if (!id) return;
-
+    const itensAtualizados = [
+      ...(comanda.itens || []),
+      {
+        id: Date.now(),
+        nome: item.nome || itemRapido,
+        preco: item.preco || parseFloat(precoRapido),
+        quantidade: 1
+      }
+    ];
     try {
       const { error } = await supabase
         .from('comandas')
-        .delete()
-        .eq('id', id);
-
+        .update({ itens: itensAtualizados })
+        .eq('id', comandaId);
       if (error) throw error;
-
-      setModalAberto(null);
+      setItemRapido('');
+      setPrecoRapido('');
       carregarDados(contaId!);
     } catch (err) {
-      console.error('Erro ao deletar comanda:', err);
+      console.error('Erro:', err);
+      alert('Erro ao adicionar item');
     }
   };
 
-  const fecharComanda = async (id: number | null) => {
-    if (!id || !contaId) return;
-
-    const comanda = comandas.find((c) => c.id === id);
+  const removerItem = async (comandaId: number, itemId: number) => {
+    const comanda = comandas.find(c => c.id === comandaId);
     if (!comanda) return;
+    const itensAtualizados = (comanda.itens || []).filter((item: any) => item.id !== itemId);
+    try {
+      await supabase
+        .from('comandas')
+        .update({ itens: itensAtualizados })
+        .eq('id', comandaId);
+      carregarDados(contaId!);
+    } catch (err) {
+      console.error('Erro:', err);
+      alert('Erro ao remover item');
+    }
+  };
 
-    const subtotal = calcularSubtotal(id);
-    const numeroNota = await gerarNumeroNota(contaId);
+  const calcularSubtotal = (comandaId: number) => {
+    const comanda = comandas.find(c => c.id === comandaId);
+    if (!comanda || !comanda.itens) return 0;
+    return comanda.itens.reduce((total: number, item: any) => total + (item.quantidade * item.preco), 0);
+  };
+
+  const fecharComanda = async (comandaId: number) => {
+    const subtotal = calcularSubtotal(comandaId);
+    const comanda = comandas.find(c => c.id === comandaId);
+    if (subtotal === 0 || !comanda || !contaId) return;
 
     try {
-      const { data, error } = await supabase
-        .from('notas_fiados')
-        .insert({
-          conta_id: contaId,
-          numero_nota: numeroNota,
-          cliente_nome: comanda.nome,
-          itens: comanda.itens || [],
-          total_valor: subtotal,
-          data: getDataBrasil(),
-        })
-        .select()
-        .single();
+      if (formaPagamento === 'FIADO') {
+        const numeroNota = await gerarNumeroNota(contaId);
 
-      if (error) throw error;
+        const dataExpiracao = new Date();
+        dataExpiracao.setDate(dataExpiracao.getDate() + 5);
 
-      const notaComId = { ...data, numero: numeroNota, comanda: comanda.nome, subtotal, itens: comanda.itens };
-      setNotaGerada(notaComId);
-      setMostrandoOpcoeNota(true);
+        const { data: notaData } = await supabase
+          .from('notas_fiados')
+          .insert([{
+            conta_id: contaId,
+            numero_nota: numeroNota,
+            cliente_nome: comanda.nome,
+            itens: comanda.itens || [],
+            total_valor: subtotal,
+            status: 'aberta',
+            data_expiracao: dataExpiracao.toISOString()
+          }])
+          .select();
 
-      try {
+        await supabase
+          .from('transacoes')
+          .insert([{
+            conta_id: contaId,
+            descricao: `Fiado: ${comanda.nome}`,
+            valor: subtotal,
+            tipo: 'receita',
+            formapagamento: 'FIADO',
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            data: getDataBrasil(),
+            origin: 'comanda',
+            itens: comanda.itens || []
+          }]);
+
         await supabase
           .from('comandas')
           .delete()
-          .eq('id', id);
-      } catch (e) {
-        console.warn('Erro ao deletar comanda após fechar:', e);
-      }
+          .eq('id', comandaId);
+        
+        setNotaGerada({
+          id: notaData?.[0]?.id || 0,
+          numero: numeroNota,
+          comanda: comanda.nome,
+          subtotal: subtotal,
+          itens: comanda.itens || []
+        });
+        setMostrandoOpcoeNota(true);
+        setModalAberto(null);
+        setFechando(false);
+      } else {
 
-      setModalAberto(null);
+        await supabase
+          .from('transacoes')
+          .insert([{
+            conta_id: contaId,
+            descricao: `Comanda: ${comanda.nome}`,
+            valor: subtotal,
+            tipo: 'receita',
+            formapagamento: formaPagamento,
+            hora: new Date().toLocaleTimeString('pt-BR'),
+            data: getDataBrasil(),
+            origin: 'comanda',
+            itens: comanda.itens || []
+          }]);
+
+        await supabase
+          .from('comandas')
+          .delete()
+          .eq('id', comandaId);
+
+        setModalAberto(null);
+        setFechando(false);
+      }
+      setFormaPagamento('PIX');
       carregarDados(contaId);
     } catch (err) {
-      console.error('Erro ao fechar comanda:', err);
+      console.error('Erro:', err);
+      alert('Erro ao fechar comanda');
+    }
+  };
+
+  const deletarComanda = async (comandaId: number) => {
+    try {
+      await supabase
+        .from('comandas')
+        .delete()
+        .eq('id', comandaId);
+      setModalAberto(null);
+      carregarDados(contaId!);
+    } catch (err) {
+      console.error('Erro:', err);
+      alert('Erro ao deletar comanda');
     }
   };
 
@@ -387,83 +378,56 @@ export default function Comanda() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-2xl mx-auto">
-        <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
-          ← Voltar
+    <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
+      <div className="w-full max-w-6xl">
+        <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">← 
+          Voltar
         </Link>
-
-        {impressoraConectada && (
-          <div className="bg-green-100 border-l-4 border-green-600 p-3 mb-4 text-green-800 text-sm">
-            🖨️ Impressora conectada: {impressoraConectada.name}
-          </div>
-        )}
-
-        {mensagemImpressora && (
-          <div className="bg-blue-100 border-l-4 border-blue-600 p-3 mb-4 text-blue-800 text-sm">
-            {mensagemImpressora}
-          </div>
-        )}
-
-        <h1 className="text-3xl font-bold mb-6">Comanda / Orçamento / Pedido</h1>
-
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4">Nova Comanda</h2>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Nome do cliente"
-              value={nomeComanda}
-              onChange={(e) => setNomeComanda(e.target.value)}
-              className="flex-1 border border-gray-300 p-2 rounded"
-            />
-            <button
-              onClick={criarComanda}
-              className="bg-green-100 text-green-600 border border-green-300 px-4 py-2 rounded font-bold hover:bg-green-200"
-            >
-              Criar
-            </button>
-          </div>
+        <h1 className="text-2xl font-bold mb-6">Comanda / Orçamento / Pedido</h1>
+        <div className="mb-6">
+          <label className="block text-sm font-bold mb-2">Modo de Operacao</label>
+          <select value={modo} onChange={(e) => setModo(e.target.value)} className="w-full border border-gray-300 p-2 rounded">
+            <option value="cardapio">Usar Cardapio</option>
+            <option value="rapido">Modo Rapido (digitar)</option>
+          </select>
         </div>
-
-        <div className="space-y-3">
-          {comandas.map((comanda) => (
-            <div key={comanda.id} className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-600">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-bold text-lg">{comanda.nome}</p>
-                  <p className="text-sm text-gray-600">{(comanda.itens || []).length} itens</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold text-blue-600">R$ {calcularSubtotal(comanda.id).toFixed(2)}</p>
-                  <button
-                    onClick={() => abrirComanda(comanda.id)}
-                    className="bg-blue-100 text-blue-600 border border-blue-300 px-3 py-1 rounded text-sm hover:bg-blue-200 mt-1"
-                  >
-                    Editar
-                  </button>
-                </div>
-              </div>
+        {!abrindoComanda && modalAberto === null && (
+          <button onClick={() => setAbrindoComanda(true)} className="w-full bg-green-100 text-green-600 border border-green-300 p-4 rounded font-bold hover:bg-green-200 mb-6">
+            + ABRIR COMANDA
+          </button>
+        )}
+        {abrindoComanda && (
+          <div className="bg-white rounded-lg p-4 mb-6 border-2 border-blue-200">
+            <input type="text" placeholder="Nome do cliente" value={nomeComanda} onChange={(e) => setNomeComanda(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-3" />
+            <div className="flex gap-2">
+              <button onClick={criarComanda} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-2 rounded font-bold hover:bg-green-200">Criar</button>
+              <button onClick={() => setAbrindoComanda(false)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-2 rounded font-bold hover:bg-gray-200">Cancelar</button>
             </div>
+          </div>
+        )}
+        <div className="space-y-2 mb-6">
+          {comandas.map((comanda) => (
+            <button key={comanda.id} onClick={() => setModalAberto(comanda.id)} className="w-full bg-white text-left p-4 rounded border-2 border-gray-200 hover:border-blue-600 transition">
+              <p className="font-bold">{comanda.nome}</p>
+              <p className="text-sm text-gray-600">{(comanda.itens || []).length} itens - R$ {calcularSubtotal(comanda.id).toFixed(2)}</p>
+            </button>
           ))}
         </div>
-
-        {modalAberto !== null && (
+        {modalAberto && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full max-h-screen overflow-y-auto">
-              <h2 className="text-2xl font-bold mb-4">{comandas.find((c) => c.id === modalAberto)?.nome}</h2>
-
-              <div className="mb-4">
-                <h3 className="font-bold mb-2">Itens na Comanda</h3>
-                {(comandas.find((c) => c.id === modalAberto)?.itens || []).length === 0 ? (
-                  <p className="text-gray-500 text-sm">Nenhum item</p>
+              <h2 className="text-2xl font-bold mb-4">{comandas.find(c => c.id === modalAberto)?.nome}</h2>
+              <div className="mb-4 flex-1">
+                <h3 className="font-bold mb-2">Itens</h3>
+                {(comandas.find(c => c.id === modalAberto)?.itens || []).length === 0 ? (
+                  <p className="text-gray-500">Nenhum item</p>
                 ) : (
-                  <div className="space-y-2 mb-4">
-                    {(comandas.find((c) => c.id === modalAberto)?.itens || []).map((item: any) => (
-                      <div key={item.id} className="flex justify-between items-center bg-gray-50 p-2 rounded text-sm">
+                  <div className="space-y-2">
+                    {(comandas.find(c => c.id === modalAberto)?.itens || []).map((item: any) => (
+                      <div key={item.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
                         <div>
                           <p className="font-bold">{item.nome}</p>
-                          <p className="text-gray-600">{item.quantidade}x R$ {item.preco.toFixed(2)}</p>
+                          <p className="text-sm text-gray-600">{item.quantidade}x R$ {item.preco.toFixed(2)} = R$ {(item.quantidade * item.preco).toFixed(2)}</p>
                         </div>
                         <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-100 text-red-600 border border-red-300 px-3 py-1 rounded text-sm hover:bg-red-200">X</button>
                       </div>
@@ -471,7 +435,6 @@ export default function Comanda() {
                   </div>
                 )}
               </div>
-
               {modo === 'cardapio' && (
                 <div className="mb-4">
                   <h3 className="font-bold mb-2">Adicionar do Cardapio</h3>
@@ -521,7 +484,6 @@ export default function Comanda() {
             </div>
           </div>
         )}
-
         {notaGerada && mostrandoOpcoeNota && !mostrandoAssinatura && !mostrandoPreview && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
@@ -539,11 +501,14 @@ export default function Comanda() {
                 </button>
                 <button
                   onClick={async () => {
-                    await imprimirComBluetoothOuNormal(notaGerada);
+                    const doc = gerarNotaPDF(notaGerada);
+                    const url = doc.output('dataurlstring');
+                    setPdfUrl(url);
+                    setMostrandoPreview(true);
                   }}
                   className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200"
                 >
-                  {impressoraConectada ? '🖨️ Imprimir (Bluetooth)' : 'Imprimir Agora'}
+                  Imprimir Agora
                 </button>
                 <button
                   onClick={async () => {
@@ -560,7 +525,6 @@ export default function Comanda() {
             </div>
           </div>
         )}
-
         {mostrandoPreview && pdfUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm max-h-screen overflow-auto">
@@ -577,7 +541,10 @@ export default function Comanda() {
                     const doc = gerarNotaPDF(notaGerada);
                     await salvarNotaSupabase(notaGerada, doc);
                     setTimeout(() => {
-                      window.print();
+                      const newWindow = window.open(pdfUrl, '_blank');
+                      setTimeout(() => {
+                        if (newWindow) newWindow.print();
+                      }, 500);
                     }, 300);
                     setTimeout(() => {
                       setMostrandoPreview(false);
@@ -603,7 +570,6 @@ export default function Comanda() {
             </div>
           </div>
         )}
-
         {mostrandoAssinatura && notaGerada && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-md w-full">
