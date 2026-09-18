@@ -245,13 +245,11 @@ export default function Comanda() {
     
     if (!nomeComanda.trim()) {
       console.log('❌ Nome vazio!');
-      alert('Por favor, digite um nome para a comanda');
       return;
     }
     
     if (!contaId) {
       console.log('❌ ContaId vazio!');
-      alert('Erro: Conta não encontrada');
       return;
     }
 
@@ -268,17 +266,14 @@ export default function Comanda() {
 
       if (error) {
         console.error('❌ Erro Supabase:', error);
-        alert(`Erro ao criar comanda: ${error.message}`);
         return;
       }
 
       console.log('✅ Comanda criada:', data);
       setNomeComanda('');
       await carregarDados(contaId);
-      alert(`Comanda "${nomeComanda}" criada com sucesso!`);
     } catch (err) {
       console.error('❌ Erro ao criar comanda:', err);
-      alert(`Erro inesperado: ${err}`);
     }
   };
 
@@ -344,15 +339,27 @@ export default function Comanda() {
   };
 
   const fecharComanda = async (id: number | null) => {
-    if (!id || !contaId) return;
+    console.log('🔴 Tentando fechar comanda:', { id, formaPagamento });
+    
+    if (!id || !contaId) {
+      console.log('❌ ID ou ContaID vazio');
+      return;
+    }
 
     const comanda = comandas.find((c) => c.id === id);
-    if (!comanda) return;
+    if (!comanda) {
+      console.log('❌ Comanda não encontrada');
+      return;
+    }
 
     const subtotal = calcularSubtotal(id);
+    console.log('💰 Subtotal:', subtotal);
+    
     const numeroNota = await gerarNumeroNota(contaId);
+    console.log('📝 Número da nota:', numeroNota);
 
     try {
+      console.log('🌐 Inserindo nota no Supabase...');
       const { data, error } = await supabase
         .from('notas_fiados')
         .insert({
@@ -366,25 +373,33 @@ export default function Comanda() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao inserir nota:', error);
+        throw error;
+      }
+
+      console.log('✅ Nota gerada:', data);
 
       const notaComId = { ...data, numero: numeroNota, comanda: comanda.nome, subtotal, itens: comanda.itens };
       setNotaGerada(notaComId);
       setMostrandoOpcoeNota(true);
+      setFechando(false);
 
+      console.log('🗑️ Deletando comanda após fechar...');
       try {
         await supabase
           .from('comandas')
           .delete()
           .eq('id', id);
+        console.log('✅ Comanda deletada');
       } catch (e) {
-        console.warn('Erro ao deletar comanda após fechar:', e);
+        console.warn('⚠️ Erro ao deletar comanda após fechar:', e);
       }
 
       setModalAberto(null);
       carregarDados(contaId);
     } catch (err) {
-      console.error('Erro ao fechar comanda:', err);
+      console.error('❌ Erro ao fechar comanda:', err);
     }
   };
 
@@ -456,7 +471,11 @@ export default function Comanda() {
 
         <div className="space-y-3">
           {comandas.map((comanda) => (
-            <div key={comanda.id} className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-600">
+            <div 
+              key={comanda.id} 
+              onClick={() => abrirComanda(comanda.id)}
+              className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-600 cursor-pointer hover:shadow-lg hover:border-blue-800 transition-all"
+            >
               <div className="flex justify-between items-start">
                 <div>
                   <p className="font-bold text-lg">{comanda.nome}</p>
@@ -464,7 +483,6 @@ export default function Comanda() {
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-blue-600">R$ {calcularSubtotal(comanda.id).toFixed(2)}</p>
-                  <button onClick={() => abrirComanda(comanda.id)} className="bg-green-100 text-green-600 border border-green-300 px-3 py-1 rounded text-sm hover:bg-green-200 opacity-70 hover:opacity-100 mt-1">Editar</button>
                 </div>
               </div>
             </div>
