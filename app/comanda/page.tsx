@@ -23,7 +23,6 @@ export default function Comanda() {
   const [cardapio, setCardapio] = useState<any[]>([]);
   const [modo, setModo] = useState('cardapio');
   const [comandas, setComandas] = useState<any[]>([]);
-  const [abrindoComanda, setAbrindoComanda] = useState(false);
   const [nomeComanda, setNomeComanda] = useState('');
   const [itemRapido, setItemRapido] = useState('');
   const [precoRapido, setPrecoRapido] = useState('');
@@ -246,10 +245,21 @@ export default function Comanda() {
   };
 
   const criarComanda = async () => {
-    if (!nomeComanda.trim() || !contaId) return;
+    console.log('Criando comanda:', { nomeComanda, contaId });
+    
+    if (!nomeComanda.trim()) {
+      console.log('Nome vazio!');
+      return;
+    }
+    
+    if (!contaId) {
+      console.log('ContaId vazio!');
+      return;
+    }
 
     try {
-      const { error } = await supabase
+      console.log('Inserindo na Supabase...');
+      const { error, data } = await supabase
         .from('comandas')
         .insert({
           conta_id: contaId,
@@ -257,10 +267,15 @@ export default function Comanda() {
           itens: [],
           subtotal: 0,
           data: getDataBrasil()
-        });
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Erro Supabase:', error);
+        throw error;
+      }
 
+      console.log('Comanda criada:', data);
       setNomeComanda('');
       carregarDados(contaId);
     } catch (err) {
@@ -417,8 +432,8 @@ export default function Comanda() {
             </button>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setModo('cardapio')} className={`flex-1 p-2 rounded font-bold ${modo === 'cardapio' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>Cardápio</button>
-            <button onClick={() => setModo('rapido')} className={`flex-1 p-2 rounded font-bold ${modo === 'rapido' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>Rápido</button>
+            <button onClick={() => setModo('cardapio')} className={`flex-1 p-2 rounded font-bold ${modo === 'cardapio' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>Itens do Cardápio</button>
+            <button onClick={() => setModo('rapido')} className={`flex-1 p-2 rounded font-bold ${modo === 'rapido' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>Digitar Itens</button>
           </div>
         </div>
 
@@ -477,7 +492,7 @@ export default function Comanda() {
               )}
               {modo === 'rapido' && (
                 <div className="mb-4">
-                  <h3 className="font-bold mb-2">Adicionar Rápido</h3>
+                  <h3 className="font-bold mb-2">Digitar Itens</h3>
                   <input type="text" placeholder="Nome do item" value={itemRapido} onChange={(e) => setItemRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
                   <input type="number" placeholder="Preço" value={precoRapido} onChange={(e) => setPrecoRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
                   <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-2 rounded font-bold hover:bg-blue-200">Adicionar</button>
