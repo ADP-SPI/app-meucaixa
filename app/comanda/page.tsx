@@ -178,31 +178,6 @@ export default function Comanda() {
     return doc;
   };
 
-  const imprimirComBluetoothOuNormal = async (notaData: any) => {
-    const doc = gerarNotaPDF(notaData);
-    
-    if (impressoraConectada) {
-      try {
-        setMensagemImpressora('Enviando para impressora Bluetooth...');
-        const pdfBlob = doc.output('blob');
-        
-        await salvarNotaSupabase(notaData, doc);
-        
-        window.print();
-        
-        setMensagemImpressora(`✅ Enviado: ${impressoraConectada.name}`);
-        setTimeout(() => setMensagemImpressora(''), 3000);
-      } catch (err) {
-        console.error('Erro ao imprimir:', err);
-        setMensagemImpressora('Erro ao imprimir. Tente novamente.');
-      }
-    } else {
-      const url = doc.output('dataurlstring');
-      setPdfUrl(url);
-      setMostrandoPreview(true);
-    }
-  };
-
   const salvarNotaSupabase = async (notaData: any, doc: any) => {
     try {
       const pdfBlob = doc.output('blob');
@@ -244,42 +219,66 @@ export default function Comanda() {
     }
   };
 
+  const imprimirComBluetoothOuNormal = async (notaData: any) => {
+    const doc = gerarNotaPDF(notaData);
+    
+    if (impressoraConectada) {
+      try {
+        setMensagemImpressora('Enviando para impressora Bluetooth...');
+        await salvarNotaSupabase(notaData, doc);
+        window.print();
+        setMensagemImpressora(`✅ Enviado: ${impressoraConectada.name}`);
+        setTimeout(() => setMensagemImpressora(''), 3000);
+      } catch (err) {
+        console.error('Erro ao imprimir:', err);
+        setMensagemImpressora('Erro ao imprimir. Tente novamente.');
+      }
+    } else {
+      const url = doc.output('dataurlstring');
+      setPdfUrl(url);
+      setMostrandoPreview(true);
+    }
+  };
+
   const criarComanda = async () => {
-    console.log('Criando comanda:', { nomeComanda, contaId });
+    console.log('🔍 Criando comanda:', { nomeComanda, contaId });
     
     if (!nomeComanda.trim()) {
-      console.log('Nome vazio!');
+      console.log('❌ Nome vazio!');
+      alert('Por favor, digite um nome para a comanda');
       return;
     }
     
     if (!contaId) {
-      console.log('ContaId vazio!');
+      console.log('❌ ContaId vazio!');
+      alert('Erro: Conta não encontrada');
       return;
     }
 
     try {
-      console.log('Inserindo na Supabase...');
+      console.log('📤 Inserindo na Supabase...');
       const { error, data } = await supabase
         .from('comandas')
         .insert({
           conta_id: contaId,
           nome: nomeComanda,
-          itens: [],
-          subtotal: 0,
-          data: getDataBrasil()
+          itens: []
         })
         .select();
 
       if (error) {
-        console.error('Erro Supabase:', error);
-        throw error;
+        console.error('❌ Erro Supabase:', error);
+        alert(`Erro ao criar comanda: ${error.message}`);
+        return;
       }
 
-      console.log('Comanda criada:', data);
+      console.log('✅ Comanda criada:', data);
       setNomeComanda('');
-      carregarDados(contaId);
+      await carregarDados(contaId);
+      alert(`Comanda "${nomeComanda}" criada com sucesso!`);
     } catch (err) {
-      console.error('Erro ao criar comanda:', err);
+      console.error('❌ Erro ao criar comanda:', err);
+      alert(`Erro inesperado: ${err}`);
     }
   };
 
@@ -415,7 +414,7 @@ export default function Comanda() {
         <h1 className="text-3xl font-bold mb-6">Comanda / Orçamento / Pedido</h1>
 
         <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4">Nova Comanda</h2>
+          <h2 className="text-xl font-bold mb-4">Nome do Cliente — Mesa</h2>
           <div className="flex gap-2 mb-4">
             <input
               type="text"
@@ -426,14 +425,32 @@ export default function Comanda() {
             />
             <button
               onClick={criarComanda}
-              className="bg-green-100 text-green-600 border border-green-300 px-4 py-2 rounded font-bold hover:bg-green-200"
+              className="bg-green-100 text-green-600 border border-green-300 px-4 py-2 rounded font-bold hover:bg-green-200 opacity-70 hover:opacity-100"
             >
               Criar
             </button>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setModo('cardapio')} className={`flex-1 p-2 rounded font-bold ${modo === 'cardapio' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>Itens do Cardápio</button>
-            <button onClick={() => setModo('rapido')} className={`flex-1 p-2 rounded font-bold ${modo === 'rapido' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600'}`}>Digitar Itens</button>
+            <button 
+              onClick={() => setModo('cardapio')} 
+              className={`flex-1 p-2 rounded font-bold transition-all ${
+                modo === 'cardapio' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-green-100 text-green-600 border border-green-300 opacity-70 hover:opacity-100'
+              }`}
+            >
+              Itens do Cardápio
+            </button>
+            <button 
+              onClick={() => setModo('rapido')} 
+              className={`flex-1 p-2 rounded font-bold transition-all ${
+                modo === 'rapido' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-green-100 text-green-600 border border-green-300 opacity-70 hover:opacity-100'
+              }`}
+            >
+              Digitar Itens / Serviço
+            </button>
           </div>
         </div>
 
@@ -447,7 +464,7 @@ export default function Comanda() {
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-blue-600">R$ {calcularSubtotal(comanda.id).toFixed(2)}</p>
-                  <button onClick={() => abrirComanda(comanda.id)} className="bg-blue-100 text-blue-600 border border-blue-300 px-3 py-1 rounded text-sm hover:bg-blue-200 mt-1">Editar</button>
+                  <button onClick={() => abrirComanda(comanda.id)} className="bg-green-100 text-green-600 border border-green-300 px-3 py-1 rounded text-sm hover:bg-green-200 opacity-70 hover:opacity-100 mt-1">Editar</button>
                 </div>
               </div>
             </div>
@@ -471,7 +488,7 @@ export default function Comanda() {
                           <p className="font-bold">{item.nome}</p>
                           <p className="text-gray-600">{item.quantidade}x R$ {item.preco.toFixed(2)}</p>
                         </div>
-                        <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-100 text-red-600 border border-red-300 px-3 py-1 rounded text-sm hover:bg-red-200">X</button>
+                        <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-100 text-red-600 border border-red-300 px-3 py-1 rounded text-sm hover:bg-red-200 opacity-70 hover:opacity-100">X</button>
                       </div>
                     ))}
                   </div>
@@ -483,7 +500,7 @@ export default function Comanda() {
                   <h3 className="font-bold mb-2">Adicionar do Cardápio</h3>
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {cardapio.map((item) => (
-                      <button key={item.id} onClick={() => adicionarItem(modalAberto, item)} className="w-full text-left bg-blue-50 p-2 rounded hover:bg-blue-100 text-sm">
+                      <button key={item.id} onClick={() => adicionarItem(modalAberto, item)} className="w-full text-left bg-green-100 text-green-600 border border-green-300 p-2 rounded hover:bg-green-200 opacity-70 hover:opacity-100 text-sm font-bold">
                         {item.nome} - R$ {item.preco.toFixed(2)}
                       </button>
                     ))}
@@ -492,10 +509,10 @@ export default function Comanda() {
               )}
               {modo === 'rapido' && (
                 <div className="mb-4">
-                  <h3 className="font-bold mb-2">Digitar Itens</h3>
+                  <h3 className="font-bold mb-2">Digitar Itens / Serviço</h3>
                   <input type="text" placeholder="Nome do item" value={itemRapido} onChange={(e) => setItemRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
                   <input type="number" placeholder="Preço" value={precoRapido} onChange={(e) => setPrecoRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
-                  <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-2 rounded font-bold hover:bg-blue-200">Adicionar</button>
+                  <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-green-100 text-green-600 border border-green-300 p-2 rounded font-bold hover:bg-green-200 opacity-70 hover:opacity-100">Adicionar</button>
                 </div>
               )}
               <div className="bg-blue-100 p-4 rounded-lg mb-4 text-center">
@@ -504,9 +521,9 @@ export default function Comanda() {
               </div>
               {!fechando && (
                 <div className="flex gap-2">
-                  <button onClick={() => setFechando(true)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200">Fechar Comanda</button>
-                  <button onClick={() => deletarComanda(modalAberto)} className="flex-1 bg-red-100 text-red-600 border border-red-300 p-3 rounded font-bold hover:bg-red-200">Excluir</button>
-                  <button onClick={() => setModalAberto(null)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Voltar</button>
+                  <button onClick={() => setFechando(true)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200 opacity-70 hover:opacity-100">Fechar Comanda</button>
+                  <button onClick={() => deletarComanda(modalAberto)} className="flex-1 bg-red-100 text-red-600 border border-red-300 p-3 rounded font-bold hover:bg-red-200 opacity-70 hover:opacity-100">Excluir</button>
+                  <button onClick={() => setModalAberto(null)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200 opacity-70 hover:opacity-100">Voltar</button>
                 </div>
               )}
               {fechando && (
@@ -519,8 +536,8 @@ export default function Comanda() {
                     <option>FIADO</option>
                   </select>
                   <div className="flex gap-2">
-                    <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200">Confirmar</button>
-                    <button onClick={() => setFechando(false)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Cancelar</button>
+                    <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200 opacity-70 hover:opacity-100">Confirmar</button>
+                    <button onClick={() => setFechando(false)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200 opacity-70 hover:opacity-100">Cancelar</button>
                   </div>
                 </div>
               )}
@@ -535,9 +552,9 @@ export default function Comanda() {
               <p className="text-gray-600 mb-2">Cliente: {notaGerada.comanda}</p>
               <p className="text-3xl font-bold text-green-600 mb-6">R$ {notaGerada.subtotal.toFixed(2)}</p>
               <div className="flex flex-col gap-3">
-                <button onClick={() => setMostrandoAssinatura(true)} className="w-full bg-purple-100 text-purple-600 border border-purple-300 p-3 rounded font-bold hover:bg-purple-200">Assinar na Tela</button>
-                <button onClick={async () => await imprimirComBluetoothOuNormal(notaGerada)} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200">{impressoraConectada ? '🖨️ Imprimir (Bluetooth)' : 'Imprimir Agora'}</button>
-                <button onClick={async () => { const doc = gerarNotaPDF(notaGerada); await salvarNotaSupabase(notaGerada, doc); setNotaGerada(null); setMostrandoOpcoeNota(false); }} className="w-full bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Salvar Impressão</button>
+                <button onClick={() => setMostrandoAssinatura(true)} className="w-full bg-purple-100 text-purple-600 border border-purple-300 p-3 rounded font-bold hover:bg-purple-200 opacity-70 hover:opacity-100">Assinar na Tela</button>
+                <button onClick={async () => await imprimirComBluetoothOuNormal(notaGerada)} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200 opacity-70 hover:opacity-100">{impressoraConectada ? '🖨️ Imprimir (Bluetooth)' : 'Imprimir Agora'}</button>
+                <button onClick={async () => { const doc = gerarNotaPDF(notaGerada); await salvarNotaSupabase(notaGerada, doc); setNotaGerada(null); setMostrandoOpcoeNota(false); }} className="w-full bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200 opacity-70 hover:opacity-100">Salvar Impressão</button>
               </div>
             </div>
           </div>
@@ -551,8 +568,8 @@ export default function Comanda() {
                 <iframe src={pdfUrl} className="w-52 h-96 border-2 border-gray-300 rounded" />
               </div>
               <div className="flex gap-2">
-                <button onClick={async () => { const doc = gerarNotaPDF(notaGerada); await salvarNotaSupabase(notaGerada, doc); setTimeout(() => { window.print(); }, 300); setTimeout(() => { setMostrandoPreview(false); setNotaGerada(null); setMostrandoOpcoeNota(false); setPdfUrl(''); }, 1000); }} className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200">Imprimir</button>
-                <button onClick={() => { setMostrandoPreview(false); setPdfUrl(''); }} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Cancelar</button>
+                <button onClick={async () => { const doc = gerarNotaPDF(notaGerada); await salvarNotaSupabase(notaGerada, doc); setTimeout(() => { window.print(); }, 300); setTimeout(() => { setMostrandoPreview(false); setNotaGerada(null); setMostrandoOpcoeNota(false); setPdfUrl(''); }, 1000); }} className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200 opacity-70 hover:opacity-100">Imprimir</button>
+                <button onClick={() => { setMostrandoPreview(false); setPdfUrl(''); }} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200 opacity-70 hover:opacity-100">Cancelar</button>
               </div>
             </div>
           </div>
@@ -567,9 +584,9 @@ export default function Comanda() {
                 <SignatureCanvas ref={sigCanvas} canvasProps={{ width: 300, height: 150, className: 'border rounded' }} />
               </div>
               <div className="flex gap-2">
-                <button onClick={() => sigCanvas.current?.clear()} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-2 rounded font-bold hover:bg-gray-200">Limpar</button>
-                <button onClick={async () => { const sig = sigCanvas.current?.toDataURL(); const doc = gerarNotaPDF(notaGerada, sig); await salvarNotaSupabase(notaGerada, doc); setMostrandoAssinatura(false); setNotaGerada(null); setMostrandoOpcoeNota(false); }} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-2 rounded font-bold hover:bg-green-200">Salvar</button>
-                <button onClick={() => setMostrandoAssinatura(false)} className="flex-1 bg-red-100 text-red-600 border border-red-300 p-2 rounded font-bold hover:bg-red-200">Cancelar</button>
+                <button onClick={() => sigCanvas.current?.clear()} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-2 rounded font-bold hover:bg-gray-200 opacity-70 hover:opacity-100">Limpar</button>
+                <button onClick={async () => { const sig = sigCanvas.current?.toDataURL(); const doc = gerarNotaPDF(notaGerada, sig); await salvarNotaSupabase(notaGerada, doc); setMostrandoAssinatura(false); setNotaGerada(null); setMostrandoOpcoeNota(false); }} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-2 rounded font-bold hover:bg-green-200 opacity-70 hover:opacity-100">Salvar</button>
+                <button onClick={() => setMostrandoAssinatura(false)} className="flex-1 bg-red-100 text-red-600 border border-red-300 p-2 rounded font-bold hover:bg-red-200 opacity-70 hover:opacity-100">Cancelar</button>
               </div>
             </div>
           </div>
