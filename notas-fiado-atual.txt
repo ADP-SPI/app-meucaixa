@@ -5,34 +5,16 @@ import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import jsPDF from 'jspdf';
 
-interface NavigatorWithBluetooth extends Navigator {
-  bluetooth?: {
-    requestDevice(options: any): Promise<any>;
-  };
-}
-
 export default function NotasFiado() {
   const [notas, setNotas] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [contaId, setContaId] = useState<number | null>(null);
-  const [impressoraConectada, setImpressoraConectada] = useState<any | null>(null);
-  const [mensagemImpressora, setMensagemImpressora] = useState('');
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
     if (conta) {
       setContaId(parseInt(conta));
       carregarNotas(parseInt(conta));
-    }
-
-    // Carregar impressora salva
-    const impressora = localStorage.getItem('impressora_conectada');
-    if (impressora) {
-      try {
-        setImpressoraConectada(JSON.parse(impressora));
-      } catch (e) {
-        console.error('Erro ao carregar impressora:', e);
-      }
     }
   }, []);
 
@@ -126,21 +108,12 @@ export default function NotasFiado() {
 
   const handleImprimir = (nota: any) => {
     const doc = gerarNotaPDF(nota);
+    const url = doc.output('dataurlstring');
     
-    // Se tem impressora Bluetooth conectada
-    if (impressoraConectada) {
-      setMensagemImpressora(`Enviando para: ${impressoraConectada.name}...`);
-      
-      // Abre print dialog que detecta impressora Bluetooth salva
-      window.print();
-      
-      setTimeout(() => {
-        setMensagemImpressora(`✅ Enviado: ${impressoraConectada.name}`);
-        setTimeout(() => setMensagemImpressora(''), 3000);
-      }, 1000);
-    } else {
-      // Sem impressora Bluetooth, abre print dialog normal
-      window.print();
+    // Abre print dialog DIRETO (sem preview)
+    const novaJanela = window.open(url);
+    if (novaJanela) {
+      novaJanela.print();
     }
   };
 
@@ -154,19 +127,6 @@ export default function NotasFiado() {
         <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
           ← Voltar
         </Link>
-
-        {impressoraConectada && (
-          <div className="bg-green-100 border-l-4 border-green-600 p-3 mb-4 text-green-800 text-sm">
-            🖨️ Impressora conectada: {impressoraConectada.name}
-          </div>
-        )}
-
-        {mensagemImpressora && (
-          <div className="bg-blue-100 border-l-4 border-blue-600 p-3 mb-4 text-blue-800 text-sm">
-            {mensagemImpressora}
-          </div>
-        )}
-
         <h1 className="text-3xl font-bold mb-2">Notas de Fiado</h1>
         <p className="text-gray-600 mb-6">Histórico de notas de fiado geradas</p>
 
@@ -190,7 +150,7 @@ export default function NotasFiado() {
                       onClick={() => handleImprimir(nota)}
                       className="bg-blue-100 text-blue-600 border border-blue-300 px-4 py-2 rounded font-bold hover:bg-blue-200 text-sm mt-2"
                     >
-                      {impressoraConectada ? '🖨️ Imprimir' : 'Imprimir'}
+                      Imprimir
                     </button>
                   </div>
                 </div>
