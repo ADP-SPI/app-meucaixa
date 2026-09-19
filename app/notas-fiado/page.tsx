@@ -11,6 +11,16 @@ interface NavigatorWithBluetooth extends Navigator {
   };
 }
 
+const getDataBrasil = () => {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+};
+
+const getHoraBrasil = () => {
+  const d = new Date();
+  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+};
+
 export default function NotasFiado() {
   const [notas, setNotas] = useState<any[]>([]);
   const [carregando, setCarregando] = useState(true);
@@ -54,12 +64,13 @@ export default function NotasFiado() {
     setCarregando(false);
   };
 
-  const gerarNotaPDF = (nota: any) => {
+  const gerarNotaPDF = (nota: any, assinatura?: string) => {
     const itens = nota.itens || [];
     const numItens = Array.isArray(itens) ? itens.length : 0;
     const alturaItem = 5;
     const alturaBase = 60;
-    const alturaTotal = alturaBase + (numItens * alturaItem) + 10;
+    const alturaAssinatura = 35;
+    const alturaTotal = alturaBase + (numItens * alturaItem) + alturaAssinatura;
 
     const doc: any = new jsPDF({
       orientation: 'portrait',
@@ -123,11 +134,35 @@ export default function NotasFiado() {
     doc.text(totalTexto, pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 10;
 
+    doc.setFont(undefined, 'normal');
+    doc.setFontSize(8);
+
+    yPos += 5;
+
+    if (assinatura && assinatura.startsWith('data:')) {
+      try {
+        doc.addImage(assinatura, 'PNG', 8, yPos, pageWidth - 16, 8);
+        yPos += 9;
+      } catch (e) {
+        console.warn('Erro ao adicionar assinatura ao PDF:', e);
+        yPos += 8;
+      }
+    } else {
+      yPos += 8;
+    }
+
+    doc.setDrawColor(0);
+    doc.line(10, yPos, pageWidth - 10, yPos);
+    yPos += 3;
+    doc.setFontSize(7);
+    doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
+    yPos += 4;
+
     return doc;
   };
 
-  const handleImprimir = (nota: any) => {
-    const doc = gerarNotaPDF(nota);
+  const handleImprimir = (nota: any, assinatura?: string) => {
+    const doc = gerarNotaPDF(nota, assinatura);
     const url = doc.output('dataurlstring');
     setPdfUrl(url);
     setNotaSelecionada(nota);
