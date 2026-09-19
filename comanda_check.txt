@@ -95,8 +95,7 @@ export default function Comanda() {
     const numItens = (notaData.itens || []).length;
     const alturaItem = 5;
     const alturaBase = 60;
-    const alturaAssinatura = assinatura ? 20 : 25;
-    const alturaTotal = alturaBase + (numItens * alturaItem) + alturaAssinatura + 10;
+    const alturaTotal = alturaBase + (numItens * alturaItem) + 15;
 
     const doc: any = new jsPDF({
       orientation: 'portrait',
@@ -161,25 +160,20 @@ export default function Comanda() {
     doc.setFont(undefined, 'normal');
     doc.setFontSize(8);
 
-    yPos += 5;
-
     if (assinatura && assinatura.startsWith('data:')) {
       try {
-        doc.addImage(assinatura, 'PNG', 8, yPos, pageWidth - 16, 8);
-        yPos += 10;
+        doc.addImage(assinatura, 'PNG', 8, yPos, pageWidth - 16, 10);
       } catch (e) {
         console.warn('Erro ao adicionar assinatura ao PDF:', e);
       }
-    } else {
-      yPos += 8;
     }
 
+    yPos += 12;
     doc.setDrawColor(0);
     doc.line(10, yPos, pageWidth - 10, yPos);
-    yPos += 4;
-    doc.setFontSize(7);
+    yPos += 5;
     doc.text('Assinatura do Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
-    yPos += 6;
+    yPos += 5;
 
     return doc;
   };
@@ -339,20 +333,6 @@ export default function Comanda() {
             data_expiracao: dataExpiracao.toISOString()
           }])
           .select();
-
-        await supabase
-          .from('transacoes')
-          .insert([{
-            conta_id: contaId,
-            descricao: `Fiado: ${comanda.nome}`,
-            valor: subtotal,
-            tipo: 'receita',
-            formapagamento: 'FIADO',
-            hora: new Date().toLocaleTimeString('pt-BR'),
-            data: getDataBrasil(),
-            origin: 'comanda',
-            itens: comanda.itens || []
-          }]);
 
         await supabase
           .from('comandas')
