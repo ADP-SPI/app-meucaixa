@@ -247,6 +247,7 @@ export default function Comanda() {
         .insert([{
           conta_id: contaId,
           nome: nomeComanda,
+          modo: modo,
           itens: [],
           data: getDataBrasil(),
           hora: new Date().toLocaleTimeString('pt-BR')
