@@ -115,7 +115,7 @@ export default function Caixa() {
     transacoes.forEach((t) => {
       if (t.data !== dataHoje) return;
 
-      if (t.tipo === 'receita' && t.formapagamento !== 'FIADO') {
+      if (t.tipo === 'receita') {
         receita += t.valor;
       } else if (t.tipo === 'despesa') {
         despesa += t.valor;
@@ -199,7 +199,7 @@ export default function Caixa() {
 
         {/* OBSERVAÇÃO FIADO */}
         <div className="bg-orange-100 border-l-4 border-orange-600 px-3 py-1 mb-4 rounded">
-          <p className="text-xs text-orange-900"><strong>Obs:</strong> Fiado não entra no total das receitas</p>
+          <p className="text-xs text-orange-900"><strong>Obs:</strong> Fiado não entra no total das receitas, mas aparece separado</p>
         </div>
 
         {/* FORMULÁRIO */}
