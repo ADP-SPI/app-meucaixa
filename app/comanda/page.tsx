@@ -241,7 +241,7 @@ export default function Comanda() {
   };
 
   const criarComanda = async () => {
-    console.log('🔍 Criando comanda:', { nomeComanda, contaId });
+    console.log('🔍 Criando comanda:', { nomeComanda, contaId, modoAtual: modo });
     
     if (!nomeComanda.trim()) {
       console.log('❌ Nome vazio!');
@@ -260,6 +260,7 @@ export default function Comanda() {
         .insert({
           conta_id: contaId,
           nome: nomeComanda,
+          modo: modo,
           itens: []
         })
         .select();
@@ -278,8 +279,14 @@ export default function Comanda() {
   };
 
   const abrirComanda = (id: number) => {
+    const comanda = comandas.find((c) => c.id === id);
+    if (comanda && comanda.modo) {
+      setModo(comanda.modo);
+    } else {
+      setModo('cardapio');
+    }
     setModalAberto(id);
-    setModo('cardapio');
+    setFechando(false);
   };
 
   const calcularSubtotal = (id: number | null) => {
@@ -332,6 +339,7 @@ export default function Comanda() {
       if (error) throw error;
 
       setModalAberto(null);
+      setFechando(false);
       carregarDados(contaId!);
     } catch (err) {
       console.error('Erro ao deletar comanda:', err);
@@ -383,7 +391,6 @@ export default function Comanda() {
       const notaComId = { ...data, numero: numeroNota, comanda: comanda.nome, subtotal, itens: comanda.itens };
       setNotaGerada(notaComId);
       setMostrandoOpcoeNota(true);
-      setFechando(false);
 
       console.log('🗑️ Deletando comanda após fechar...');
       try {
@@ -396,6 +403,7 @@ export default function Comanda() {
         console.warn('⚠️ Erro ao deletar comanda após fechar:', e);
       }
 
+      setFechando(false);
       setModalAberto(null);
       carregarDados(contaId);
     } catch (err) {
@@ -555,7 +563,7 @@ export default function Comanda() {
                   </select>
                   <div className="flex gap-2">
                     <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200 opacity-70 hover:opacity-100">Confirmar</button>
-                    <button onClick={() => setFechando(false)} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200 opacity-70 hover:opacity-100">Cancelar</button>
+                    <button onClick={() => { setFechando(false); }} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200 opacity-70 hover:opacity-100">Cancelar</button>
                   </div>
                 </div>
               )}
