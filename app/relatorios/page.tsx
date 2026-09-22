@@ -18,18 +18,19 @@ export default function Relatorios() {
     const conta = localStorage.getItem('conta_id');
     if (conta) {
       setContaId(parseInt(conta));
-      carregarTransacoes();
+      carregarTransacoes(parseInt(conta));
     }
   }, []);
 
-  const carregarTransacoes = async () => {
-    if (!contaId) return;
+  const carregarTransacoes = async (cId?: number) => {
+    const id = cId || contaId;
+    if (!id) return;
     
     try {
       const { data, error } = await supabase
         .from('transacoes')
         .select('*')
-        .eq('conta_id', contaId)
+        .eq('conta_id', id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -41,9 +42,7 @@ export default function Relatorios() {
   };
 
   const transacoesFiltradas = filtroAplicado ? transacoes.filter((t) => {
-    if (filtroOperacao === 'receita' && t.tipo !== 'receita') return false;
-    if (filtroOperacao === 'despesa' && t.tipo !== 'despesa') return false;
-    if (filtroOperacao === 'retirada_pessoal' && t.tipo !== 'retirada_pessoal') return false;
+    if (filtroOperacao !== 'ambos' && t.tipo !== filtroOperacao) return false;
     if (filtroTipo && filtroTipo !== '' && t.formapagamento !== filtroTipo) return false;
     if (dataInicio && t.data < dataInicio) return false;
     if (dataFim && t.data > dataFim) return false;
@@ -93,10 +92,7 @@ export default function Relatorios() {
               <label className="block text-xs font-bold mb-1">Tipo de Operação</label>
               <select
                 value={filtroOperacao}
-                onChange={(e) => {
-                  setFiltroOperacao(e.target.value);
-                  setFiltroAplicado(false);
-                }}
+                onChange={(e) => setFiltroOperacao(e.target.value)}
                 className="w-full border border-gray-300 p-2 rounded text-sm"
               >
                 <option value="ambos">Todos</option>
@@ -110,10 +106,7 @@ export default function Relatorios() {
               <label className="block text-xs font-bold mb-1">Forma de Pagamento</label>
               <select
                 value={filtroTipo}
-                onChange={(e) => {
-                  setFiltroTipo(e.target.value);
-                  setFiltroAplicado(false);
-                }}
+                onChange={(e) => setFiltroTipo(e.target.value)}
                 className="w-full border border-gray-300 p-2 rounded text-sm"
               >
                 <option value="">Todas</option>
@@ -129,10 +122,7 @@ export default function Relatorios() {
               <input
                 type="date"
                 value={dataInicio}
-                onChange={(e) => {
-                  setDataInicio(e.target.value);
-                  setFiltroAplicado(false);
-                }}
+                onChange={(e) => setDataInicio(e.target.value)}
                 className="w-full border border-gray-300 p-2 rounded text-sm"
               />
             </div>
@@ -142,10 +132,7 @@ export default function Relatorios() {
               <input
                 type="date"
                 value={dataFim}
-                onChange={(e) => {
-                  setDataFim(e.target.value);
-                  setFiltroAplicado(false);
-                }}
+                onChange={(e) => setDataFim(e.target.value)}
                 className="w-full border border-gray-300 p-2 rounded text-sm"
               />
             </div>
