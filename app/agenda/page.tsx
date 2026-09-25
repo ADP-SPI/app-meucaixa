@@ -134,7 +134,7 @@ export default function Agenda() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4 flex justify-center">
+    <div className="min-h-screen bg-gray-100 text-gray-900 scheme-light p-4 flex justify-center">
       <div className="w-full max-w-6xl">
         <Link href="/dashboard" className="text-blue-600 hover:underline mb-4 inline-block">
           ← Voltar
@@ -150,7 +150,7 @@ export default function Agenda() {
               value={nomeCliente}
               onChange={(e) => setNomeCliente(e.target.value)}
               placeholder="Digite o nome"
-              className="w-full border border-gray-300 p-2 rounded"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 p-2 rounded"
             />
           </div>
 
@@ -160,7 +160,7 @@ export default function Agenda() {
               type="date"
               value={dataSelecionada}
               onChange={(e) => setDataSelecionada(e.target.value)}
-              className="w-full border border-gray-300 p-2 rounded"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 p-2 rounded"
             />
           </div>
 
@@ -169,7 +169,7 @@ export default function Agenda() {
             <select
               value={horarioSelecionado}
               onChange={(e) => setHorarioSelecionado(e.target.value)}
-              className="w-full border border-gray-300 p-2 rounded"
+              className="w-full bg-white text-gray-900 placeholder:text-gray-400 border border-gray-300 p-2 rounded"
             >
               <option value="">Selecione um horário</option>
               {gerarHorarios().map(h => (
