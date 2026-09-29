@@ -10,10 +10,14 @@ const supabase = createClient(
   'sb_publishable_CXx1yNZ2C03bTuNpeDUNsQ_k4JHv9Vm'
 );
 
+// Mesmos IDs usados em app/dashboard/page.tsx e app/_components/PlanosCadastro.tsx
+const PLANOS_PESSOAIS_IDS = [4, 5];
+
 export default function Usuarios() {
   const router = useRouter();
   const [usuarios, setUsuarios] = useState<any[]>([]);
   const [plano, setPlano] = useState<any>(null);
+  const [planoPessoal, setPlanoPessoal] = useState(false);
   const [contaId, setContaId] = useState<number | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [modalAberto, setModalAberto] = useState(false);
@@ -61,6 +65,7 @@ useEffect(() => {
           .single();
 
         setPlano(planoData);
+        setPlanoPessoal(PLANOS_PESSOAIS_IDS.includes(contaData.plano_id));
       }
 
       // Carregar usuários
@@ -88,8 +93,8 @@ useEffect(() => {
 
     // Verificar se atingiu o limite
      if (usuarios.length >= plano.max_usuarios) {
-      alert(`Limite atingido! Seu plano permite apenas ${plano.max_usuarios} acesso(s).\n\nFaça upgrade para adicionar mais usuários.`);
-      router.push('/planos');
+      alert(`Limite atingido! Seu plano permite apenas ${plano.max_usuarios} acesso(s).\n\n${planoPessoal ? 'Conheça o plano Casal para adicionar o cônjuge.' : 'Faça upgrade para adicionar mais usuários.'}`);
+      router.push(planoPessoal ? '/planospessoais' : '/planos');
       return;
     }
 
@@ -185,7 +190,7 @@ useEffect(() => {
        ← Voltar
       </Link>
 
-        <h1 className="text-2xl font-bold mb-6">👥 Gerenciar Usuários</h1>
+        <h1 className="text-2xl font-bold mb-6">{planoPessoal ? '👥 Membros da Família / Cônjuge' : '👥 Gerenciar Usuários'}</h1>
 
         {/* RESUMO DO PLANO */}
         {plano && (
@@ -213,7 +218,7 @@ useEffect(() => {
 
         {/* LISTA DE USUÁRIOS */}
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-lg font-bold mb-4">Usuários da Conta</h2>
+          <h2 className="text-lg font-bold mb-4">{planoPessoal ? 'Membros da Conta' : 'Usuários da Conta'}</h2>
 
           {usuarios.length === 0 ? (
             <p className="text-gray-500 text-sm">Nenhum usuário cadastrado</p>
@@ -224,8 +229,10 @@ useEffect(() => {
                   <div className="flex-1">
                     <p className="font-bold">{user.nome}</p>
                     <p className="text-sm text-gray-600">{user.email}</p>
-                    {user.tipo === 'proprietario' && (
-                      <p className="text-xs text-blue-600 mt-1">👤 Proprietário</p>
+                    {user.tipo === 'proprietario' ? (
+                      <p className="text-xs text-blue-600 mt-1">👤 {planoPessoal ? 'Titular' : 'Proprietário'}</p>
+                    ) : planoPessoal && (
+                      <p className="text-xs text-gray-500 mt-1">Membro</p>
                     )}
                   </div>
 
@@ -268,13 +275,18 @@ useEffect(() => {
             onClick={() => setModalAberto(true)}
             className="w-full bg-green-600 text-white p-4 rounded font-bold hover:bg-green-700 mb-6"
           >
-            + ADICIONAR NOVO USUÁRIO
+            {planoPessoal ? '+ ADICIONAR CÔNJUGE / MEMBRO' : '+ ADICIONAR NOVO USUÁRIO'}
           </button>
         )}
 
         {vagosDisponiveis === 0 && usuarios.length > 0 && (
           <div className="bg-yellow-50 border border-yellow-200 p-4 rounded text-sm text-yellow-800">
-            ⚠️ Você atingiu o limite de acessos do seu plano. Para adicionar mais usuários, faça upgrade.
+            ⚠️ Você atingiu o limite de acessos do seu plano.{' '}
+            {planoPessoal ? (
+              <>Para adicionar o cônjuge, conheça o <Link href="/planospessoais" className="font-bold underline">plano Casal</Link>.</>
+            ) : (
+              'Para adicionar mais usuários, faça upgrade.'
+            )}
           </div>
         )}
 
@@ -282,7 +294,7 @@ useEffect(() => {
         {modalAberto && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
             <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
-              <h3 className="text-xl font-bold mb-4">Novo Usuário</h3>
+              <h3 className="text-xl font-bold mb-4">{planoPessoal ? 'Novo Membro' : 'Novo Usuário'}</h3>
 
               <div className="space-y-4 mb-6">
                 <div>
@@ -291,7 +303,7 @@ useEffect(() => {
                     type="text"
                     value={novoNome}
                     onChange={(e) => setNovoNome(e.target.value)}
-                    placeholder="Ex: Carlos"
+                    placeholder={planoPessoal ? 'Ex: Maria' : 'Ex: Carlos'}
                     className="w-full border border-gray-300 p-2 rounded"
                   />
                 </div>
@@ -302,7 +314,7 @@ useEffect(() => {
                     type="email"
                     value={novoEmail}
                     onChange={(e) => setNovoEmail(e.target.value)}
-                    placeholder="funcionario@email.com"
+                    placeholder={planoPessoal ? 'conjuge@email.com' : 'funcionario@email.com'}
                     className="w-full border border-gray-300 p-2 rounded"
                   />
                 </div>
@@ -325,7 +337,7 @@ useEffect(() => {
                   disabled={processando}
                   className="w-full bg-green-600 text-white p-3 rounded font-bold hover:bg-green-700 disabled:bg-gray-400"
                 >
-                  {processando ? 'Criando...' : '✓ CRIAR USUÁRIO'}
+                  {processando ? 'Criando...' : planoPessoal ? '✓ ADICIONAR MEMBRO' : '✓ CRIAR USUÁRIO'}
                 </button>
 
                 <button

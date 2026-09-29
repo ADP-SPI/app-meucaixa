@@ -214,9 +214,9 @@ export default function Dashboard() {
             <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
               Relatorios
             </a>
-            {tipoPlano !== 'pessoal' && tipoUsuario === 'proprietario' && (
+            {tipoUsuario === 'proprietario' && (
               <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                Gerenciar Usuarios
+                {tipoPlano === 'pessoal' ? 'Membros da Família / Cônjuge' : 'Gerenciar Usuarios'}
               </a>
             )}
             {tipoPlano !== 'pessoal' && (

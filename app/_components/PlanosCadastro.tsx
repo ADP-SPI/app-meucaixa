@@ -207,7 +207,13 @@ export default function PlanosCadastro({
                   </ul>
                 </>
               ) : (
-                <p className="text-gray-600 mb-6">{plano.descricao}</p>
+                <>
+                  <p className="text-gray-600 mb-4">{plano.descricao}</p>
+                  <ul className="space-y-2 text-gray-700 mb-6">
+                    <li>✓ {plano.usuarios > 1 ? `${plano.usuarios} acessos (você + cônjuge)` : '1 acesso'}</li>
+                    {plano.usuarios > 1 && <li>✓ Gerencie os membros da família no painel</li>}
+                  </ul>
+                </>
               )}
               <button
                 onClick={() => handleSelecionarPlano(plano)}
