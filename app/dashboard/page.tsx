@@ -12,6 +12,7 @@ export default function Dashboard() {
   const [nomeEmpresa, setNomeEmpresa] = useState('');
   const [contaId, setContaId] = useState('');
   const [tipoPlano, setTipoPlano] = useState('');
+  const [planoId, setPlanoId] = useState<number | null>(null);
   const [validando, setValidando] = useState(true);
   const [avisoVencimento, setAvisoVencimento] = useState<{tipo: string; dias: number} | null>(null);
   const [ultimoDiaVerificado, setUltimoDiaVerificado] = useState<number>(new Date().getDate());
@@ -130,6 +131,7 @@ export default function Dashboard() {
         setNomeEmpresa(conta.nome);
         const planoMap: {[key: number]: string} = {1: 'basico', 2: 'pro', 3: 'enterprise', 4: 'pessoal', 5: 'pessoal'};
         setTipoPlano(planoMap[conta.plano_id] || 'basico');
+        setPlanoId(conta.plano_id);
       }
     } catch (err) {
       console.error('Erro ao validar sessao:', err);
@@ -179,7 +181,11 @@ export default function Dashboard() {
 
           <div className="text-center py-8 mb-8">
             <h1 className="text-3xl font-bold text-gray-900">Meu Caixa</h1>
-            <p className="text-gray-600 mt-2">Gestao simples do seu negocio</p>
+            <p className="text-gray-600 mt-2">
+              {planoId === 5 ? 'Controle Financeiro do Casal'
+                : planoId === 4 ? 'Controle Financeiro Pessoal'
+                : 'Gestão Simples do Seu Negócio'}
+            </p>
           </div>
 
           <div className="space-y-3">
