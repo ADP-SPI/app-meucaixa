@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { supabase, formatarDataHoraBrasil } from '@/lib/supabase';
 import jsPDF from 'jspdf';
 
 interface NavigatorWithBluetooth extends Navigator {
@@ -10,16 +10,6 @@ interface NavigatorWithBluetooth extends Navigator {
     requestDevice(options: any): Promise<any>;
   };
 }
-
-const getDataBrasil = () => {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-};
-
-const getHoraBrasil = () => {
-  const d = new Date();
-  return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
-};
 
 export default function NotasFiado() {
   const [notas, setNotas] = useState<any[]>([]);
@@ -93,9 +83,8 @@ export default function NotasFiado() {
     doc.text(nota.cliente_nome || 'Cliente', pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 5;
 
-    const dataNota = new Date(nota.created_at);
     doc.setFontSize(9);
-    doc.text(dataNota.toLocaleDateString('pt-BR') + ' ' + dataNota.toLocaleTimeString('pt-BR'), pageWidth / 2, yPos, { align: 'center' } as any);
+    doc.text(formatarDataHoraBrasil(nota.created_at), pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 5;
 
     doc.setFontSize(8);
@@ -206,7 +195,7 @@ export default function NotasFiado() {
                     <p className="font-bold text-lg">Nota #{String(nota.numero_nota).padStart(4, '0')}</p>
                     <p className="text-sm text-gray-600">Cliente: {nota.cliente_nome || 'N/A'}</p>
                     <p className="text-sm text-gray-600">
-                      Data: {new Date(nota.created_at).toLocaleDateString('pt-BR')} {new Date(nota.created_at).toLocaleTimeString('pt-BR')}
+                      Data: {formatarDataHoraBrasil(nota.created_at)}
                     </p>
                   </div>
                   <div className="text-right">

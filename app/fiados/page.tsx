@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+import { supabase, getDataBrasil, getHoraBrasil } from '@/lib/supabase';
 
 export default function Fiados() {
   const [transacoes, setTransacoes] = useState<any[]>([]);
@@ -81,8 +81,8 @@ export default function Fiados() {
               valor: nota.valor,
               tipo: 'receita',
               formapagamento: formaPagamento,
-              hora: new Date().toLocaleTimeString('pt-BR'),
-              data: new Date().toISOString().split('T')[0],
+              hora: getHoraBrasil(),
+              data: getDataBrasil(),
               created_at: new Date().toISOString(),
               origin: 'fiado_pago'
             }]);

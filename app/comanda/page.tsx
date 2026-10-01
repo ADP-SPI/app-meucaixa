@@ -2,14 +2,9 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { supabase, getDataBrasil, getHoraBrasil, formatarDataHoraBrasil } from '@/lib/supabase';
 import SignatureCanvas from 'react-signature-canvas';
 import jsPDF from 'jspdf';
-
-const getDataBrasil = () => {
-  const d = new Date();
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-};
 
 interface NavigatorWithBluetooth extends Navigator {
   bluetooth?: {
@@ -119,9 +114,8 @@ export default function Comanda() {
     doc.text(notaData.comanda, pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 5;
 
-    const agora = new Date();
     doc.setFontSize(9);
-    doc.text(agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR'), pageWidth / 2, yPos, { align: 'center' } as any);
+    doc.text(formatarDataHoraBrasil(new Date()), pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 5;
 
     doc.setFontSize(8);
@@ -255,7 +249,7 @@ export default function Comanda() {
           nome: nomeComanda,
           itens: [],
           data: getDataBrasil(),
-          hora: new Date().toLocaleTimeString('pt-BR')
+          hora: getHoraBrasil()
         }]);
       if (error) throw error;
       setNomeComanda('');
@@ -348,7 +342,7 @@ export default function Comanda() {
             valor: subtotal,
             tipo: 'receita',
             formapagamento: 'FIADO',
-            hora: new Date().toLocaleTimeString('pt-BR'),
+            hora: getHoraBrasil(),
             data: getDataBrasil(),
             origin: 'comanda',
             itens: comanda.itens || []
@@ -379,7 +373,7 @@ export default function Comanda() {
             valor: subtotal,
             tipo: 'receita',
             formapagamento: formaPagamento,
-            hora: new Date().toLocaleTimeString('pt-BR'),
+            hora: getHoraBrasil(),
             data: getDataBrasil(),
             origin: 'comanda',
             itens: comanda.itens || []

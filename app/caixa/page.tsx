@@ -116,6 +116,8 @@ export default function Caixa() {
       if (t.data !== dataHoje) return;
 
       if (t.tipo === 'receita') {
+        // Fiado ainda não foi recebido: aparece só no card FIADO
+        if (t.formapagamento === 'FIADO') return;
         receita += t.valor;
       } else if (t.tipo === 'despesa') {
         despesa += t.valor;
