@@ -49,9 +49,17 @@ export default function Relatorios() {
     return true;
   }) : transacoes;
 
+  // Fiado ainda não foi recebido: fica fora de Receita/Total/Saldo e aparece no card FIADO
+  const ehFiado = (t: any) => t.tipo === 'receita' && t.formapagamento === 'FIADO';
+
+  const totalFiado = transacoesFiltradas
+    .filter(ehFiado)
+    .reduce((sum, t) => sum + t.valor, 0);
+
   const calcularTotal = () => {
     return transacoesFiltradas
       .reduce((sum, t) => {
+        if (ehFiado(t)) return sum;
         if (t.tipo === 'receita') return sum + t.valor;
         if (t.tipo === 'despesa') return sum - t.valor;
         if (t.tipo === 'retirada_pessoal') return sum - t.valor;
@@ -62,14 +70,14 @@ export default function Relatorios() {
 
   const calcularPorTipoOperacao = (tipo: string) => {
     return transacoesFiltradas
-      .filter((t) => t.tipo === tipo)
+      .filter((t) => t.tipo === tipo && !ehFiado(t))
       .reduce((sum, t) => sum + t.valor, 0)
       .toFixed(2)
       .replace('.', ',');
   };
 
   const calcularSaldo = () => {
-    const receita = parseFloat(transacoesFiltradas.filter(t => t.tipo === 'receita').reduce((sum, t) => sum + t.valor, 0).toFixed(2));
+    const receita = parseFloat(transacoesFiltradas.filter(t => t.tipo === 'receita' && !ehFiado(t)).reduce((sum, t) => sum + t.valor, 0).toFixed(2));
     const despesa = parseFloat(transacoesFiltradas.filter(t => t.tipo === 'despesa').reduce((sum, t) => sum + t.valor, 0).toFixed(2));
     const retirada = parseFloat(transacoesFiltradas.filter(t => t.tipo === 'retirada_pessoal').reduce((sum, t) => sum + t.valor, 0).toFixed(2));
     return (receita - despesa - retirada).toFixed(2);
@@ -194,6 +202,15 @@ export default function Relatorios() {
           <div className={`${parseFloat(calcularSaldo()) >= 0 ? 'bg-green-200' : 'bg-red-200'} p-3 rounded border ${parseFloat(calcularSaldo()) >= 0 ? 'border-green-300' : 'border-red-300'} mb-4 text-center`}>
             <p className="text-xs font-bold">SALDO</p>
             <p className="text-2xl font-bold">{parseFloat(calcularSaldo()) >= 0 ? '+' : ''}R$ {parseFloat(calcularSaldo()).toFixed(2).replace('.', ',')}</p>
+          </div>
+        )}
+
+        {/* FIADO (fora dos totais) */}
+        {totalFiado > 0 && (
+          <div className="bg-orange-50 text-black p-3 rounded border border-orange-300 mb-4 text-center">
+            <p className="text-xs font-bold">FIADO (a receber)</p>
+            <p className="text-lg font-bold">R$ {totalFiado.toFixed(2).replace('.', ',')}</p>
+            <p className="text-xs text-orange-900 mt-1">Não entra no total das receitas nem no saldo</p>
           </div>
         )}
 
