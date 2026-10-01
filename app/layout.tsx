@@ -1,4 +1,5 @@
 import UpdateNotification from './components/UpdateNotification';
+import AssinaturaGuard from './_components/AssinaturaGuard';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -54,7 +55,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <UpdateNotification />
-        {children}
+        <AssinaturaGuard>{children}</AssinaturaGuard>
         <script>
           {`
             if ('serviceWorker' in navigator) {

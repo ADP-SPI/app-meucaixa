@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 
@@ -60,6 +60,12 @@ export default function PlanosCadastro({
   const [modalAberto, setModalAberto] = useState(false);
   const [successModal, setSuccessModal] = useState(false);
   const [dataVencimento, setDataVencimento] = useState('');
+  const [assinaturaExpirada, setAssinaturaExpirada] = useState(false);
+
+  // Chegou aqui redirecionado pelo bloqueio de assinatura vencida (AssinaturaGuard / login)
+  useEffect(() => {
+    setAssinaturaExpirada(new URLSearchParams(window.location.search).get('expirado') === '1');
+  }, []);
 
   const handleSelecionarPlano = (plano: Plano) => {
     setPlanoSelecionado(plano);
@@ -185,6 +191,16 @@ export default function PlanosCadastro({
         <Link href="/" className="text-blue-600 hover:underline font-bold mb-8 inline-block">
           ← Voltar para Home
         </Link>
+
+        {assinaturaExpirada && (
+          <div className="bg-red-50 border border-red-300 text-red-800 p-4 rounded-lg mb-8 max-w-2xl mx-auto text-center">
+            <p className="font-bold">⏰ Sua assinatura venceu e o acesso ao sistema foi bloqueado.</p>
+            <p className="text-sm mt-1">
+              Para continuar usando sua conta,{' '}
+              <Link href="/renovacao" className="font-bold underline">renove sua assinatura aqui</Link>.
+            </p>
+          </div>
+        )}
 
         <h1 className="text-4xl font-bold text-center text-gray-900 mb-4">Escolha seu Plano</h1>
         <p className="text-center text-gray-600 mb-12">Selecione o plano ideal para sua necessidade</p>

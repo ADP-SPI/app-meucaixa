@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
+import { getDataBrasil } from '@/lib/supabase';
+import { verificarAssinatura } from '@/lib/assinatura';
 
 // ✅ UMA ÚNICA instância global do Supabase
 const supabase = createClient(
@@ -128,6 +130,13 @@ export default function LoginPage() {
       
       console.log('Update retornou:', updateData);
       console.log('Erro ao salvar device_id:', erroDevice);
+
+      const { expirada, destino } = await verificarAssinatura(usuarios.conta_id);
+      if (expirada) {
+        router.push(`${destino}?expirado=1`);
+        return;
+      }
+      sessionStorage.setItem(`assinatura_ok_${usuarios.conta_id}`, getDataBrasil());
 
       router.push('/dashboard');
     } catch (err) {

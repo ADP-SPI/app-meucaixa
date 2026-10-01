@@ -1,6 +1,7 @@
 'use client';
 
 import { supabase } from '@/lib/supabase';
+import { verificarAssinatura } from '@/lib/assinatura';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
@@ -62,17 +63,15 @@ export default function Dashboard() {
   const buscarVencimento = async () => {
     const contaId = localStorage.getItem('conta_id');
     if (!contaId) return;
-    const { data } = await supabase
-      .from('assinaturas')
-      .select('data_vencimento')
-      .eq('conta_id', contaId)
-      .single();
-    if (!data?.data_vencimento) return;
-    const hoje = new Date();
-    const vencimento = new Date(data.data_vencimento);
-    const dias = Math.ceil((vencimento.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-    if (dias <= 0) {
-      setAvisoVencimento({tipo: 'vencido', dias: 0});
+    const { expirada, diasRestantes: dias, destino } = await verificarAssinatura(parseInt(contaId));
+    if (expirada) {
+      router.replace(`${destino}?expirado=1`);
+      return;
+    }
+    if (dias === null) {
+      setAvisoVencimento(null);
+    } else if (dias === 0) {
+      setAvisoVencimento({tipo: 'hoje', dias: 0});
     } else if (dias >= 1 && dias <= 5) {
       setAvisoVencimento({tipo: 'ultimo5', dias});
     } else {
@@ -155,8 +154,10 @@ export default function Dashboard() {
       <div className="min-h-screen bg-gray-100">
         <div className="max-w-md mx-auto p-4">
           {avisoVencimento && (
-            <div className={`p-3 rounded text-white mb-4 text-center font-bold ${avisoVencimento.tipo === 'vencido' ? 'bg-red-600' : 'bg-yellow-600'}`}>
-              {avisoVencimento.tipo === 'vencido' ? 'ASSINATURA VENCIDA' : `ASSINATURA VENCE EM ${avisoVencimento.dias} DIAS`}
+            <div className={`p-3 rounded text-white mb-4 text-center font-bold ${avisoVencimento.tipo === 'hoje' ? 'bg-red-600' : 'bg-yellow-600'}`}>
+              {avisoVencimento.tipo === 'hoje'
+                ? 'ASSINATURA VENCE HOJE (ÚLTIMO DIA DE ACESSO)'
+                : `ASSINATURA VENCE EM ${avisoVencimento.dias} ${avisoVencimento.dias === 1 ? 'DIA' : 'DIAS'}`}
             </div>
           )}
 
