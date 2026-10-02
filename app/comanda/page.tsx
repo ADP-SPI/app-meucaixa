@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase, getDataBrasil, getHoraBrasil, formatarDataHoraBrasil } from '@/lib/supabase';
 import SignatureCanvas from 'react-signature-canvas';
 import jsPDF from 'jspdf';
+import { bluetoothDisponivel, imprimirNotaBluetooth } from '@/lib/impressoraBluetooth';
 
 interface NavigatorWithBluetooth extends Navigator {
   bluetooth?: {
@@ -33,6 +34,8 @@ export default function Comanda() {
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [impressoraConectada, setImpressoraConectada] = useState<any | null>(null);
   const [mensagemImpressora, setMensagemImpressora] = useState('');
+  const [imprimindoBluetooth, setImprimindoBluetooth] = useState(false);
+  const [statusBluetooth, setStatusBluetooth] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -218,25 +221,42 @@ export default function Comanda() {
     }
   };
 
-  const imprimirComBluetoothOuNormal = async (notaData: any) => {
+  const abrirPreviewPDF = (notaData: any) => {
     const doc = gerarNotaPDF(notaData);
-    
-    if (impressoraConectada) {
-      try {
-        setMensagemImpressora('Enviando para impressora Bluetooth...');
-        await salvarNotaSupabase(notaData, doc);
-        window.print();
-        setMensagemImpressora(`✅ Enviado: ${impressoraConectada.name}`);
-        setTimeout(() => setMensagemImpressora(''), 3000);
-      } catch (err) {
-        console.error('Erro ao imprimir:', err);
-        setMensagemImpressora('Erro ao imprimir. Tente novamente.');
-      }
-    } else {
-      const url = doc.output('dataurlstring');
-      setPdfUrl(url);
-      setMostrandoPreview(true);
+    setPdfUrl(doc.output('dataurlstring'));
+    setMostrandoPreview(true);
+  };
+
+  // Mesmo módulo das Notas de Fiado: cupom ESC/POS direto na térmica via Web Bluetooth
+  const imprimirComBluetoothOuNormal = async (notaData: any) => {
+    if (!bluetoothDisponivel()) {
+      abrirPreviewPDF(notaData);
+      return;
     }
+
+    setImprimindoBluetooth(true);
+    setStatusBluetooth(null);
+    try {
+      const nome = await imprimirNotaBluetooth({
+        numero_nota: notaData.numero,
+        cliente_nome: notaData.comanda,
+        itens: notaData.itens,
+        total_valor: notaData.subtotal,
+        created_at: new Date(),
+      });
+      setImpressoraConectada(JSON.parse(localStorage.getItem('impressora_conectada') || 'null'));
+      setStatusBluetooth({ tipo: 'ok', texto: `✅ Nota enviada para ${nome}` });
+      await salvarNotaSupabase(notaData, gerarNotaPDF(notaData));
+    } catch (err: any) {
+      console.error('Erro na impressão Bluetooth:', err);
+      const texto = err?.name === 'NotFoundError'
+        ? 'Nenhuma impressora selecionada.'
+        : err?.name === 'NetworkError'
+          ? 'Não foi possível conectar. Verifique se a impressora está ligada e próxima.'
+          : err?.message || 'Erro ao imprimir via Bluetooth.';
+      setStatusBluetooth({ tipo: 'erro', texto });
+    }
+    setImprimindoBluetooth(false);
   };
 
   const criarComanda = async () => {
@@ -360,6 +380,7 @@ export default function Comanda() {
           subtotal: subtotal,
           itens: comanda.itens || []
         });
+        setStatusBluetooth(null);
         setMostrandoOpcoeNota(true);
         setModalAberto(null);
         setFechando(false);
@@ -562,10 +583,18 @@ export default function Comanda() {
               <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(4, '0')} Gerada!</h2>
               <p className="text-gray-600 mb-2">Cliente: {notaGerada.comanda}</p>
               <p className="text-3xl font-bold text-green-600 mb-6">R$ {notaGerada.subtotal.toFixed(2).replace('.', ',')}</p>
+              {statusBluetooth && (
+                <p className={`text-sm mb-3 p-2 rounded ${statusBluetooth.tipo === 'ok' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}`}>
+                  {statusBluetooth.texto}
+                </p>
+              )}
               <div className="flex flex-col gap-3">
                 <button onClick={() => setMostrandoAssinatura(true)} className="w-full bg-purple-100 text-purple-600 border border-purple-300 p-3 rounded font-bold hover:bg-purple-200">Assinar na Tela</button>
-                <button onClick={async () => await imprimirComBluetoothOuNormal(notaGerada)} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200">{impressoraConectada ? '🖨️ Imprimir (Bluetooth)' : 'Imprimir Agora'}</button>
-                <button onClick={async () => { const doc = gerarNotaPDF(notaGerada); await salvarNotaSupabase(notaGerada, doc); setNotaGerada(null); setMostrandoOpcoeNota(false); }} className="w-full bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Salvar Impressão</button>
+                <button onClick={async () => await imprimirComBluetoothOuNormal(notaGerada)} disabled={imprimindoBluetooth} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200 disabled:opacity-50">{imprimindoBluetooth ? 'Enviando...' : bluetoothDisponivel() ? '🖨️ Imprimir (Bluetooth)' : 'Imprimir Agora'}</button>
+                {bluetoothDisponivel() && (
+                  <button onClick={() => abrirPreviewPDF(notaGerada)} className="w-full bg-white text-blue-600 border border-blue-200 p-3 rounded font-bold hover:bg-blue-50">Visualizar / Imprimir PDF</button>
+                )}
+                <button onClick={async () => { const doc = gerarNotaPDF(notaGerada); await salvarNotaSupabase(notaGerada, doc); setNotaGerada(null); setMostrandoOpcoeNota(false); setStatusBluetooth(null); }} className="w-full bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Salvar Impressão</button>
               </div>
             </div>
           </div>
