@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, getDataBrasil } from '@/lib/supabase';
+import { FIADO, FORMAS_RECEBIMENTO, normalizarFormaPagamento } from '@/lib/formasPagamento';
 
 // Período padrão: do dia 1 do mês atual até hoje (Brasília)
 const periodoPadrao = () => {
@@ -86,12 +87,12 @@ export default function Relatorios() {
   const transacoesFiltradas = transacoes.filter((t) => {
     if (t.data < filtrosAplicados.inicio || t.data > filtrosAplicados.fim) return false;
     if (filtrosAplicados.operacao !== 'ambos' && t.tipo !== filtrosAplicados.operacao) return false;
-    if (filtrosAplicados.forma && t.formapagamento !== filtrosAplicados.forma) return false;
+    if (filtrosAplicados.forma && normalizarFormaPagamento(t.formapagamento) !== filtrosAplicados.forma) return false;
     return true;
   });
 
   // Fiado ainda não foi recebido: fica fora de Receita/Saldo e aparece no card FIADO
-  const ehFiado = (t: any) => t.tipo === 'receita' && t.formapagamento === 'FIADO';
+  const ehFiado = (t: any) => t.tipo === 'receita' && normalizarFormaPagamento(t.formapagamento) === FIADO;
 
   const somar = (lista: any[]) => lista.reduce((sum, t) => sum + t.valor, 0);
 
@@ -139,10 +140,9 @@ export default function Relatorios() {
                 className="w-full border border-gray-300 p-2 rounded text-sm"
               >
                 <option value="">Todas</option>
-                <option value="PIX">PIX</option>
-                <option value="DINHEIRO">DINHEIRO</option>
-                <option value="CARTÃO">CARTÃO</option>
-                <option value="FIADO">FIADO</option>
+                {[...FORMAS_RECEBIMENTO, FIADO].map((forma) => (
+                  <option key={forma} value={forma}>{forma}</option>
+                ))}
               </select>
             </div>
 
@@ -238,7 +238,7 @@ export default function Relatorios() {
                       <p className={`font-bold ${t.tipo === 'receita' ? 'text-green-600' : t.tipo === 'retirada_pessoal' ? 'text-blue-600' : 'text-red-600'}`}>
                         {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toFixed(2).replace('.', ',')}
                       </p>
-                      <p className="text-xs text-gray-600">{t.formapagamento}</p>
+                      <p className="text-xs text-gray-600">{normalizarFormaPagamento(t.formapagamento)}</p>
                     </div>
                   </div>
                 </div>

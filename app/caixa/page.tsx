@@ -3,13 +3,14 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, getDataBrasil } from '@/lib/supabase';
+import { CARTAO, DINHEIRO, FIADO, FORMAS_RECEBIMENTO, PIX, normalizarFormaPagamento } from '@/lib/formasPagamento';
 
 export default function Caixa() {
   const [transacoes, setTransacoes] = useState<any[]>([]);
   const [tipoOperacao, setTipoOperacao] = useState('receita');
   const [nomeCliente, setNomeCliente] = useState('');
   const [valor, setValor] = useState('');
-  const [formapagamento, setformapagamento] = useState('PIX');
+  const [formapagamento, setformapagamento] = useState(PIX);
   const [excluindoId, setExcluindoId] = useState<number | null>(null);
   const [carregando, setCarregando] = useState(true);
   const [contaId, setContaId] = useState<number | null>(null);
@@ -58,7 +59,7 @@ export default function Caixa() {
             descricao: nomeCliente,
             valor: parseFloat(valor),
             tipo: tipoOperacao,
-            formapagamento: formapagamento,
+            formapagamento: normalizarFormaPagamento(formapagamento),
             hora: new Date().toLocaleTimeString('pt-BR'),
             data: getDataBrasil(),
             created_at: new Date().toISOString()
@@ -69,7 +70,7 @@ export default function Caixa() {
 
       setNomeCliente('');
       setValor('');
-      setformapagamento('PIX');
+      setformapagamento(PIX);
       setTipoOperacao('receita');
       
       setTimeout(() => {
@@ -117,7 +118,7 @@ export default function Caixa() {
 
       if (t.tipo === 'receita') {
         // Fiado ainda não foi recebido: aparece só no card FIADO
-        if (t.formapagamento === 'FIADO') return;
+        if (normalizarFormaPagamento(t.formapagamento) === FIADO) return;
         receita += t.valor;
       } else if (t.tipo === 'despesa') {
         despesa += t.valor;
@@ -130,12 +131,12 @@ export default function Caixa() {
   };
 
   const totalFiados = transacoes
-    .filter((t) => t.tipo === 'receita' && t.formapagamento === 'FIADO' && t.data === getDataBrasil())
+    .filter((t) => t.tipo === 'receita' && normalizarFormaPagamento(t.formapagamento) === FIADO && t.data === getDataBrasil())
     .reduce((sum, t) => sum + t.valor, 0);
 
   const receitasPorForma = (forma: string) => {
     return transacoes
-      .filter((t) => t.tipo === 'receita' && t.formapagamento === forma && t.data === getDataBrasil())
+      .filter((t) => t.tipo === 'receita' && normalizarFormaPagamento(t.formapagamento) === forma && t.data === getDataBrasil())
       .reduce((sum, t) => sum + t.valor, 0)
       .toFixed(2)
       .replace('.', ',');
@@ -183,15 +184,15 @@ export default function Caixa() {
         <div className="grid grid-cols-4 gap-2 mb-2">
           <div className="bg-white text-black p-2 rounded text-center border border-gray-200">
             <p className="text-xs font-bold">PIX</p>
-            <p className="text-sm font-bold">R$ {receitasPorForma('PIX')}</p>
+            <p className="text-sm font-bold">R$ {receitasPorForma(PIX)}</p>
           </div>
           <div className="bg-white text-black p-2 rounded text-center border border-gray-200">
             <p className="text-xs font-bold">DINHEIRO</p>
-            <p className="text-sm font-bold">R$ {receitasPorForma('DINHEIRO')}</p>
+            <p className="text-sm font-bold">R$ {receitasPorForma(DINHEIRO)}</p>
           </div>
           <div className="bg-white text-black p-2 rounded text-center border border-gray-200">
             <p className="text-xs font-bold">CARTÃO</p>
-            <p className="text-sm font-bold">R$ {receitasPorForma('CARTÃO')}</p>
+            <p className="text-sm font-bold">R$ {receitasPorForma(CARTAO)}</p>
           </div>
           <div className="bg-orange-50 text-black p-2 rounded text-center border border-orange-300">
             <p className="text-xs font-bold">FIADO</p>
@@ -249,10 +250,10 @@ export default function Caixa() {
               onChange={(e) => setformapagamento(e.target.value)}
               className="w-full border border-gray-300 p-2 rounded text-sm"
             >
-              <option>PIX</option>
-              <option>DINHEIRO</option>
-              <option>CARTÃO</option>
-              {tipoOperacao === 'receita' && <option>FIADO</option>}
+              {FORMAS_RECEBIMENTO.map((forma) => (
+                <option key={forma} value={forma}>{forma}</option>
+              ))}
+              {tipoOperacao === 'receita' && <option value={FIADO}>{FIADO}</option>}
             </select>
           </div>
 
@@ -277,7 +278,7 @@ export default function Caixa() {
                     key={t.id}
                     className={`p-2 rounded border-l-4 ${
                       t.tipo === 'receita'
-                        ? t.formapagamento === 'FIADO'
+                        ? normalizarFormaPagamento(t.formapagamento) === FIADO
                           ? 'bg-orange-50 border-orange-600'
                           : 'bg-green-50 border-green-600'
                         : t.tipo === 'retirada_pessoal'
@@ -289,7 +290,7 @@ export default function Caixa() {
                       <div className="flex-1">
                         <p className="font-bold text-sm">{t.descricao || 'Sem descrição'}</p>
                         <p className="text-xs text-gray-600">
-                          {t.formapagamento} - {t.hora}
+                          {normalizarFormaPagamento(t.formapagamento)} - {t.hora}
                         </p>
                       </div>
                       <div className="text-right">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, getDataBrasil, getHoraBrasil } from '@/lib/supabase';
+import { FIADO, FORMAS_RECEBIMENTO, PIX, normalizarFormaPagamento } from '@/lib/formasPagamento';
 
 export default function Fiados() {
   const [transacoes, setTransacoes] = useState<any[]>([]);
@@ -11,7 +12,7 @@ export default function Fiados() {
   const [clienteSelecionado, setClienteSelecionado] = useState<string>('');
   const [selecionadas, setSelecionadas] = useState<number[]>([]);
   const [mostrandoModal, setMostrandoModal] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState('PIX');
+  const [formaPagamento, setFormaPagamento] = useState(PIX);
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -27,7 +28,7 @@ export default function Fiados() {
         .from('transacoes')
         .select('*')
         .eq('conta_id', cId)
-        .eq('formapagamento', 'FIADO')
+        .eq('formapagamento', FIADO)
         .eq('tipo', 'receita')
         .order('created_at', { ascending: false });
 
@@ -80,7 +81,7 @@ export default function Fiados() {
               descricao: `${nota.descricao} (recebido)`,
               valor: nota.valor,
               tipo: 'receita',
-              formapagamento: formaPagamento,
+              formapagamento: normalizarFormaPagamento(formaPagamento),
               hora: getHoraBrasil(),
               data: getDataBrasil(),
               created_at: new Date().toISOString(),
@@ -91,7 +92,7 @@ export default function Fiados() {
 
       setSelecionadas([]);
       setMostrandoModal(false);
-      setFormaPagamento('PIX');
+      setFormaPagamento(PIX);
       carregarTransacoes(contaId);
     } catch (err) {
       console.error('Erro:', err);
@@ -202,9 +203,9 @@ export default function Fiados() {
                   onChange={(e) => setFormaPagamento(e.target.value)}
                   className="w-full border border-gray-300 p-2 rounded"
                 >
-                  <option>PIX</option>
-                  <option>DINHEIRO</option>
-                  <option>CARTÃO</option>
+                  {FORMAS_RECEBIMENTO.map((forma) => (
+                    <option key={forma} value={forma}>{forma}</option>
+                  ))}
                 </select>
               </div>
               <div className="flex gap-2">

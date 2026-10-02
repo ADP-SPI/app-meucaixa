@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase, getDataBrasil, getHoraBrasil, formatarDataHoraBrasil } from '@/lib/supabase';
 import SignatureCanvas from 'react-signature-canvas';
 import jsPDF from 'jspdf';
+import { FIADO, FORMAS_RECEBIMENTO, PIX, normalizarFormaPagamento } from '@/lib/formasPagamento';
 import { bluetoothDisponivel, imprimirComandaBluetooth, imprimirNotaBluetooth, mensagemErroBluetooth } from '@/lib/impressoraBluetooth';
 
 interface NavigatorWithBluetooth extends Navigator {
@@ -24,7 +25,7 @@ export default function Comanda() {
   const [precoRapido, setPrecoRapido] = useState('');
   const [modalAberto, setModalAberto] = useState<number | null>(null);
   const [fechando, setFechando] = useState(false);
-  const [formaPagamento, setFormaPagamento] = useState('PIX');
+  const [formaPagamento, setFormaPagamento] = useState(PIX);
   const [contaId, setContaId] = useState<number | null>(null);
   const [notaGerada, setNotaGerada] = useState<any | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -358,7 +359,7 @@ export default function Comanda() {
     if (subtotal === 0 || !comanda || !contaId) return;
 
     try {
-      if (formaPagamento === 'FIADO') {
+      if (formaPagamento === FIADO) {
         const numeroNota = await gerarNumeroNota(contaId);
 
         const dataExpiracao = new Date();
@@ -384,7 +385,7 @@ export default function Comanda() {
             descricao: `Fiado: ${comanda.nome}`,
             valor: subtotal,
             tipo: 'receita',
-            formapagamento: 'FIADO',
+            formapagamento: FIADO,
             hora: getHoraBrasil(),
             data: getDataBrasil(),
             origin: 'comanda',
@@ -416,7 +417,7 @@ export default function Comanda() {
             descricao: `Comanda: ${comanda.nome}`,
             valor: subtotal,
             tipo: 'receita',
-            formapagamento: formaPagamento,
+            formapagamento: normalizarFormaPagamento(formaPagamento),
             hora: getHoraBrasil(),
             data: getDataBrasil(),
             origin: 'comanda',
@@ -431,7 +432,7 @@ export default function Comanda() {
         setModalAberto(null);
         setFechando(false);
       }
-      setFormaPagamento('PIX');
+      setFormaPagamento(PIX);
       carregarDados(contaId);
     } catch (err) {
       console.error('Erro:', err);
@@ -601,10 +602,9 @@ export default function Comanda() {
                 <div className="mb-4">
                   <label className="block text-sm font-bold mb-2">Forma de Pagamento</label>
                   <select value={formaPagamento} onChange={(e) => setFormaPagamento(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-4">
-                    <option>PIX</option>
-                    <option>DINHEIRO</option>
-                    <option>CARTAO</option>
-                    <option>FIADO</option>
+                    {[...FORMAS_RECEBIMENTO, FIADO].map((forma) => (
+                      <option key={forma} value={forma}>{forma}</option>
+                    ))}
                   </select>
                   <div className="flex gap-2">
                     <button onClick={() => fecharComanda(modalAberto)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200">Confirmar</button>
