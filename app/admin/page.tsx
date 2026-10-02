@@ -191,7 +191,7 @@ export default function Admin() {
   };
 
   const cancelarCliente = async (clienteId: number) => {
-    if (!confirm('Tem certeza que deseja cancelar?')) return;
+    if (!confirm('Tem certeza de que deseja cancelar?')) return;
 
     try {
       const { error } = await supabase
@@ -258,7 +258,7 @@ export default function Admin() {
             <thead className="bg-gray-200">
               <tr>
                 <th className="p-4 text-left">Empresa</th>
-                <th className="p-4 text-left">Email</th>
+                <th className="p-4 text-left">E-mail</th>
                 <th className="p-4 text-left">Plano</th>
                 <th className="p-4 text-left">Status</th>
                 <th className="p-4 text-left">Vencimento</th>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, getDataBrasil } from '@/lib/supabase';
+import { formatarMoeda } from '@/lib/moeda';
 import { FIADO, FORMAS_RECEBIMENTO, normalizarFormaPagamento } from '@/lib/formasPagamento';
 
 // Período padrão: do dia 1 do mês atual até hoje (Brasília)
@@ -102,7 +103,6 @@ export default function Relatorios() {
   const totalRetiradas = somar(transacoesFiltradas.filter((t) => t.tipo === 'retirada_pessoal'));
   const saldo = totalReceitas - totalDespesas - totalRetiradas;
 
-  const moeda = (valor: number) => valor.toFixed(2).replace('.', ',');
   const dataBR = (data: string) => data.split('-').reverse().join('/');
 
   return (
@@ -193,29 +193,29 @@ export default function Relatorios() {
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-green-100 text-green-600 p-3 rounded border border-green-300 text-center">
             <p className="text-xs font-bold">TOTAL RECEITAS</p>
-            <p className="text-lg font-bold">R$ {moeda(totalReceitas)}</p>
+            <p className="text-lg font-bold">R$ {formatarMoeda(totalReceitas)}</p>
           </div>
           <div className="bg-red-100 text-red-600 p-3 rounded border border-red-300 text-center">
             <p className="text-xs font-bold">TOTAL DESPESAS</p>
-            <p className="text-lg font-bold">R$ {moeda(totalDespesas)}</p>
+            <p className="text-lg font-bold">R$ {formatarMoeda(totalDespesas)}</p>
           </div>
           <div className="bg-blue-100 text-blue-600 p-3 rounded border border-blue-300 text-center">
             <p className="text-xs font-bold">TOTAL RETIRADAS</p>
-            <p className="text-lg font-bold">R$ {moeda(totalRetiradas)}</p>
+            <p className="text-lg font-bold">R$ {formatarMoeda(totalRetiradas)}</p>
           </div>
         </div>
 
         {/* SALDO */}
         <div className={`${saldo >= 0 ? 'bg-green-200 border-green-300' : 'bg-red-200 border-red-300'} p-3 rounded border mb-4 text-center`}>
           <p className="text-xs font-bold">SALDO</p>
-          <p className="text-2xl font-bold">{saldo >= 0 ? '+' : '-'}R$ {moeda(Math.abs(saldo))}</p>
+          <p className="text-2xl font-bold">{saldo >= 0 ? '+' : '-'}R$ {formatarMoeda(Math.abs(saldo))}</p>
         </div>
 
         {/* FIADO (fora dos totais) */}
         {totalFiado > 0 && (
           <div className="bg-orange-50 text-black p-3 rounded border border-orange-300 mb-4 text-center">
             <p className="text-xs font-bold">FIADO (a receber)</p>
-            <p className="text-lg font-bold">R$ {moeda(totalFiado)}</p>
+            <p className="text-lg font-bold">R$ {formatarMoeda(totalFiado)}</p>
             <p className="text-xs text-orange-900 mt-1">Não entra no total das receitas nem no saldo</p>
           </div>
         )}
@@ -236,7 +236,7 @@ export default function Relatorios() {
                     </div>
                     <div className="text-right">
                       <p className={`font-bold ${t.tipo === 'receita' ? 'text-green-600' : t.tipo === 'retirada_pessoal' ? 'text-blue-600' : 'text-red-600'}`}>
-                        {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toFixed(2).replace('.', ',')}
+                        {t.tipo === 'receita' ? '+' : '-'} R$ {formatarMoeda(t.valor)}
                       </p>
                       <p className="text-xs text-gray-600">{normalizarFormaPagamento(t.formapagamento)}</p>
                     </div>

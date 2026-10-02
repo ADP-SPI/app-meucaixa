@@ -78,7 +78,7 @@ export default function LoginPage() {
         .single();
 
       if (erroLogin || !usuarios) {
-        setErro('Email ou senha incorretos');
+        setErro('E-mail ou senha incorretos');
         setCarregando(false);
         return;
       }
@@ -160,7 +160,7 @@ export default function LoginPage() {
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-bold mb-2">Email</label>
+            <label className="block text-sm font-bold mb-2">E-mail</label>
             <input
               type="email"
               value={email}

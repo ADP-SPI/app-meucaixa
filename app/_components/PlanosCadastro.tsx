@@ -96,7 +96,7 @@ export default function PlanosCadastro({
         .single();
 
       if (contaExistente) {
-        setErro('Email já cadastrado');
+        setErro('E-mail já cadastrado');
         setCarregando(false);
         return;
       }
@@ -271,7 +271,7 @@ export default function PlanosCadastro({
               />
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="E-mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full p-3 mb-4 border border-gray-300 rounded"

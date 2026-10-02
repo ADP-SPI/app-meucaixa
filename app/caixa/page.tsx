@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, getDataBrasil } from '@/lib/supabase';
+import { filtrarDigitacaoMoeda, formatarMoeda, lerMoeda } from '@/lib/moeda';
 import { CARTAO, DINHEIRO, FIADO, FORMAS_RECEBIMENTO, PIX, normalizarFormaPagamento } from '@/lib/formasPagamento';
 
 export default function Caixa() {
@@ -40,7 +41,7 @@ export default function Caixa() {
   };
 
   const adicionarTransacao = async () => {
-    if (!nomeCliente.trim() || !valor || isNaN(parseFloat(valor))) {
+    if (!nomeCliente.trim() || !(lerMoeda(valor) > 0)) {
       alert('Preencha descrição e valor corretamente');
       return;
     }
@@ -57,7 +58,7 @@ export default function Caixa() {
           {
             conta_id: contaId,
             descricao: nomeCliente,
-            valor: parseFloat(valor),
+            valor: lerMoeda(valor),
             tipo: tipoOperacao,
             formapagamento: normalizarFormaPagamento(formapagamento),
             hora: new Date().toLocaleTimeString('pt-BR'),
@@ -135,11 +136,10 @@ export default function Caixa() {
     .reduce((sum, t) => sum + t.valor, 0);
 
   const receitasPorForma = (forma: string) => {
-    return transacoes
+    const total = transacoes
       .filter((t) => t.tipo === 'receita' && normalizarFormaPagamento(t.formapagamento) === forma && t.data === getDataBrasil())
-      .reduce((sum, t) => sum + t.valor, 0)
-      .toFixed(2)
-      .replace('.', ',');
+      .reduce((sum, t) => sum + t.valor, 0);
+    return formatarMoeda(total);
   };
 
   const { receita, despesa, retirada } = calcularSaldos();
@@ -162,22 +162,22 @@ export default function Caixa() {
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className="bg-green-100 text-black p-3 rounded-lg text-center border border-green-300">
             <p className="text-xs font-bold">RECEITA</p>
-            <p className="text-lg font-bold">R$ {receita.toFixed(2).replace('.', ',')}</p>
+            <p className="text-lg font-bold">R$ {formatarMoeda(receita)}</p>
           </div>
           <div className="bg-red-100 text-black p-3 rounded-lg text-center border border-red-300">
             <p className="text-xs font-bold">DESPESA</p>
-            <p className="text-lg font-bold">R$ {despesa.toFixed(2).replace('.', ',')}</p>
+            <p className="text-lg font-bold">R$ {formatarMoeda(despesa)}</p>
           </div>
           <div className="bg-blue-100 text-black p-3 rounded-lg text-center border border-blue-300">
             <p className="text-xs font-bold">RETIRADA</p>
-            <p className="text-lg font-bold">R$ {retirada.toFixed(2).replace('.', ',')}</p>
+            <p className="text-lg font-bold">R$ {formatarMoeda(retirada)}</p>
           </div>
         </div>
 
         {/* SALDO TOTAL */}
         <div className={`p-4 rounded-lg mb-4 text-center ${saldo >= 0 ? 'bg-green-200' : 'bg-red-200'}`}>
           <p className="text-sm font-bold">SALDO</p>
-          <p className="text-3xl font-bold">{saldo >= 0 ? '+' : ''}R$ {saldo.toFixed(2).replace('.', ',')}</p>
+          <p className="text-3xl font-bold">{saldo >= 0 ? '+' : '-'}R$ {formatarMoeda(Math.abs(saldo))}</p>
         </div>
 
         {/* FORMAS DE PAGAMENTO */}
@@ -196,7 +196,7 @@ export default function Caixa() {
           </div>
           <div className="bg-orange-50 text-black p-2 rounded text-center border border-orange-300">
             <p className="text-xs font-bold">FIADO</p>
-            <p className="text-sm font-bold">R$ {totalFiados.toFixed(2).replace('.', ',')}</p>
+            <p className="text-sm font-bold">R$ {formatarMoeda(totalFiados)}</p>
           </div>
         </div>
 
@@ -234,11 +234,11 @@ export default function Caixa() {
           <div className="mb-3">
             <label className="block text-xs font-bold mb-1">Valor (R$)</label>
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={valor}
-              onChange={(e) => setValor(e.target.value)}
+              onChange={(e) => setValor(filtrarDigitacaoMoeda(e.target.value))}
               placeholder="0,00"
-              step="0.01"
               className="w-full border border-gray-300 p-2 rounded text-sm"
             />
           </div>
@@ -297,7 +297,7 @@ export default function Caixa() {
                         <p className={`font-bold ${
                           t.tipo === 'receita' ? 'text-green-600' : t.tipo === 'retirada_pessoal' ? 'text-blue-600' : 'text-red-600'
                         }`}>
-                          {t.tipo === 'receita' ? '+' : '-'} R$ {t.valor.toFixed(2).replace('.', ',')}
+                          {t.tipo === 'receita' ? '+' : '-'} R$ {formatarMoeda(t.valor)}
                         </p>
                         <button
                           onClick={() => setExcluindoId(t.id)}
@@ -319,7 +319,7 @@ export default function Caixa() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg p-6 max-w-sm">
               <h2 className="text-lg font-bold mb-4">Confirmar Exclusão</h2>
-              <p className="text-gray-600 mb-6">Tem certeza que deseja excluir esta transação?</p>
+              <p className="text-gray-600 mb-6">Tem certeza de que deseja excluir esta transação?</p>
               <div className="flex gap-2">
                 <button
                   onClick={() => confirmarExclusao(excluindoId)}

@@ -85,7 +85,7 @@ useEffect(() => {
 
   const adicionarUsuario = async () => {
     if (!novoNome.trim() || !novoEmail.trim() || !novaSenha.trim()) {
-      setErro('Preencha nome, email e senha');
+      setErro('Preencha nome, e-mail e senha');
       return;
     }
 
@@ -111,7 +111,7 @@ useEffect(() => {
         .single();
 
       if (emailExiste) {
-        setErro('Este email já está cadastrado');
+        setErro('Este e-mail já está cadastrado');
         setProcessando(false);
         return;
       }
@@ -309,7 +309,7 @@ useEffect(() => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold mb-2">Email</label>
+                  <label className="block text-sm font-bold mb-2">E-mail</label>
                   <input
                     type="email"
                     value={novoEmail}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, formatarDataHoraBrasil } from '@/lib/supabase';
 import jsPDF from 'jspdf';
+import { formatarMoeda } from '@/lib/moeda';
 import { bluetoothDisponivel, imprimirNotaBluetooth, mensagemErroBluetooth } from '@/lib/impressoraBluetooth';
 
 interface NavigatorWithBluetooth extends Navigator {
@@ -108,7 +109,7 @@ export default function NotasFiado() {
     if (Array.isArray(itens)) {
       itens.forEach((item: any) => {
         const nomeItem = item.nome ? item.nome.substring(0, 20) : 'Item';
-        const valor = `${item.preco ? item.preco.toFixed(2).replace('.', ',') : '0,00'}`;
+        const valor = `${item.preco ? formatarMoeda(item.preco) : '0,00'}`;
         doc.text(nomeItem, 5, yPos);
         doc.text(valor, pageWidth - 5, yPos, { align: 'right' } as any);
         yPos += 5;
@@ -122,7 +123,7 @@ export default function NotasFiado() {
 
     doc.setFont(undefined, 'bold');
     doc.setFontSize(11);
-    const totalTexto = `TOTAL R$ ${nota.total_valor.toFixed(2).replace('.', ',')}`;
+    const totalTexto = `TOTAL R$ ${formatarMoeda(nota.total_valor)}`;
     doc.text(totalTexto, pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 10;
 
@@ -224,7 +225,7 @@ export default function NotasFiado() {
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-orange-600">R$ {nota.total_valor.toFixed(2).replace('.', ',')}</p>
+                    <p className="text-2xl font-bold text-orange-600">R$ {formatarMoeda(nota.total_valor)}</p>
                     <button
                       onClick={() => handleImprimir(nota)}
                       className="bg-blue-100 text-blue-600 border border-blue-300 px-4 py-2 rounded font-bold hover:bg-blue-200 text-sm mt-2"

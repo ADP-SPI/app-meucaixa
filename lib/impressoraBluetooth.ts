@@ -1,6 +1,7 @@
 // Impressão direta em impressora térmica Bluetooth (BLE) via Web Bluetooth + ESC/POS.
 // Funciona no Chrome/Edge para Android (inclusive no PWA). Safari/iOS não suporta Web Bluetooth.
 import { formatarDataHoraBrasil } from '@/lib/supabase';
+import { formatarMoeda } from '@/lib/moeda';
 
 // Serviços BLE mais comuns em impressoras térmicas genéricas (MTP, PT-210, RPP, Goojprt, KP...).
 // Precisam ser declarados no requestDevice, senão o Chrome bloqueia o acesso a eles.
@@ -121,7 +122,7 @@ const CMD = {
 const semAcento = (texto: string) =>
   texto.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\x20-\x7e]/g, '');
 
-const moeda = (valor: number) => (valor || 0).toFixed(2).replace('.', ',');
+const moeda = (valor: number) => formatarMoeda(valor || 0);
 
 const linhaDuasColunas = (esquerda: string, direita: string) => {
   const espaco = LARGURA - direita.length - 1;
@@ -205,14 +206,14 @@ export const gerarEscPosNota = (nota: any): Uint8Array =>
 // Pré-conta / conferência da comanda ainda aberta
 export const gerarEscPosComanda = (comanda: { nome: string; itens: any[]; subtotal: number }): Uint8Array =>
   gerarEscPos({
-    titulo: 'PRE-CONTA',
+    titulo: 'PRÉ-CONTA',
     cliente: comanda.nome,
     dataHora: new Date(),
     itens: comanda.itens,
     rotuloTotal: 'SUBTOTAL',
     total: comanda.subtotal,
     assinatura: false,
-    rodape: 'Nao e documento fiscal',
+    rodape: 'Não é documento fiscal',
   });
 
 const imprimirBytes = async (dados: Uint8Array) => {

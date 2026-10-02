@@ -3,11 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { filtrarDigitacaoMoeda, formatarMoeda, lerMoeda, moedaParaCampo } from '@/lib/moeda';
 
 interface Item {
   id: number;
   nome: string;
-  preco: string;
+  preco: number;
 }
 
 export default function Cardapio() {
@@ -46,8 +47,8 @@ export default function Cardapio() {
   };
 
   const adicionarItem = async () => {
-    if (!novoNome.trim() || !novoPreco.trim() || !contaId) {
-      alert('Preencha nome e preço');
+    if (!novoNome.trim() || !(lerMoeda(novoPreco) > 0) || !contaId) {
+      alert('Preencha o nome e um preço válido (ex: 10,50)');
       return;
     }
 
@@ -57,7 +58,7 @@ export default function Cardapio() {
         .insert([{
           conta_id: contaId,
           nome: novoNome.trim(),
-          preco: parseFloat(novoPreco)
+          preco: lerMoeda(novoPreco)
         }]);
 
       if (error) throw error;
@@ -73,12 +74,12 @@ export default function Cardapio() {
   const iniciarEdicao = (item: Item) => {
     setEditando(item);
     setNovoNome(item.nome);
-    setNovoPreco(item.preco);
+    setNovoPreco(moedaParaCampo(item.preco));
   };
 
   const salvarEdicao = async () => {
-    if (!editando || !novoNome.trim() || !novoPreco.trim() || !contaId) {
-      alert('Preencha nome e preço');
+    if (!editando || !novoNome.trim() || !(lerMoeda(novoPreco) > 0) || !contaId) {
+      alert('Preencha o nome e um preço válido (ex: 10,50)');
       return;
     }
 
@@ -87,7 +88,7 @@ export default function Cardapio() {
         .from('cardapio')
         .update({
           nome: novoNome.trim(),
-          preco: parseFloat(novoPreco)
+          preco: lerMoeda(novoPreco)
         })
         .eq('id', editando.id);
 
@@ -103,7 +104,7 @@ export default function Cardapio() {
   };
 
   const deletarItem = async (id: number) => {
-    if (!confirm('Tem certeza que deseja deletar este item?')) return;
+    if (!confirm('Tem certeza de que deseja excluir este item?')) return;
 
     try {
       const { error } = await supabase
@@ -114,7 +115,7 @@ export default function Cardapio() {
       if (error) throw error;
       if (contaId) carregarItens(contaId);
     } catch (err) {
-      alert('Erro ao deletar item');
+      alert('Erro ao excluir item');
     }
   };
 
@@ -142,11 +143,11 @@ export default function Cardapio() {
               className="border border-gray-300 p-2 rounded"
             />
             <input
-              type="number"
+              type="text"
+              inputMode="decimal"
               value={novoPreco}
-              onChange={(e) => setNovoPreco(e.target.value)}
-              placeholder="Preço"
-              step="0.01"
+              onChange={(e) => setNovoPreco(filtrarDigitacaoMoeda(e.target.value))}
+              placeholder="Preço (ex: 10,50)"
               className="border border-gray-300 p-2 rounded"
             />
             <div className="flex gap-2">
@@ -190,13 +191,13 @@ export default function Cardapio() {
               {itens.map((item) => (
                 <div key={item.id} className="bg-white p-4 rounded border border-gray-300">
                   <p className="font-bold text-lg">{item.nome}</p>
-                  <p className="text-2xl font-bold text-green-600">R$ {parseFloat(item.preco).toFixed(2)}</p>
+                  <p className="text-2xl font-bold text-green-600">R$ {formatarMoeda(item.preco)}</p>
                   <div className="flex gap-2 mt-3">
                     <button onClick={() => iniciarEdicao(item)} className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-2 rounded text-sm hover:bg-blue-200">
                       ✏️ EDITAR
                     </button>
                     <button onClick={() => deletarItem(item.id)} className="flex-1 bg-red-100 text-red-600 border border-red-300 p-2 rounded text-sm hover:bg-red-200">
-                      🗑️ DELETAR
+                      🗑️ EXCLUIR
                     </button>
                   </div>
                 </div>

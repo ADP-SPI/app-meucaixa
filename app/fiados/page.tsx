@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, getDataBrasil, getHoraBrasil } from '@/lib/supabase';
+import { formatarMoeda } from '@/lib/moeda';
 import { FIADO, FORMAS_RECEBIMENTO, PIX, normalizarFormaPagamento } from '@/lib/formasPagamento';
 
 export default function Fiados() {
@@ -119,7 +120,7 @@ export default function Fiados() {
 
         <div className="bg-orange-100 text-orange-600 p-3 rounded border border-orange-300 shadow-md mb-6 text-center">
           <p className="text-xs font-bold">TOTAL FIADO</p>
-          <p className="text-2xl font-bold">R$ {parseFloat(totalFiado).toFixed(2).replace('.', ',')}</p>
+          <p className="text-2xl font-bold">R$ {formatarMoeda(parseFloat(totalFiado))}</p>
         </div>
 
         {/* FILTRO DE CLIENTE */}
@@ -144,7 +145,7 @@ export default function Fiados() {
         {selecionadas.length > 0 && (
           <div className="bg-green-100 text-green-600 p-3 rounded border border-green-300 mb-4 text-center">
             <p className="text-xs font-bold">{selecionadas.length} notas selecionadas</p>
-            <p className="text-2xl font-bold">R$ {parseFloat(totalSelecionado).toFixed(2).replace('.', ',')}</p>
+            <p className="text-2xl font-bold">R$ {formatarMoeda(parseFloat(totalSelecionado))}</p>
             <button
               onClick={() => setMostrandoModal(true)}
               className="mt-2 bg-green-600 text-white px-6 py-2 rounded font-bold hover:bg-green-700"
@@ -179,7 +180,7 @@ export default function Fiados() {
                     <p className="text-xs text-gray-600">{t.data} - {t.hora}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold text-orange-600">R$ {t.valor.toFixed(2).replace('.', ',')}</p>
+                    <p className="font-bold text-orange-600">R$ {formatarMoeda(t.valor)}</p>
                   </div>
                 </div>
               ))}
@@ -194,7 +195,7 @@ export default function Fiados() {
               <h3 className="text-lg font-bold mb-4">Registrar Pagamento</h3>
               <div className="mb-4">
                 <p className="text-sm text-gray-600">{selecionadas.length} notas</p>
-                <p className="font-bold text-2xl">R$ {parseFloat(totalSelecionado).toFixed(2).replace('.', ',')}</p>
+                <p className="font-bold text-2xl">R$ {formatarMoeda(parseFloat(totalSelecionado))}</p>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-bold mb-2">Forma de Pagamento</label>

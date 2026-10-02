@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase, getDataBrasil, getHoraBrasil, formatarDataHoraBrasil } from '@/lib/supabase';
 import SignatureCanvas from 'react-signature-canvas';
 import jsPDF from 'jspdf';
+import { filtrarDigitacaoMoeda, formatarMoeda, lerMoeda } from '@/lib/moeda';
 import { FIADO, FORMAS_RECEBIMENTO, PIX, normalizarFormaPagamento } from '@/lib/formasPagamento';
 import { bluetoothDisponivel, imprimirComandaBluetooth, imprimirNotaBluetooth, mensagemErroBluetooth } from '@/lib/impressoraBluetooth';
 
@@ -140,7 +141,7 @@ export default function Comanda() {
     doc.setFontSize(8);
     (notaData.itens || []).forEach((item: any) => {
       const nomeItem = item.nome.substring(0, 20);
-      const valor = `${(item.quantidade * item.preco).toFixed(2).replace('.', ',')}`;
+      const valor = `${formatarMoeda(item.quantidade * item.preco)}`;
       doc.text(nomeItem, 5, yPos);
       doc.text(valor, pageWidth - 5, yPos, { align: 'right' } as any);
       yPos += 5;
@@ -153,7 +154,7 @@ export default function Comanda() {
 
     doc.setFont(undefined, 'bold');
     doc.setFontSize(11);
-    const totalTexto = `TOTAL R$ ${notaData.subtotal.toFixed(2).replace('.', ',')}`;
+    const totalTexto = `TOTAL R$ ${formatarMoeda(notaData.subtotal)}`;
     doc.text(totalTexto, pageWidth / 2, yPos, { align: 'center' } as any);
     yPos += 10;
 
@@ -307,12 +308,17 @@ export default function Comanda() {
   const adicionarItem = async (comandaId: number, item: any) => {
     const comanda = comandas.find(c => c.id === comandaId);
     if (!comanda) return;
+    // Item digitado na hora ("Adicionar Rápido"): exige nome e preço válido
+    if (!item.nome && (!itemRapido.trim() || !(lerMoeda(precoRapido) > 0))) {
+      alert('Informe o nome do item e um preço válido (ex: 10,50)');
+      return;
+    }
     const itensAtualizados = [
       ...(comanda.itens || []),
       {
         id: Date.now(),
         nome: item.nome || itemRapido,
-        preco: item.preco || parseFloat(precoRapido),
+        preco: item.preco || lerMoeda(precoRapido),
         quantidade: 1
       }
     ];
@@ -450,7 +456,7 @@ export default function Comanda() {
       carregarDados(contaId!);
     } catch (err) {
       console.error('Erro:', err);
-      alert('Erro ao deletar comanda');
+      alert('Erro ao excluir comanda');
     }
   };
 
@@ -515,7 +521,7 @@ export default function Comanda() {
                   : 'bg-gray-100 text-gray-600'
               }`}
             >
-              Digitar Itens / Serviço
+              Digitar Itens / Serviços
             </button>
           </div>
         </div>
@@ -524,7 +530,7 @@ export default function Comanda() {
           {comandas.map((comanda) => (
             <button key={comanda.id} onClick={() => { setModalAberto(comanda.id); setStatusComanda(null); }} className="w-full bg-white text-left p-4 rounded border-2 border-gray-200 hover:border-blue-600 transition">
               <p className="font-bold">{comanda.nome}</p>
-              <p className="text-sm text-gray-600">{(comanda.itens || []).length} itens - R$ {calcularSubtotal(comanda.id).toFixed(2).replace('.', ',')}</p>
+              <p className="text-sm text-gray-600">{(comanda.itens || []).length} itens - R$ {formatarMoeda(calcularSubtotal(comanda.id))}</p>
             </button>
           ))}
         </div>
@@ -543,7 +549,7 @@ export default function Comanda() {
                       <div key={item.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
                         <div>
                           <p className="font-bold">{item.nome}</p>
-                          <p className="text-sm text-gray-600">{item.quantidade}x R$ {item.preco.toFixed(2).replace('.', ',')} = R$ {(item.quantidade * item.preco).toFixed(2).replace('.', ',')}</p>
+                          <p className="text-sm text-gray-600">{item.quantidade}x R$ {formatarMoeda(item.preco)} = R$ {formatarMoeda(item.quantidade * item.preco)}</p>
                         </div>
                         <button onClick={() => removerItem(modalAberto, item.id)} className="bg-red-100 text-red-600 border border-red-300 px-3 py-1 rounded text-sm hover:bg-red-200">X</button>
                       </div>
@@ -557,7 +563,7 @@ export default function Comanda() {
                   <div className="space-y-2 max-h-40 overflow-y-auto">
                     {cardapio.map((item) => (
                       <button key={item.id} onClick={() => adicionarItem(modalAberto, item)} className="w-full text-left bg-blue-50 p-2 rounded hover:bg-blue-100 text-sm">
-                        {item.nome} - R$ {item.preco.toFixed(2).replace('.', ',')}
+                        {item.nome} - R$ {formatarMoeda(item.preco)}
                       </button>
                     ))}
                   </div>
@@ -567,13 +573,13 @@ export default function Comanda() {
                 <div className="mb-4">
                   <h3 className="font-bold mb-2">Adicionar Rápido</h3>
                   <input type="text" placeholder="Nome do item" value={itemRapido} onChange={(e) => setItemRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
-                  <input type="number" placeholder="Preço" value={precoRapido} onChange={(e) => setPrecoRapido(e.target.value)} className="w-full border border-gray-300 p-2 rounded mb-2" />
+                  <input type="text" inputMode="decimal" placeholder="Preço (ex: 10,50)" value={precoRapido} onChange={(e) => setPrecoRapido(filtrarDigitacaoMoeda(e.target.value))} className="w-full border border-gray-300 p-2 rounded mb-2" />
                   <button onClick={() => adicionarItem(modalAberto, {})} className="w-full bg-blue-100 text-blue-600 border border-blue-300 p-2 rounded font-bold hover:bg-blue-200">Adicionar</button>
                 </div>
               )}
               <div className="bg-blue-100 p-4 rounded-lg mb-4 text-center">
                 <p className="text-sm text-gray-600">SUBTOTAL</p>
-                <p className="text-3xl font-bold text-blue-600">R$ {calcularSubtotal(modalAberto).toFixed(2).replace('.', ',')}</p>
+                <p className="text-3xl font-bold text-blue-600">R$ {formatarMoeda(calcularSubtotal(modalAberto))}</p>
               </div>
               {!fechando && (
                 <div className="mb-3">
@@ -621,7 +627,7 @@ export default function Comanda() {
             <div className="bg-white rounded-lg p-6 max-w-md w-full text-center">
               <h2 className="text-2xl font-bold text-green-600 mb-4">Nota #{String(notaGerada.numero).padStart(4, '0')} Gerada!</h2>
               <p className="text-gray-600 mb-2">Cliente: {notaGerada.comanda}</p>
-              <p className="text-3xl font-bold text-green-600 mb-6">R$ {notaGerada.subtotal.toFixed(2).replace('.', ',')}</p>
+              <p className="text-3xl font-bold text-green-600 mb-6">R$ {formatarMoeda(notaGerada.subtotal)}</p>
               {statusBluetooth && (
                 <p className={`text-sm mb-3 p-2 rounded ${statusBluetooth.tipo === 'ok' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}`}>
                   {statusBluetooth.texto}
@@ -642,7 +648,7 @@ export default function Comanda() {
         {mostrandoPreview && pdfUrl && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 w-full max-w-sm max-h-screen overflow-auto">
-              <h2 className="text-2xl font-bold mb-4">Preview Nota (52mm)</h2>
+              <h2 className="text-2xl font-bold mb-4">Pré-visualização da Nota (52 mm)</h2>
               <div className="flex justify-center mb-4">
                 <iframe src={pdfUrl} className="w-52 h-96 border-2 border-gray-300 rounded" />
               </div>

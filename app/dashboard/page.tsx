@@ -146,7 +146,7 @@ export default function Dashboard() {
   };
 
   if (validando) {
-    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessao...</p></div>;
+    return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Validando sessão...</p></div>;
   }
 
   return (
@@ -168,7 +168,7 @@ export default function Dashboard() {
               <p className="text-xs text-gray-500">{nomeEmpresa}</p>
               {tipoUsuario === 'proprietario' && (
                 <span className="text-xs text-gray-500">
-                  Proprietario
+                  Proprietário
                 </span>
               )}
             </div>
@@ -176,7 +176,7 @@ export default function Dashboard() {
               onClick={handleLogout}
               className="text-blue-600 hover:underline font-bold"
             >
-              Sair / Trocar Usuario
+              Sair / Trocar Usuário
             </button>
           </div>
 
@@ -215,15 +215,15 @@ export default function Dashboard() {
             )}
             {tipoPlano !== 'pessoal' && (
               <a href="/cardapio" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                Cardapio / Produtos ou Serviços
+                Cardápio / Produtos ou Serviços
               </a>
             )}
             <a href="/relatorios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-              Relatorios
+              Relatórios
             </a>
             {tipoUsuario === 'proprietario' && (
               <a href="/usuarios" className="block bg-white text-black p-4 rounded border border-gray-200 text-center font-bold hover:bg-gray-50 transition">
-                {tipoPlano === 'pessoal' ? 'Membros da Família / Cônjuge' : 'Gerenciar Usuarios'}
+                {tipoPlano === 'pessoal' ? 'Membros da Família / Cônjuge' : 'Gerenciar Usuários'}
               </a>
             )}
             {contaId === '4' && (

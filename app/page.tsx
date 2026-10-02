@@ -47,7 +47,7 @@ export default function LandingPage() {
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
           Controle seu caixa, comanda, fiados e cardápio em um só lugar. 
-          Perfeito para barbearias, lanchonetes, bars e salões.
+          Perfeito para barbearias, lanchonetes, bares e salões.
         </p>
         <Link 
           href="/planos"
