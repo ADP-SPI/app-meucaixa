@@ -161,20 +161,15 @@ export default function Dashboard() {
             </div>
           )}
 
-          <div className="flex justify-between items-center mb-6">
-            <div>
+          <div className="flex justify-between items-center gap-4 mb-6">
+            <div className="min-w-0">
               <p className="text-sm text-gray-600">Bem-vindo</p>
-              <p className="font-bold text-gray-900">{nomeUsuario}</p>
-              <p className="text-xs text-gray-500">{nomeEmpresa}</p>
-              {tipoUsuario === 'proprietario' && (
-                <span className="text-xs text-gray-500">
-                  Proprietário
-                </span>
-              )}
+              <p className="font-bold text-gray-900 break-words">{nomeEmpresa}</p>
+              <p className="text-xs text-gray-500 break-words">Usuário: {nomeUsuario}</p>
             </div>
             <button
               onClick={handleLogout}
-              className="text-blue-600 hover:underline font-bold"
+              className="shrink-0 text-right text-blue-600 hover:underline font-bold"
             >
               Sair / Trocar Usuário
             </button>
