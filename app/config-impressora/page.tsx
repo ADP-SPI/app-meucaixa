@@ -2,16 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { escolherImpressora } from '@/lib/impressoraBluetooth';
 
 interface BluetoothDevice {
   name: string;
   id: string;
-}
-
-interface NavigatorWithBluetooth extends Navigator {
-  bluetooth?: {
-    requestDevice(options: any): Promise<any>;
-  };
 }
 
 export default function ConfigImpressora() {
@@ -39,38 +34,19 @@ export default function ConfigImpressora() {
     setErro('');
 
     try {
-      const nav = navigator as NavigatorWithBluetooth;
-      
-      // Verifica se o navegador suporta Web Bluetooth API
-      if (!nav.bluetooth) {
-        throw new Error('Seu navegador não suporta Bluetooth. Use Chrome/Edge no Android.');
-      }
-
-      // Solicita dispositivo Bluetooth (SEM serviços inválidos)
-      const device = await nav.bluetooth.requestDevice({
-        filters: [
-          { namePrefix: 'KA-' },
-          { namePrefix: 'Thermal' },
-          { namePrefix: 'PRINTER' },
-          { namePrefix: 'ESC' },
-          { namePrefix: 'BT' },
-        ],
-      });
-
-      if (device) {
-        const novaImpressora: BluetoothDevice = {
-          name: device.name || 'Impressora Desconhecida',
-          id: device.id,
-        };
-
-        // Salva no localStorage
-        localStorage.setItem('impressora_conectada', JSON.stringify(novaImpressora));
-        setImpressoraConectada(novaImpressora);
-        setMensagem(`✅ Impressora conectada: ${novaImpressora.name}`);
-      }
+      // Conecta de verdade (GATT) e já salva a impressora no localStorage
+      const { device } = await escolherImpressora();
+      const novaImpressora: BluetoothDevice = {
+        name: device.name || 'Impressora Desconhecida',
+        id: device.id,
+      };
+      setImpressoraConectada(novaImpressora);
+      setMensagem(`✅ Impressora conectada: ${novaImpressora.name}`);
     } catch (err: any) {
       if (err.name === 'NotFoundError') {
         setErro('Nenhuma impressora Bluetooth encontrada. Verifique se está ligada e próxima.');
+      } else if (err.name === 'NetworkError') {
+        setErro('Não foi possível conectar. Verifique se a impressora está ligada e próxima.');
       } else if (err.name === 'NotAllowedError') {
         setErro('Você cancelou a busca de impressora.');
       } else {

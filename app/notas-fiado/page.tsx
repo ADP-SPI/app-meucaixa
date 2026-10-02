@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, formatarDataHoraBrasil } from '@/lib/supabase';
 import jsPDF from 'jspdf';
+import { bluetoothDisponivel, imprimirNotaBluetooth } from '@/lib/impressoraBluetooth';
 
 interface NavigatorWithBluetooth extends Navigator {
   bluetooth?: {
@@ -20,6 +21,8 @@ export default function NotasFiado() {
   const [pdfUrl, setPdfUrl] = useState<string>('');
   const [mostrandoPreview, setMostrandoPreview] = useState(false);
   const [notaSelecionada, setNotaSelecionada] = useState<any | null>(null);
+  const [imprimindoBluetooth, setImprimindoBluetooth] = useState(false);
+  const [statusBluetooth, setStatusBluetooth] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -158,6 +161,33 @@ export default function NotasFiado() {
     setMostrandoPreview(true);
   };
 
+  const handleImprimirBluetooth = async () => {
+    if (!notaSelecionada) return;
+    setImprimindoBluetooth(true);
+    setStatusBluetooth(null);
+    try {
+      const nome = await imprimirNotaBluetooth(notaSelecionada);
+      setImpressoraConectada(JSON.parse(localStorage.getItem('impressora_conectada') || 'null'));
+      setStatusBluetooth({ tipo: 'ok', texto: `✅ Nota enviada para ${nome}` });
+    } catch (err: any) {
+      console.error('Erro na impressão Bluetooth:', err);
+      const texto = err?.name === 'NotFoundError'
+        ? 'Nenhuma impressora selecionada.'
+        : err?.name === 'NetworkError'
+          ? 'Não foi possível conectar. Verifique se a impressora está ligada e próxima.'
+          : err?.message || 'Erro ao imprimir via Bluetooth.';
+      setStatusBluetooth({ tipo: 'erro', texto });
+    }
+    setImprimindoBluetooth(false);
+  };
+
+  const fecharPreview = () => {
+    setMostrandoPreview(false);
+    setPdfUrl('');
+    setNotaSelecionada(null);
+    setStatusBluetooth(null);
+  };
+
   if (carregando) {
     return <div className="min-h-screen bg-gray-100 flex items-center justify-center"><p>Carregando...</p></div>;
   }
@@ -220,9 +250,23 @@ export default function NotasFiado() {
               <div className="flex justify-center mb-4">
                 <iframe src={pdfUrl} className="w-52 h-96 border-2 border-gray-300 rounded" />
               </div>
+              {statusBluetooth && (
+                <p className={`text-sm mb-3 p-2 rounded ${statusBluetooth.tipo === 'ok' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}`}>
+                  {statusBluetooth.texto}
+                </p>
+              )}
+              {bluetoothDisponivel() && (
+                <button
+                  onClick={handleImprimirBluetooth}
+                  disabled={imprimindoBluetooth}
+                  className="w-full mb-2 bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700 disabled:bg-gray-400"
+                >
+                  {imprimindoBluetooth ? 'Enviando...' : '🖨️ Imprimir via Bluetooth'}
+                </button>
+              )}
               <div className="flex gap-2">
                 <button onClick={() => { window.print(); }} className="flex-1 bg-blue-100 text-blue-600 border border-blue-300 p-3 rounded font-bold hover:bg-blue-200">Imprimir</button>
-                <button onClick={() => { setMostrandoPreview(false); setPdfUrl(''); setNotaSelecionada(null); }} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Fechar</button>
+                <button onClick={fecharPreview} className="flex-1 bg-gray-100 text-gray-600 border border-gray-300 p-3 rounded font-bold hover:bg-gray-200">Fechar</button>
               </div>
             </div>
           </div>
