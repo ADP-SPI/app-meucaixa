@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase, formatarDataHoraBrasil } from '@/lib/supabase';
 import jsPDF from 'jspdf';
-import { bluetoothDisponivel, imprimirNotaBluetooth } from '@/lib/impressoraBluetooth';
+import { bluetoothDisponivel, imprimirNotaBluetooth, mensagemErroBluetooth } from '@/lib/impressoraBluetooth';
 
 interface NavigatorWithBluetooth extends Navigator {
   bluetooth?: {
@@ -171,12 +171,7 @@ export default function NotasFiado() {
       setStatusBluetooth({ tipo: 'ok', texto: `✅ Nota enviada para ${nome}` });
     } catch (err: any) {
       console.error('Erro na impressão Bluetooth:', err);
-      const texto = err?.name === 'NotFoundError'
-        ? 'Nenhuma impressora selecionada.'
-        : err?.name === 'NetworkError'
-          ? 'Não foi possível conectar. Verifique se a impressora está ligada e próxima.'
-          : err?.message || 'Erro ao imprimir via Bluetooth.';
-      setStatusBluetooth({ tipo: 'erro', texto });
+      setStatusBluetooth({ tipo: 'erro', texto: mensagemErroBluetooth(err) });
     }
     setImprimindoBluetooth(false);
   };

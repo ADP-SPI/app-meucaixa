@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase, getDataBrasil, getHoraBrasil, formatarDataHoraBrasil } from '@/lib/supabase';
 import SignatureCanvas from 'react-signature-canvas';
 import jsPDF from 'jspdf';
-import { bluetoothDisponivel, imprimirNotaBluetooth } from '@/lib/impressoraBluetooth';
+import { bluetoothDisponivel, imprimirComandaBluetooth, imprimirNotaBluetooth, mensagemErroBluetooth } from '@/lib/impressoraBluetooth';
 
 interface NavigatorWithBluetooth extends Navigator {
   bluetooth?: {
@@ -36,6 +36,7 @@ export default function Comanda() {
   const [mensagemImpressora, setMensagemImpressora] = useState('');
   const [imprimindoBluetooth, setImprimindoBluetooth] = useState(false);
   const [statusBluetooth, setStatusBluetooth] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
+  const [statusComanda, setStatusComanda] = useState<{ tipo: 'ok' | 'erro'; texto: string } | null>(null);
 
   useEffect(() => {
     const conta = localStorage.getItem('conta_id');
@@ -249,12 +250,34 @@ export default function Comanda() {
       await salvarNotaSupabase(notaData, gerarNotaPDF(notaData));
     } catch (err: any) {
       console.error('Erro na impressão Bluetooth:', err);
-      const texto = err?.name === 'NotFoundError'
-        ? 'Nenhuma impressora selecionada.'
-        : err?.name === 'NetworkError'
-          ? 'Não foi possível conectar. Verifique se a impressora está ligada e próxima.'
-          : err?.message || 'Erro ao imprimir via Bluetooth.';
-      setStatusBluetooth({ tipo: 'erro', texto });
+      setStatusBluetooth({ tipo: 'erro', texto: mensagemErroBluetooth(err) });
+    }
+    setImprimindoBluetooth(false);
+  };
+
+  // Pré-conta / conferência da comanda aberta, sem precisar fechar
+  const imprimirComanda = async (comandaId: number) => {
+    const comanda = comandas.find(c => c.id === comandaId);
+    if (!comanda) return;
+
+    if (!bluetoothDisponivel()) {
+      setStatusComanda({ tipo: 'erro', texto: 'Impressão Bluetooth disponível apenas no Chrome para Android.' });
+      return;
+    }
+
+    setImprimindoBluetooth(true);
+    setStatusComanda(null);
+    try {
+      const nome = await imprimirComandaBluetooth({
+        nome: comanda.nome,
+        itens: comanda.itens || [],
+        subtotal: calcularSubtotal(comandaId),
+      });
+      setImpressoraConectada(JSON.parse(localStorage.getItem('impressora_conectada') || 'null'));
+      setStatusComanda({ tipo: 'ok', texto: `✅ Comanda enviada para ${nome}` });
+    } catch (err: any) {
+      console.error('Erro ao imprimir comanda:', err);
+      setStatusComanda({ tipo: 'erro', texto: mensagemErroBluetooth(err) });
     }
     setImprimindoBluetooth(false);
   };
@@ -498,7 +521,7 @@ export default function Comanda() {
 
         <div className="space-y-2 mb-6">
           {comandas.map((comanda) => (
-            <button key={comanda.id} onClick={() => setModalAberto(comanda.id)} className="w-full bg-white text-left p-4 rounded border-2 border-gray-200 hover:border-blue-600 transition">
+            <button key={comanda.id} onClick={() => { setModalAberto(comanda.id); setStatusComanda(null); }} className="w-full bg-white text-left p-4 rounded border-2 border-gray-200 hover:border-blue-600 transition">
               <p className="font-bold">{comanda.nome}</p>
               <p className="text-sm text-gray-600">{(comanda.itens || []).length} itens - R$ {calcularSubtotal(comanda.id).toFixed(2).replace('.', ',')}</p>
             </button>
@@ -551,6 +574,22 @@ export default function Comanda() {
                 <p className="text-sm text-gray-600">SUBTOTAL</p>
                 <p className="text-3xl font-bold text-blue-600">R$ {calcularSubtotal(modalAberto).toFixed(2).replace('.', ',')}</p>
               </div>
+              {!fechando && (
+                <div className="mb-3">
+                  <button
+                    onClick={() => imprimirComanda(modalAberto)}
+                    disabled={imprimindoBluetooth || (comandas.find(c => c.id === modalAberto)?.itens || []).length === 0}
+                    className="w-full bg-blue-600 text-white p-3 rounded font-bold hover:bg-blue-700 disabled:bg-gray-400"
+                  >
+                    {imprimindoBluetooth ? 'Enviando...' : '🖨️ Imprimir Comanda'}
+                  </button>
+                  {statusComanda && (
+                    <p className={`text-sm mt-2 p-2 rounded ${statusComanda.tipo === 'ok' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-700'}`}>
+                      {statusComanda.texto}
+                    </p>
+                  )}
+                </div>
+              )}
               {!fechando && (
                 <div className="flex gap-2">
                   <button onClick={() => setFechando(true)} className="flex-1 bg-green-100 text-green-600 border border-green-300 p-3 rounded font-bold hover:bg-green-200">Fechar Comanda</button>

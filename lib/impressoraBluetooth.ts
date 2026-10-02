@@ -129,7 +129,18 @@ const linhaDuasColunas = (esquerda: string, direita: string) => {
   return texto + ' '.repeat(LARGURA - texto.length - direita.length) + direita;
 };
 
-export const gerarEscPosNota = (nota: any): Uint8Array => {
+type Cupom = {
+  titulo: string;
+  cliente: string;
+  dataHora: string | Date;
+  itens: any[];
+  rotuloTotal: string;
+  total: number;
+  assinatura: boolean;
+  rodape?: string;
+};
+
+const gerarEscPos = (cupom: Cupom): Uint8Array => {
   const encoder = new TextEncoder();
   const partes: number[] = [];
   const cmd = (bytes: number[]) => partes.push(...bytes);
@@ -142,16 +153,16 @@ export const gerarEscPosNota = (nota: any): Uint8Array => {
   cmd(CMD.tamanhoDuplo);
   texto('MEU CAIXA');
   cmd(CMD.tamanhoNormal);
-  texto(`Nota #${String(nota.numero_nota).padStart(4, '0')}`);
+  texto(cupom.titulo);
   cmd(CMD.negritoOff);
-  texto(nota.cliente_nome || 'Cliente');
-  texto(formatarDataHoraBrasil(nota.created_at));
+  texto(cupom.cliente || 'Cliente');
+  texto(formatarDataHoraBrasil(cupom.dataHora));
 
   cmd(CMD.esquerda);
   separador();
   texto(linhaDuasColunas('Item', 'Valor'));
   separador();
-  (Array.isArray(nota.itens) ? nota.itens : []).forEach((item: any) => {
+  (Array.isArray(cupom.itens) ? cupom.itens : []).forEach((item: any) => {
     const quantidade = item.quantidade || 1;
     texto(linhaDuasColunas(`${quantidade}x ${item.nome || 'Item'}`, moeda(quantidade * (item.preco || 0))));
   });
@@ -160,14 +171,19 @@ export const gerarEscPosNota = (nota: any): Uint8Array => {
   cmd(CMD.centro);
   cmd(CMD.negritoOn);
   cmd(CMD.tamanhoDuplo);
-  texto(`TOTAL R$ ${moeda(nota.total_valor)}`);
+  texto(`${cupom.rotuloTotal} R$ ${moeda(cupom.total)}`);
   cmd(CMD.tamanhoNormal);
   cmd(CMD.negritoOff);
 
-  // Espaço para assinatura
-  cmd(CMD.avancar(3));
-  texto('________________________');
-  texto('Assinatura do Cliente');
+  if (cupom.assinatura) {
+    cmd(CMD.avancar(3));
+    texto('________________________');
+    texto('Assinatura do Cliente');
+  }
+  if (cupom.rodape) {
+    cmd(CMD.avancar(1));
+    texto(cupom.rodape);
+  }
 
   cmd(CMD.avancar(4));
   cmd(CMD.cortar);
@@ -175,8 +191,45 @@ export const gerarEscPosNota = (nota: any): Uint8Array => {
   return new Uint8Array(partes);
 };
 
-export const imprimirNotaBluetooth = async (nota: any) => {
+export const gerarEscPosNota = (nota: any): Uint8Array =>
+  gerarEscPos({
+    titulo: `Nota #${String(nota.numero_nota).padStart(4, '0')}`,
+    cliente: nota.cliente_nome,
+    dataHora: nota.created_at,
+    itens: nota.itens,
+    rotuloTotal: 'TOTAL',
+    total: nota.total_valor,
+    assinatura: true,
+  });
+
+// Pré-conta / conferência da comanda ainda aberta
+export const gerarEscPosComanda = (comanda: { nome: string; itens: any[]; subtotal: number }): Uint8Array =>
+  gerarEscPos({
+    titulo: 'PRE-CONTA',
+    cliente: comanda.nome,
+    dataHora: new Date(),
+    itens: comanda.itens,
+    rotuloTotal: 'SUBTOTAL',
+    total: comanda.subtotal,
+    assinatura: false,
+    rodape: 'Nao e documento fiscal',
+  });
+
+const imprimirBytes = async (dados: Uint8Array) => {
   const impressora = await obterImpressora();
-  await enviar(impressora, gerarEscPosNota(nota));
+  await enviar(impressora, dados);
   return impressora.device.name || 'Impressora';
 };
+
+export const imprimirNotaBluetooth = (nota: any) => imprimirBytes(gerarEscPosNota(nota));
+
+export const imprimirComandaBluetooth = (comanda: { nome: string; itens: any[]; subtotal: number }) =>
+  imprimirBytes(gerarEscPosComanda(comanda));
+
+// Mensagem amigável para os erros mais comuns do Web Bluetooth
+export const mensagemErroBluetooth = (err: any) =>
+  err?.name === 'NotFoundError'
+    ? 'Nenhuma impressora selecionada.'
+    : err?.name === 'NetworkError'
+      ? 'Não foi possível conectar. Verifique se a impressora está ligada e próxima.'
+      : err?.message || 'Erro ao imprimir via Bluetooth.';
