@@ -3,16 +3,30 @@
 import { formatarDataHoraBrasil } from '@/lib/supabase';
 import { formatarMoeda } from '@/lib/moeda';
 
-// Serviços BLE mais comuns em impressoras térmicas genéricas (MTP, PT-210, RPP, Goojprt, KP...).
-// Precisam ser declarados no requestDevice, senão o Chrome bloqueia o acesso a eles.
+// O Web Bluetooth só dá acesso aos serviços declarados em optionalServices (não existe "qualquer serviço").
+// Por isso a lista cobre os serviços BLE usados por impressoras térmicas genéricas e módulos UART/serial BLE.
+// Se um modelo não funcionar, a mensagem de erro mostra os serviços encontrados para adicioná-lo aqui.
 const SERVICOS_IMPRESSORA: (number | string)[] = [
+  // 16 bits (módulos BLE chineses e impressoras portáteis: MTP-II, PT-210, RPP02, Goojprt, KP, Cat/Peripage...)
   0x18f0,
-  0xff00,
-  0xffe0,
-  0xfee7,
+  0xae00,
   0xae30,
-  'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-  '49535343-fe7d-4ae5-8fa9-9fafd205e455',
+  0xaf30,
+  0xfee7,
+  0xff00,
+  0xff10,
+  0xff12,
+  0xffb0,
+  0xffc0,
+  0xffd0,
+  0xffe0,
+  0xffe5,
+  0xfff0,
+  // 128 bits
+  'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Xprinter / Gprinter / POS genéricas
+  '49535343-fe7d-4ae5-8fa9-9fafd205e455', // Microchip/ISSC Transparent UART
+  '6e400001-b5a3-f393-e0a9-e50e24dcca9e', // Nordic UART
+  '38eb4a80-c570-11e3-9507-0002a5d5c51b', // Zebra
 ];
 
 const CHAVE_IMPRESSORA = 'impressora_conectada';
@@ -27,26 +41,40 @@ let impressoraAtual: Impressora | null = null;
 export const bluetoothDisponivel = () =>
   typeof navigator !== 'undefined' && !!(navigator as any).bluetooth;
 
-const acharCaracteristicaEscrita = async (server: any) => {
-  for (const uuid of SERVICOS_IMPRESSORA) {
-    let servico;
+class SemCanalDeEscrita extends Error {}
+
+// Varre todos os serviços liberados e usa a primeira característica que aceite escrita
+const acharCaracteristicaEscrita = async (device: any, server: any) => {
+  let servicos: any[] = [];
+  try {
+    servicos = await server.getPrimaryServices();
+  } catch {
+    // nenhum dos serviços declarados existe nesta impressora
+  }
+
+  for (const servico of servicos) {
+    let caracteristicas: any[] = [];
     try {
-      servico = await server.getPrimaryService(uuid);
+      caracteristicas = await servico.getCharacteristics();
     } catch {
       continue;
     }
-    const caracteristicas = await servico.getCharacteristics();
     const escrita = caracteristicas.find(
       (c: any) => c.properties.write || c.properties.writeWithoutResponse
     );
     if (escrita) return escrita;
   }
-  throw new Error('Impressora sem serviço de impressão BLE compatível.');
+
+  const encontrados = servicos.map((sv: any) => sv.uuid).join(', ') || 'nenhum';
+  throw new SemCanalDeEscrita(
+    `A impressora "${device.name || 'sem nome'}" não liberou um canal de impressão BLE ` +
+    `(serviços encontrados: ${encontrados}). Confirme se ela é Bluetooth BLE e informe o modelo ao suporte.`
+  );
 };
 
 const conectarDevice = async (device: any): Promise<Impressora> => {
   const server = device.gatt.connected ? device.gatt : await device.gatt.connect();
-  const caracteristica = await acharCaracteristicaEscrita(server);
+  const caracteristica = await acharCaracteristicaEscrita(device, server);
   impressoraAtual = { device, caracteristica };
   localStorage.setItem(CHAVE_IMPRESSORA, JSON.stringify({ name: device.name || 'Impressora', id: device.id }));
   return impressoraAtual;
